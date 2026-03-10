@@ -102,7 +102,7 @@ export default function AuthPage() {
         supabase={supabase}
       />
       
-      <div className="w-full max-w-sm sm:max-w-md text-center">
+      <div className="w-full max-w-xs sm:max-w-sm text-center">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Logo style="fragments" className="w-10 h-10" />
           <span className="font-bold text-2xl">WorkersCraft AI</span>
@@ -117,7 +117,7 @@ export default function AuthPage() {
           <Button 
             onClick={handleSignIn} 
             size="lg" 
-            className="w-full h-12 text-base font-medium"
+            className="w-full h-11 text-base font-medium"
           >
             Sign In
           </Button>
@@ -125,7 +125,7 @@ export default function AuthPage() {
             onClick={handleSignUp} 
             size="lg" 
             variant="outline" 
-            className="w-full h-12 text-base font-medium"
+            className="w-full h-11 text-base font-medium"
           >
             Sign Up
           </Button>
