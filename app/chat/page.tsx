@@ -51,6 +51,7 @@ export default function Home() {
     'useMorphApply',
     process.env.NEXT_PUBLIC_USE_MORPH_APPLY === 'true',
   )
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   const filteredModels = modelsList.models.filter((model) => {
     if (process.env.NEXT_PUBLIC_HIDE_LOCAL_MODELS) {
@@ -257,6 +258,7 @@ export default function Home() {
     setResult(undefined)
     setCurrentTab('code')
     setIsPreviewLoading(false)
+    setIsFullscreen(false)
   }
 
   function setCurrentPreview(preview: {
@@ -272,6 +274,10 @@ export default function Home() {
     setCurrentPreview({ fragment: undefined, result: undefined })
   }
 
+  function toggleFullscreen() {
+    setIsFullscreen(!isFullscreen)
+  }
+
   return (
     <main className="flex min-h-screen max-h-screen">
       {supabase && (
@@ -282,9 +288,9 @@ export default function Home() {
           supabase={supabase}
         />
       )}
-      <div className="grid w-full md:grid-cols-2">
+      <div className={`grid w-full transition-all duration-300 ${isFullscreen ? 'grid-cols-1' : 'md:grid-cols-2'}`}>
         <div
-          className={`flex flex-col w-full max-h-full max-w-[800px] mx-auto px-4 overflow-auto ${fragment ? 'col-span-1' : 'col-span-2'}`}
+          className={`flex flex-col w-full max-h-full max-w-[800px] mx-auto px-4 overflow-auto transition-all duration-300 ${isFullscreen ? 'hidden' : 'block'} ${fragment ? 'col-span-1' : 'col-span-2'}`}
         >
           <NavBar
             session={session}
@@ -341,7 +347,12 @@ export default function Home() {
           isPreviewLoading={isPreviewLoading}
           fragment={fragment}
           result={result as ExecutionResult}
-          onClose={() => setFragment(undefined)}
+          onClose={() => {
+            setFragment(undefined)
+            setIsFullscreen(false)
+          }}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
         />
       </div>
     </main>

@@ -14,7 +14,7 @@ import { FragmentSchema } from '@/lib/schema'
 import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
-import { ChevronsRight, LoaderCircle } from 'lucide-react'
+import { ChevronsRight, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
 import { Dispatch, SetStateAction } from 'react'
 
 export function Preview({
@@ -27,6 +27,8 @@ export function Preview({
   fragment,
   result,
   onClose,
+  isFullscreen,
+  onToggleFullscreen,
 }: {
   teamID: string | undefined
   accessToken: string | undefined
@@ -37,6 +39,8 @@ export function Preview({
   fragment?: DeepPartial<FragmentSchema>
   result?: ExecutionResult
   onClose: () => void
+  isFullscreen?: boolean
+  onToggleFullscreen?: () => void
 }) {
   if (!fragment) {
     return null
@@ -47,7 +51,7 @@ export function Preview({
     getTemplateId(result?.template!) !== 'code-interpreter-v1'
 
   return (
-    <div className="absolute md:relative z-10 top-0 left-0 shadow-2xl md:rounded-tl-3xl md:rounded-bl-3xl md:border-l md:border-y bg-popover h-full w-full overflow-auto">
+    <div className={`relative transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50' : 'absolute md:relative'} top-0 left-0 shadow-2xl md:rounded-tl-3xl md:rounded-bl-3xl md:border-l md:border-y bg-popover h-full w-full overflow-auto`}>
       <Tabs
         value={selectedTab}
         onValueChange={(value) =>
@@ -55,7 +59,7 @@ export function Preview({
         }
         className="h-full flex flex-col items-start justify-start"
       >
-        <div className="w-full p-2 grid grid-cols-3 items-center border-b">
+        <div className="w-full p-2 grid grid-cols-3 items-center border-b sticky top-0 bg-popover z-10">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -104,6 +108,29 @@ export function Preview({
             <div className="flex items-center justify-end gap-2">
               <DownloadZip fragment={fragment} />
               <DeployVercel fragment={fragment} />
+              {onToggleFullscreen && (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground"
+                        onClick={onToggleFullscreen}
+                      >
+                        {isFullscreen ? (
+                          <Minimize2 className="h-4 w-4" />
+                        ) : (
+                          <Maximize2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           )}
         </div>

@@ -18,7 +18,6 @@ export default function AuthPage() {
   useEffect(() => {
     let mounted = true
 
-    // Check for existing session on mount
     const checkSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
@@ -37,7 +36,6 @@ export default function AuthPage() {
 
     checkSession()
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (mounted) {
         if (session) {
@@ -63,7 +61,6 @@ export default function AuthPage() {
     setAuthDialog(true)
   }
 
-  // Show loading while checking auth
   if (isChecking) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
@@ -80,7 +77,6 @@ export default function AuthPage() {
     )
   }
 
-  // Don't render if authenticated (redirecting)
   if (isAuthenticated) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background">
@@ -106,7 +102,7 @@ export default function AuthPage() {
         supabase={supabase}
       />
       
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-sm sm:max-w-md text-center">
         <div className="flex items-center justify-center gap-2 mb-8">
           <Logo style="fragments" className="w-10 h-10" />
           <span className="font-bold text-2xl">WorkersCraft AI</span>
@@ -117,11 +113,11 @@ export default function AuthPage() {
           Sign in to start building amazing applications
         </p>
         
-        <div className="space-y-3">
+        <div className="space-y-3 w-full">
           <Button 
             onClick={handleSignIn} 
             size="lg" 
-            className="w-full h-12 text-lg"
+            className="w-full h-12 text-base font-medium"
           >
             Sign In
           </Button>
@@ -129,7 +125,7 @@ export default function AuthPage() {
             onClick={handleSignUp} 
             size="lg" 
             variant="outline" 
-            className="w-full h-12 text-lg"
+            className="w-full h-12 text-base font-medium"
           >
             Sign Up
           </Button>
