@@ -1,6 +1,5 @@
 import { FragmentCode } from './fragment-code'
 import { FragmentPreview } from './fragment-preview'
-import { DownloadZip } from './download-zip'
 import { DeployVercel } from './deploy-vercel'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -14,7 +13,7 @@ import { FragmentSchema } from '@/lib/schema'
 import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
-import { ChevronsRight, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
+import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
 import { Dispatch, SetStateAction } from 'react'
 
 export function Preview({
@@ -49,6 +48,8 @@ export function Preview({
   const isLinkAvailable =
     result?.template &&
     getTemplateId(result?.template!) !== 'code-interpreter-v1'
+
+  const previewUrl = (result as ExecutionResultWeb)?.url
 
   return (
     <div className={`relative transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50' : 'absolute md:relative'} top-0 left-0 shadow-2xl md:rounded-tl-3xl md:rounded-bl-3xl md:border-l md:border-y bg-popover h-full w-full overflow-auto`}>
@@ -105,8 +106,24 @@ export function Preview({
             </TabsList>
           </div>
           {fragment && (
-            <div className="flex items-center justify-end gap-2">
-              <DownloadZip fragment={fragment} />
+            <div className="flex items-center justify-end gap-1">
+              {previewUrl && (
+                <TooltipProvider>
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-muted-foreground"
+                        onClick={() => window.open(previewUrl, '_blank')}
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Open in new tab</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               <DeployVercel fragment={fragment} />
               {onToggleFullscreen && (
                 <TooltipProvider>
