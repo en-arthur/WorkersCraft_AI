@@ -37,11 +37,11 @@ export function ChatPicker({
           onValueChange={onSelectedTemplateChange}
         >
           <SelectTrigger className="whitespace-nowrap border-none shadow-none focus:ring-0 px-0 py-0 h-6 text-xs">
-            <SelectValue placeholder="Select a persona" />
+            <SelectValue placeholder="Select Your Tech Stack" />
           </SelectTrigger>
           <SelectContent side="top">
             <SelectGroup>
-              <SelectLabel>Persona</SelectLabel>
+              <SelectLabel>Tech Stack</SelectLabel>
               <SelectItem value="auto">
                 <div className="flex items-center space-x-2">
                   <Sparkles

@@ -1,6 +1,7 @@
-import { DeployDialog } from './deploy-dialog'
 import { FragmentCode } from './fragment-code'
 import { FragmentPreview } from './fragment-preview'
+import { DownloadZip } from './download-zip'
+import { DeployVercel } from './deploy-vercel'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -99,16 +100,10 @@ export function Preview({
               </TabsTrigger>
             </TabsList>
           </div>
-          {result && (
+          {fragment && (
             <div className="flex items-center justify-end gap-2">
-              {isLinkAvailable && (
-                <DeployDialog
-                  url={(result as ExecutionResultWeb).url!}
-                  sbxId={result.sbxId!}
-                  teamID={teamID}
-                  accessToken={accessToken}
-                />
-              )}
+              <DownloadZip fragment={fragment} />
+              <DeployVercel fragment={fragment} />
             </div>
           )}
         </div>

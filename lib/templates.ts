@@ -9,7 +9,7 @@ export function getTemplateId(id: string) {
 
 const templates = {
   'code-interpreter-v1': {
-    name: 'Python data analyst',
+    name: 'Python',
     lib: [
       'python',
       'jupyter',
@@ -25,7 +25,7 @@ const templates = {
     port: null,
   },
   [getTemplateIdSuffix('nextjs-developer')]: {
-    name: 'Next.js developer',
+    name: 'Next.js',
     lib: [
       'nextjs@14.2.5',
       'typescript',
@@ -42,7 +42,7 @@ const templates = {
     port: 3000,
   },
   [getTemplateIdSuffix('vue-developer')]: {
-    name: 'Vue.js developer',
+    name: 'Vue.js',
     lib: ['vue@latest', 'nuxt@3.13.0', 'tailwindcss'],
     file: 'app/app.vue',
     instructions:
@@ -50,7 +50,7 @@ const templates = {
     port: 3000,
   },
   [getTemplateIdSuffix('streamlit-developer')]: {
-    name: 'Streamlit developer',
+    name: 'Streamlit',
     lib: [
       'streamlit',
       'pandas',
@@ -65,7 +65,7 @@ const templates = {
     port: 8501,
   },
   [getTemplateIdSuffix('gradio-developer')]: {
-    name: 'Gradio developer',
+    name: 'Gradio',
     lib: [
       'gradio',
       'pandas',
