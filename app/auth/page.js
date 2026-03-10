@@ -13,25 +13,44 @@ export default function AuthPage() {
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [authView, setAuthView] = useState('sign_in')
   const [isChecking, setIsChecking] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
   useEffect(() => {
+    let mounted = true
+
     // Check for existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.push('/chat')
-      } else {
-        setIsChecking(false)
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (mounted && session) {
+          setIsAuthenticated(true)
+          router.push('/chat')
+        } else if (mounted) {
+          setIsChecking(false)
+        }
+      } catch (error) {
+        if (mounted) {
+          setIsChecking(false)
+        }
       }
-    })
+    }
+
+    checkSession()
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        router.push('/chat')
+      if (mounted) {
+        if (session) {
+          setIsAuthenticated(true)
+          router.push('/chat')
+        }
       }
     })
 
-    return () => subscription.unsubscribe()
+    return () => {
+      mounted = false
+      subscription.unsubscribe()
+    }
   }, [router])
 
   const handleSignIn = () => {
@@ -44,16 +63,42 @@ export default function AuthPage() {
     setAuthDialog(true)
   }
 
+  // Show loading while checking auth
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-muted animate-spin" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Logo style="fragments" className="w-8 h-8" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if authenticated (redirecting)
+  if (isAuthenticated) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-primary animate-spin" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Logo style="fragments" className="w-8 h-8" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm">Redirecting to chat...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <AuthDialog
         open={isAuthDialogOpen}
         setOpen={setAuthDialog}
