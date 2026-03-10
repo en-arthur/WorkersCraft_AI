@@ -14,7 +14,7 @@ export function LandingNav() {
         
         <div className="flex items-center gap-4">
           <ThemeToggle />
-          <Link href="/chat">
+          <Link href="/auth">
             <Button size="sm">Launch App</Button>
           </Link>
         </div>

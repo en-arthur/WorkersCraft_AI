@@ -23,7 +23,7 @@ export function Hero() {
       </p>
       
       <div className="flex gap-4 flex-wrap justify-center">
-        <Link href="/chat">
+        <Link href="/auth">
           <Button size="lg" className="gap-2 px-8 h-12 text-lg">
             Get Started <ArrowRight className="w-5 h-5" />
           </Button>
