@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { LandingNav } from '@/components/landing/landing-nav'
@@ -13,13 +13,32 @@ import { Footer } from '@/components/landing/footer'
 export default function LandingPage() {
   const router = useRouter()
   const { session } = useAuth(() => {}, () => {})
+  const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    if (session) {
+    // Give auth time to initialize
+    const timer = setTimeout(() => {
+      setIsChecking(false)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!isChecking && session) {
       router.push('/chat')
     }
-  }, [session, router])
+  }, [session, isChecking, router])
 
+  // Show loading while checking auth
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
+
+  // Don't render landing if authenticated
   if (session) {
     return null
   }
