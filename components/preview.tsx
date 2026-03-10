@@ -25,11 +25,13 @@ interface FragmentFiles {
 function getFragmentFiles(fragment: DeepPartial<FragmentSchema>): FragmentFiles[] {
   // Check for multi-file format first
   if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
-    return fragment.files.map((file) => ({
-      name: file.file_name || file.file_path?.split('/').pop() || 'file',
-      path: file.file_path || '',
-      content: file.file_content || '',
-    }))
+    return fragment.files
+      .filter((f): f is NonNullable<typeof f> => f != null)
+      .map((file) => ({
+        name: file.file_name || file.file_path?.split('/').pop() || 'file',
+        path: file.file_path || '',
+        content: file.file_content || '',
+      }))
   }
 
   // Fallback to single file format
