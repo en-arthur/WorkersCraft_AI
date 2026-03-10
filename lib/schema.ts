@@ -4,7 +4,9 @@ export const fragmentSchema = z.object({
   commentary: z
     .string()
     .describe(
-      `Describe what you're about to do and the steps you want to take for generating the fragment in great detail.`,
+      `List ALL user requirements and mark each as implemented.
+       Example: "1) Auth page with password - done, 2) Dashboard - done, 3) Customer section - done, 4) Utility functions - done"
+       If any requirement is missing, describe what still needs to be added.`,
     ),
   template: z
     .string()
