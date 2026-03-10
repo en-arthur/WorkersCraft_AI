@@ -1,3 +1,5 @@
+'use client'
+
 import { LandingNav } from '@/components/landing/landing-nav'
 import { Hero } from '@/components/landing/hero'
 import { Features } from '@/components/landing/features'
