@@ -46,6 +46,15 @@ export async function POST(req: Request) {
   const { model: modelNameString, apiKey: modelApiKey, ...modelParams } = config
   const modelClient = getModelClient(model, config)
 
+  // Get the main file path and code (for morph edits)
+  const mainFilePath = currentFragment.files && currentFragment.files.length > 0
+    ? currentFragment.files[0].file_path
+    : currentFragment.file_path || 'app.py'
+  
+  const mainCode = currentFragment.files && currentFragment.files.length > 0
+    ? currentFragment.files[0].file_content
+    : currentFragment.code || ''
+
   try {
     const contextualSystemPrompt = `You are a code editor. Generate a JSON response with exactly these fields:
 
@@ -53,13 +62,13 @@ export async function POST(req: Request) {
   "commentary": "Explain what changes you are making",
   "instruction": "One line description of the change", 
   "edit": "The code changes with // ... existing code ... for unchanged parts",
-  "file_path": "${currentFragment.file_path}"
+  "file_path": "${mainFilePath}"
 }
 
-Current file: ${currentFragment.file_path}
+Current file: ${mainFilePath}
 Current code:
 \`\`\`
-${currentFragment.code}
+${mainCode}
 \`\`\`
 
 `
@@ -77,9 +86,9 @@ ${currentFragment.code}
 
     // Apply edits using Morph
     const morphResult = await applyPatch({
-      targetFile: currentFragment.file_path,
+      targetFile: mainFilePath,
       instructions: editInstructions.instruction,
-      initialCode: currentFragment.code,
+      initialCode: mainCode,
       codeEdit: editInstructions.edit,
     })
 
@@ -105,7 +114,7 @@ ${currentFragment.code}
         'Content-Type': 'text/plain; charset=utf-8',
       },
     })
-  } catch (error: any) {
-    return handleAPIError(error, { hasOwnApiKey: !!config.apiKey })
+  } catch (error) {
+    return handleAPIError(error)
   }
 }
