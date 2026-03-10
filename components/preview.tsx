@@ -16,6 +16,34 @@ import { DeepPartial } from 'ai'
 import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
 import { Dispatch, SetStateAction } from 'react'
 
+interface FragmentFiles {
+  name: string
+  path: string
+  content: string
+}
+
+function getFragmentFiles(fragment: DeepPartial<FragmentSchema>): FragmentFiles[] {
+  // Check for multi-file format first
+  if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
+    return fragment.files.map((file) => ({
+      name: file.file_name || file.file_path?.split('/').pop() || 'file',
+      path: file.file_path || '',
+      content: file.file_content || '',
+    }))
+  }
+
+  // Fallback to single file format
+  if (fragment.code && fragment.file_path) {
+    return [{
+      name: fragment.file_path.split('/').pop() || 'file',
+      path: fragment.file_path,
+      content: fragment.code,
+    }]
+  }
+
+  return []
+}
+
 export function Preview({
   teamID,
   accessToken,
@@ -50,6 +78,7 @@ export function Preview({
     getTemplateId(result?.template!) !== 'code-interpreter-v1'
 
   const previewUrl = (result as ExecutionResultWeb)?.url
+  const fragmentFiles = getFragmentFiles(fragment)
 
   return (
     <div className={`relative transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50' : 'absolute md:relative'} top-0 left-0 shadow-2xl md:rounded-tl-3xl md:rounded-bl-3xl md:border-l md:border-y bg-popover h-full w-full overflow-auto`}>
@@ -151,19 +180,10 @@ export function Preview({
             </div>
           )}
         </div>
-        {fragment && (
+        {fragment && fragmentFiles.length > 0 && (
           <div className="overflow-y-auto w-full h-full">
             <TabsContent value="code" className="h-full">
-              {fragment.code && fragment.file_path && (
-                <FragmentCode
-                  files={[
-                    {
-                      name: fragment.file_path,
-                      content: fragment.code,
-                    },
-                  ]}
-                />
-              )}
+              <FragmentCode files={fragmentFiles} />
             </TabsContent>
             <TabsContent value="fragment" className="h-full">
               {result && <FragmentPreview result={result as ExecutionResult} />}

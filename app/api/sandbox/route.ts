@@ -20,7 +20,6 @@ export async function POST(req: Request) {
   } = await req.json()
   console.log('fragment', fragment)
   console.log('userID', userID)
-  // console.log('apiKey', apiKey)
 
   // Create an interpreter or a sandbox
   const sbx = await Sandbox.create(fragment.template, {
@@ -48,20 +47,27 @@ export async function POST(req: Request) {
     )
   }
 
-  // Copy code to fs
-  if (fragment.code && Array.isArray(fragment.code)) {
-    fragment.code.forEach(async (file) => {
+  // Copy files to sandbox filesystem
+  // Handle multi-file format
+  if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
+    // Write all files from the files array
+    for (const file of fragment.files) {
       await sbx.files.write(file.file_path, file.file_content)
-      console.log(`Copied file to ${file.file_path} in ${sbx.sandboxId}`)
-    })
-  } else {
+      console.log(`Copied file ${file.file_name} to ${file.file_path} in ${sbx.sandboxId}`)
+    }
+  } else if (fragment.code && fragment.file_path) {
+    // Fallback to single file format
     await sbx.files.write(fragment.file_path, fragment.code)
     console.log(`Copied file to ${fragment.file_path} in ${sbx.sandboxId}`)
   }
 
   // Execute code or return a URL to the running sandbox
   if (fragment.template === 'code-interpreter-v1') {
-    const { logs, error, results } = await sbx.runCode(fragment.code || '')
+    const code = fragment.files && fragment.files.length > 0
+      ? fragment.files[0].file_content
+      : fragment.code || ''
+
+    const { logs, error, results } = await sbx.runCode(code)
 
     return new Response(
       JSON.stringify({
