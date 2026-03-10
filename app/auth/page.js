@@ -4,22 +4,35 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { ViewType } from '@/components/auth'
 import { AuthDialog } from '@/components/auth-dialog'
-import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import Logo from '@/components/logo'
 import { Button } from '@/components/ui/button'
 
 export default function AuthPage() {
   const router = useRouter()
-  const { session } = useAuth(() => {}, () => {})
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [authView, setAuthView] = useState('sign_in')
+  const [isChecking, setIsChecking] = useState(true)
 
   useEffect(() => {
-    if (session) {
-      router.push('/chat')
-    }
-  }, [session, router])
+    // Check for existing session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.push('/chat')
+      } else {
+        setIsChecking(false)
+      }
+    })
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        router.push('/chat')
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [router])
 
   const handleSignIn = () => {
     setAuthView('sign_in')
@@ -29,6 +42,14 @@ export default function AuthPage() {
   const handleSignUp = () => {
     setAuthView('sign_up')
     setAuthDialog(true)
+  }
+
+  if (isChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    )
   }
 
   return (
