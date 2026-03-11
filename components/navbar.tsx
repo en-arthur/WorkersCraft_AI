@@ -17,23 +17,19 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Session } from '@supabase/supabase-js'
-import { LogOut, Trash, Undo, FolderOpen } from 'lucide-react'
+import { LogOut, Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 
 export function NavBar({
   session,
   showLogin,
   signOut,
-  onClear,
-  canClear,
   onUndo,
   canUndo,
 }: {
   session: Session | null
   showLogin: () => void
   signOut: () => void
-  onClear: () => void
-  canClear: boolean
   onUndo: () => void
   canUndo: boolean
 }) {
@@ -73,21 +69,6 @@ export function NavBar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>Undo</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClear}
-                disabled={!canClear}
-              >
-                <Trash className="h-4 w-4 md:h-5 md:w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Clear chat</TooltipContent>
           </Tooltip>
         </TooltipProvider>
         <TooltipProvider>

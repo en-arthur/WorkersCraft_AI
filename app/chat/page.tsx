@@ -557,8 +557,6 @@ function ChatContent() {
             session={session}
             showLogin={() => setAuthDialog(true)}
             signOut={logout}
-            onClear={handleClearChat}
-            canClear={messages.length > 0}
             canUndo={messages.length > 1 && !isLoading}
             onUndo={handleUndo}
           />
