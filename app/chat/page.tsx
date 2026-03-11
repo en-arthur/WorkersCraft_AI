@@ -289,7 +289,13 @@ function ChatContent() {
 
   async function loadProject(projectId: string) {
     try {
-      const response = await fetch(`/api/projects/${projectId}`)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      const response = await fetch(`/api/projects/${projectId}`, {
+        headers: {
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        }
+      })
       const data = await response.json()
       if (data.latest_version?.fragment_data) {
         setFragment(data.latest_version.fragment_data)
@@ -309,19 +315,26 @@ function ChatContent() {
 
     try {
       setSaving(true)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       if (currentProject) {
         // Save new version
         await fetch(`/api/projects/${currentProject.id}/versions`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession?.access_token}`
+          },
           body: JSON.stringify({ fragment_data: fragment })
         })
 
         // Save conversation
         await fetch(`/api/projects/${currentProject.id}/conversations`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession?.access_token}`
+          },
           body: JSON.stringify({ messages })
         })
 
@@ -330,7 +343,10 @@ function ChatContent() {
         // Create new project
         const response = await fetch('/api/projects', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${currentSession?.access_token}`
+          },
           body: JSON.stringify({
             user_id: session.user.id,
             name: newProject.name || 'Untitled Project',

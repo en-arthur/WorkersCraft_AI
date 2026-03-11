@@ -45,7 +45,13 @@ export default function DashboardPage() {
   async function loadProjects() {
     try {
       setLoading(true)
-      const response = await fetch(`/api/projects?user_id=${session.user.id}`)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      const response = await fetch(`/api/projects?user_id=${session.user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        }
+      })
       const data = await response.json()
       if (data.projects) {
         setProjects(data.projects)
@@ -62,9 +68,16 @@ export default function DashboardPage() {
 
     try {
       setSaving(true)
+      
+      // Get session token
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
       const response = await fetch('/api/projects', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        },
         body: JSON.stringify({
           user_id: session.user.id,
           name: newProject.name,
@@ -90,8 +103,13 @@ export default function DashboardPage() {
     if (!confirm('Are you sure you want to delete this project?')) return
 
     try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
       const response = await fetch(`/api/projects/${projectId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        }
       })
 
       if (response.ok) {

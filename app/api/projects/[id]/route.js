@@ -1,11 +1,30 @@
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+function getSupabaseWithAuth(token) {
+  if (!token) return null
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    }
+  )
+}
 
 export async function GET(req, { params }) {
   try {
-    if (!supabase) {
-      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return Response.json({ error: 'Authorization required' }, { status: 401 })
     }
 
+    const supabase = getSupabaseWithAuth(token)
     const { id } = params
 
     const { data: project, error } = await supabase
@@ -43,10 +62,13 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
-    if (!supabase) {
-      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return Response.json({ error: 'Authorization required' }, { status: 401 })
     }
 
+    const supabase = getSupabaseWithAuth(token)
     const { id } = params
     const { name, description } = await req.json()
 
@@ -71,10 +93,13 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    if (!supabase) {
-      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return Response.json({ error: 'Authorization required' }, { status: 401 })
     }
 
+    const supabase = getSupabaseWithAuth(token)
     const { id } = params
 
     const { error } = await supabase

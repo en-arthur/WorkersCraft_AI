@@ -1,38 +1,70 @@
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+function getSupabaseWithAuth(token) {
+  if (!token) return null
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    }
+  )
+}
 
 export async function GET(req) {
   try {
-    if (!supabase) {
-      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
-    }
-
     const { searchParams } = new URL(req.url)
     const user_id = searchParams.get('user_id')
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
 
     if (!user_id) {
       return Response.json({ error: 'User ID required' }, { status: 400 })
     }
 
-    const { data: projects, error } = await supabase
+    if (!token) {
+      return Response.json({ error: 'Authorization required' }, { status: 401 })
+    }
+
+    const supabaseAuth = getSupabaseWithAuth(token)
+    if (!supabaseAuth) {
+      return Response.json({ error: 'Failed to create auth client' }, { status: 500 })
+    }
+
+    const { data: projects, error } = await supabaseAuth
       .from('projects')
       .select('*')
       .eq('user_id', user_id)
       .eq('is_archived', false)
       .order('updated_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching projects:', error)
+      throw error
+    }
 
     return Response.json({ projects })
   } catch (error) {
+    console.error('Error in GET /api/projects:', error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(req) {
   try {
-    if (!supabase) {
-      console.error('Supabase not configured')
-      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    const token = req.headers.get('authorization')?.replace('Bearer ', '')
+    
+    if (!token) {
+      return Response.json({ error: 'Authorization required' }, { status: 401 })
+    }
+
+    const supabaseAuth = getSupabaseWithAuth(token)
+    if (!supabaseAuth) {
+      return Response.json({ error: 'Failed to create auth client' }, { status: 500 })
     }
 
     const { user_id, name, description, fragment_data } = await req.json()
@@ -43,7 +75,7 @@ export async function POST(req) {
       return Response.json({ error: 'User ID and name required' }, { status: 400 })
     }
 
-    const { data: project, error } = await supabase
+    const { data: project, error } = await supabaseAuth
       .from('projects')
       .insert({
         user_id,
@@ -63,7 +95,7 @@ export async function POST(req) {
 
     // Save initial version
     if (fragment_data) {
-      const { error: versionError } = await supabase
+      const { error: versionError } = await supabaseAuth
         .from('project_versions')
         .insert({
           project_id: project.id,
