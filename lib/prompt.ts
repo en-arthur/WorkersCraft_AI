@@ -38,7 +38,7 @@ export function toPrompt(template: Templates) {
     - If anything is missing, add it now
 
     Example commentary format:
-    "Building auth page with password login. Implementing: 1) Auth page with password - done, 2) Dashboard - done, 3) Customer section - done"
+    "Building auth page with password login. Features: 1) Hero section, 2) Tech specs, 3) Features showcase, 4) Interactive gallery, 5) Navigation, 6) Dark/red aesthetic"
 
     You can install additional dependencies.
     Do not touch project dependencies files like package.json, package-lock.json, requirements.txt, etc.
