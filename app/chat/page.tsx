@@ -118,6 +118,17 @@ export default function Home() {
     onError: (error) => {
       console.error('Error submitting request:', error)
       if (error.message.includes('limit')) {
+        setIsRateLimited(true)
+      }
+
+      setErrorMessage(error.message)
+    },
+    onFinish: async ({ object: fragment, error }) => {
+      if (!error) {
+        // send it to /api/sandbox
+        console.log('fragment', fragment)
+        setIsPreviewLoading(true)
+        posthog.capture('fragment_generated', {
           template: fragment?.template,
         })
 
