@@ -288,6 +288,8 @@ function ChatContent() {
   }, [searchParams, session])
 
   async function loadProject(projectId: string) {
+    if (!supabase) return
+    
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
@@ -311,7 +313,7 @@ function ChatContent() {
   }
 
   async function saveProject() {
-    if (!fragment || !session?.user?.id) return
+    if (!fragment || !session?.user?.id || !supabase) return
 
     try {
       setSaving(true)
