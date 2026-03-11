@@ -65,11 +65,24 @@ export async function POST(req: Request) {
   if (fragment.template === 'expo-app') {
     console.log('Restarting Expo Metro bundler to load new code...')
     try {
-      await sbx.commands.run('pkill -f "expo start"')
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
-      await new Promise(resolve => setTimeout(resolve, 10000))
-      console.log('Metro bundler restarted successfully')
+      // Kill all node processes (Metro bundler)
+      await sbx.commands.run('killall -9 node || true')
+      console.log('Killed existing Metro processes')
+      
+      // Wait for processes to die
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      
+      // Clear Metro cache and restart
+      const startCmd = 'cd /home/user && rm -rf .expo node_modules/.cache && npx expo start --web --clear'
+      console.log('Starting Metro with cleared cache...')
+      
+      // Start Metro in background
+      const proc = await sbx.commands.run(startCmd, { background: true })
+      console.log('Metro start command executed')
+      
+      // Wait longer for Metro to compile and start
+      await new Promise(resolve => setTimeout(resolve, 20000))
+      console.log('Metro bundler should be ready')
     } catch (error) {
       console.error('Error restarting Metro:', error)
     }
