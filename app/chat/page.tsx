@@ -362,8 +362,32 @@ function ChatContent() {
       
       // Load fragment if available
       if (data.latest_version?.fragment_data) {
-        setFragment(data.latest_version.fragment_data)
+        const fragmentData = data.latest_version.fragment_data
+        setFragment(fragmentData)
         console.log('Loaded fragment data')
+        
+        // Run the fragment in sandbox to show preview
+        setIsPreviewLoading(true)
+        try {
+          const sandboxResponse = await fetch('/api/sandbox', {
+            method: 'POST',
+            body: JSON.stringify({
+              fragment: fragmentData,
+              userID: session?.user?.id,
+              teamID: userTeam?.id,
+              accessToken: session?.access_token,
+            }),
+          })
+          
+          const result = await sandboxResponse.json()
+          console.log('Sandbox result:', result)
+          setResult(result)
+          setCurrentTab('fragment')
+        } catch (error) {
+          console.error('Error running sandbox:', error)
+        } finally {
+          setIsPreviewLoading(false)
+        }
       } else {
         console.log('No fragment data found - new project')
       }
