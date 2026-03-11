@@ -39,10 +39,29 @@ export default function DashboardPage() {
   }, [authChecked, session, router])
 
   useEffect(() => {
-    if (session?.user?.id) {
-      loadProjects()
+    async function fetchProjects() {
+      if (!session?.user?.id) return
+      
+      try {
+        setLoading(true)
+        const { data: { session: currentSession } } = await supabase.auth.getSession()
+        
+        const response = await fetch(`/api/projects?user_id=${session.user.id}`, {
+          headers: {
+            'Authorization': `Bearer ${currentSession?.access_token}`
+          }
+        })
+        const data = await response.json()
+        setProjects(data.projects || [])
+      } catch (error) {
+        console.error('Error loading projects:', error)
+      } finally {
+        setLoading(false)
+      }
     }
-  }, [session])
+    
+    fetchProjects()
+  }, [session?.user?.id])
 
   async function loadProjects() {
     try {
@@ -279,7 +298,7 @@ export default function DashboardPage() {
             <DialogHeader>
               <DialogTitle>Delete Project</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete "{projectToDelete?.name}"? This action cannot be undone.
+                Are you sure you want to delete &quot;{projectToDelete?.name}&quot;? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
