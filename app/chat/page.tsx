@@ -281,11 +281,55 @@ function ChatContent() {
 
   // Load project from URL if specified
   useEffect(() => {
+    if (!authChecked || !session?.user?.id) return
+    
     const projectId = searchParams.get('project')
-    if (projectId && session?.user?.id) {
+    if (projectId) {
+      console.log('Loading project from URL:', projectId)
       loadProject(projectId)
     }
-  }, [searchParams, session])
+  }, [authChecked, session?.user?.id])
+
+  // Auto-save when fragment or messages change
+  useEffect(() => {
+    if (!currentProject?.id || !fragment || !session?.user?.id) return
+    
+    const autoSaveTimer = setTimeout(() => {
+      saveProjectSilently()
+    }, 3000) // Auto-save after 3 seconds of inactivity
+    
+    return () => clearTimeout(autoSaveTimer)
+  }, [fragment, messages, currentProject?.id, session?.user?.id])
+
+  async function saveProjectSilently() {
+    if (!fragment || !session?.user?.id || !supabase || !currentProject?.id) return
+    
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      
+      // Save new version
+      await fetch(`/api/projects/${currentProject.id}/versions`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        },
+        body: JSON.stringify({ fragment_data: fragment })
+      })
+
+      // Save conversation
+      await fetch(`/api/projects/${currentProject.id}/conversations`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${currentSession?.access_token}`
+        },
+        body: JSON.stringify({ messages })
+      })
+    } catch (error) {
+      console.error('Auto-save error:', error)
+    }
+  }
 
   async function loadProject(projectId: string) {
     if (!supabase) return
@@ -293,22 +337,47 @@ function ChatContent() {
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
+      console.log('Loading project:', projectId)
+      
       const response = await fetch(`/api/projects/${projectId}`, {
         headers: {
           'Authorization': `Bearer ${currentSession?.access_token}`
         }
       })
       const data = await response.json()
+      
+      console.log('Project data received:', data)
+      
+      if (data.error) {
+        console.error('Error loading project:', data.error)
+        alert(`Failed to load project: ${data.error}`)
+        return
+      }
+      
+      // Always set the current project
+      if (data.project) {
+        setCurrentProject(data.project)
+        console.log('Set current project:', data.project)
+      }
+      
+      // Load fragment if available
       if (data.latest_version?.fragment_data) {
         setFragment(data.latest_version.fragment_data)
-        setCurrentProject(data.project)
-        // Load messages from latest conversation if available
-        if (data.conversations?.[0]?.messages) {
-          setMessages(data.conversations[0].messages)
-        }
+        console.log('Loaded fragment data')
+      } else {
+        console.log('No fragment data found - new project')
+      }
+      
+      // Load messages from latest conversation if available
+      if (data.conversations?.[0]?.messages) {
+        setMessages(data.conversations[0].messages)
+        console.log('Loaded messages:', data.conversations[0].messages.length)
+      } else {
+        console.log('No conversation history found')
       }
     } catch (error) {
       console.error('Error loading project:', error)
+      alert(`Failed to load project: ${error.message}`)
     }
   }
 
