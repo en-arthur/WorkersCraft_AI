@@ -28,7 +28,7 @@ export default function LandingPage() {
   useEffect(() => {
     if (!isChecking && session) {
       setIsAuthenticated(true)
-      router.push('/chat')
+      router.push('/dashboard')
     }
   }, [session, isChecking, router])
 

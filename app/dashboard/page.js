@@ -21,6 +21,13 @@ export default function DashboardPage() {
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
 
+  // Auth protection - redirect to auth if not logged in
+  useEffect(() => {
+    if (!session) {
+      router.push('/auth')
+    }
+  }, [session, router])
+
   useEffect(() => {
     if (session?.user?.id) {
       loadProjects()
@@ -107,6 +114,22 @@ export default function DashboardPage() {
             </div>
           </div>
           <p className="text-muted-foreground text-sm">Loading projects...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-muted animate-spin" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Logo style="fragments" className="w-8 h-8" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm">Checking authentication...</p>
         </div>
       </div>
     )

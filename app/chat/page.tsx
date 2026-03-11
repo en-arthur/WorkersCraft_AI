@@ -27,6 +27,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Logo from '@/components/logo'
 
 function ChatContent() {
   const [chatInput, setChatInput] = useLocalStorage('chat', '')
@@ -86,6 +87,14 @@ function ChatContent() {
       setLanguageModel({ ...languageModel, model: defaultModel.id })
     }
   }, [languageModel.model])
+
+  // Auth protection - redirect to auth if not logged in
+  useEffect(() => {
+    if (!session) {
+      router.push('/auth')
+    }
+  }, [session, router])
+
   const currentTemplate =
     selectedTemplate === 'auto'
       ? templates
@@ -351,9 +360,13 @@ function ChatContent() {
   }
 
   function logout() {
-    supabase
-      ? supabase.auth.signOut()
-      : console.warn('Supabase is not initialized')
+    if (supabase) {
+      supabase.auth.signOut().then(() => {
+        router.push('/')
+      })
+    } else {
+      console.warn('Supabase is not initialized')
+    }
   }
 
   function handleLanguageModelChange(e: LLMModelConfig) {
@@ -387,6 +400,23 @@ function ChatContent() {
 
   function toggleFullscreen() {
     setIsFullscreen(!isFullscreen)
+  }
+
+  // Show loading while checking auth
+  if (!session) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-muted animate-spin" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Logo style="fragments" className="w-8 h-8" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

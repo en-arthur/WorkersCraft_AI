@@ -23,7 +23,7 @@ export default function AuthPage() {
         const { data: { session } } = await supabase.auth.getSession()
         if (mounted && session) {
           setIsAuthenticated(true)
-          router.push('/chat')
+          router.push('/dashboard')
         } else if (mounted) {
           setIsChecking(false)
         }
@@ -40,7 +40,7 @@ export default function AuthPage() {
       if (mounted) {
         if (session) {
           setIsAuthenticated(true)
-          router.push('/chat')
+          router.push('/dashboard')
         }
       }
     })
@@ -87,7 +87,7 @@ export default function AuthPage() {
               <Logo style="fragments" className="w-8 h-8" />
             </div>
           </div>
-          <p className="text-muted-foreground text-sm">Redirecting to chat...</p>
+          <p className="text-muted-foreground text-sm">Redirecting to dashboard...</p>
         </div>
       </div>
     )
