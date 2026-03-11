@@ -103,21 +103,21 @@ export default function AuthPage() {
       />
       
       <div className="w-full max-w-xs sm:max-w-sm text-center">
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <Logo style="fragments" className="w-10 h-10" />
-          <span className="font-bold text-2xl">WorkersCraft AI</span>
+        <div className="flex items-center justify-center gap-2 mb-10">
+          <Logo style="fragments" className="w-12 h-12" />
+          <span className="font-bold text-3xl">WorkersCraft AI</span>
         </div>
         
-        <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
-        <p className="text-muted-foreground mb-8">
+        <h1 className="text-3xl font-bold mb-3">Welcome Back</h1>
+        <p className="text-muted-foreground mb-10 text-base">
           Sign in to start building amazing applications
         </p>
         
-        <div className="space-y-3 w-full">
+        <div className="space-y-4 w-full">
           <Button 
             onClick={handleSignIn} 
             size="lg" 
-            className="w-full h-11 text-base font-medium"
+            className="w-full h-12 text-base font-medium px-6"
           >
             Sign In
           </Button>
@@ -125,7 +125,7 @@ export default function AuthPage() {
             onClick={handleSignUp} 
             size="lg" 
             variant="outline" 
-            className="w-full h-11 text-base font-medium"
+            className="w-full h-12 text-base font-medium px-6"
           >
             Sign Up
           </Button>
