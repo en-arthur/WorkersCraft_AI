@@ -61,30 +61,26 @@ export async function POST(req: Request) {
     console.log(`Copied file to ${fragment.file_path} in ${sbx.sandboxId}`)
   }
 
-  // Restart Metro bundler for Expo to pick up new files
+  // Trigger Metro file watcher for Expo to detect changes
   if (fragment.template === 'expo-app') {
-    console.log('Restarting Expo Metro bundler to load new code...')
+    console.log('Triggering Metro file watcher for Expo...')
     try {
-      // Kill all node processes (Metro bundler)
-      await sbx.commands.run('killall -9 node || true')
-      console.log('Killed existing Metro processes')
+      // Touch all written files to trigger Metro's file watcher
+      if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
+        for (const file of fragment.files) {
+          await sbx.commands.run(`touch /home/user/${file.file_path}`)
+          console.log(`Touched ${file.file_path}`)
+        }
+      } else if (fragment.file_path) {
+        await sbx.commands.run(`touch /home/user/${fragment.file_path}`)
+        console.log(`Touched ${fragment.file_path}`)
+      }
       
-      // Wait for processes to die
-      await new Promise(resolve => setTimeout(resolve, 3000))
-      
-      // Clear Metro cache and restart
-      const startCmd = 'cd /home/user && rm -rf .expo node_modules/.cache && npx expo start --web --clear'
-      console.log('Starting Metro with cleared cache...')
-      
-      // Start Metro in background
-      const proc = await sbx.commands.run(startCmd, { background: true })
-      console.log('Metro start command executed')
-      
-      // Wait longer for Metro to compile and start
-      await new Promise(resolve => setTimeout(resolve, 20000))
-      console.log('Metro bundler should be ready')
+      // Wait for Metro to detect changes and recompile
+      await new Promise(resolve => setTimeout(resolve, 5000))
+      console.log('Metro should have recompiled')
     } catch (error) {
-      console.error('Error restarting Metro:', error)
+      console.error('Error triggering Metro file watcher:', error)
     }
   }
 
