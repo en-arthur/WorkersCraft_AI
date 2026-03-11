@@ -54,7 +54,7 @@ export function ChatPicker({
               </SelectItem>
               {Object.entries(templates).map(([templateId, template]) => {
                 const cleanId = getTemplateId(templateId)
-                const isExpo = cleanId === 'expo-app'
+                const isExpo = cleanId === 'expo-developer'
                 const imageSrc = `/thirdparty/templates/${cleanId}.${isExpo ? 'png' : 'svg'}`
                 
                 return (

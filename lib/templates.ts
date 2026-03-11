@@ -80,7 +80,7 @@ const templates = {
       'A gradio app. Gradio Blocks/Interface should be called demo.',
     port: 7860,
   },
-  'expo-app': {
+  [getTemplateIdSuffix('expo-developer')]: {
     name: 'Expo React Native',
     lib: ['expo', 'react-native', 'react-native-web', 'react', 'react-dom'],
     file: 'App.js',

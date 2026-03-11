@@ -61,26 +61,19 @@ export async function POST(req: Request) {
     console.log(`Copied file to ${fragment.file_path} in ${sbx.sandboxId}`)
   }
 
-  // Trigger Metro file watcher for Expo to detect changes
-  if (fragment.template === 'expo-app') {
-    console.log('Triggering Metro file watcher for Expo...')
+  // Start Metro bundler for Expo after writing files
+  if (fragment.template.includes('expo-developer')) {
+    console.log('Starting Expo Metro bundler...')
     try {
-      // Touch all written files to trigger Metro's file watcher
-      if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
-        for (const file of fragment.files) {
-          await sbx.commands.run(`touch /home/user/${file.file_path}`)
-          console.log(`Touched ${file.file_path}`)
-        }
-      } else if (fragment.file_path) {
-        await sbx.commands.run(`touch /home/user/${fragment.file_path}`)
-        console.log(`Touched ${fragment.file_path}`)
-      }
+      // Start Metro in background
+      sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
+      console.log('Metro start command executed')
       
-      // Wait for Metro to detect changes and recompile
-      await new Promise(resolve => setTimeout(resolve, 5000))
-      console.log('Metro should have recompiled')
+      // Wait for Metro to compile and start
+      await new Promise(resolve => setTimeout(resolve, 15000))
+      console.log('Metro bundler should be ready')
     } catch (error) {
-      console.error('Error triggering Metro file watcher:', error)
+      console.error('Error starting Metro:', error)
     }
   }
 
