@@ -87,7 +87,7 @@ export default function Home() {
     ? lastMessage.content.map(c => c.type === 'text' ? c.text : '').join(' ')
     : ''
   
-  const isCreatingFiles = /\b(add|create|new|make)\s+(a\s+)?(new\s+)?file/i.test(userMessage)
+  const isCreatingFiles = /\b(add|create|new|make)\b/i.test(userMessage)
   const isDeletingFiles = /\b(delete|remove)\s+file/i.test(userMessage)
   const isRenamingFiles = /\b(rename|move)\s+file/i.test(userMessage)
   const isPureEdit = !isCreatingFiles && !isDeletingFiles && !isRenamingFiles
