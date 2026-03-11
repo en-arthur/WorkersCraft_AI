@@ -58,7 +58,7 @@ export default function Home() {
     true,  // Enabled by default
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [currentProject, setCurrentProject] = useState(null)
+  const [currentProject, setCurrentProject] = useState<{ id: string; name: string; description?: string } | null>(null)
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
