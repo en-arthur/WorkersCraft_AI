@@ -196,10 +196,10 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r bg-muted/10 overflow-hidden flex flex-col`}>
-        <div className="p-4">
+        <div className={`${sidebarOpen ? 'p-4' : 'p-0'} w-64 transition-all duration-300`}>
           <div className="flex items-center gap-2 mb-8">
             <Logo width={32} height={32} />
-            <h2 className="font-bold text-lg">WorkersCraft AI</h2>
+            <h2 className="font-bold text-lg whitespace-nowrap">WorkersCraft AI</h2>
           </div>
           
           <nav className="space-y-2">
@@ -214,7 +214,7 @@ export default function DashboardPage() {
           </nav>
         </div>
         
-        <div className="mt-auto p-4 space-y-2 border-t">
+        <div className={`${sidebarOpen ? 'p-4' : 'p-0'} w-64 mt-auto space-y-2 border-t transition-all duration-300`}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-muted-foreground">Theme</span>
             <ThemeToggle />
