@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     template,
     model,
     config,
+    currentFragment,
   }: {
     messages: CoreMessage[]
     userID: string | undefined
@@ -31,6 +32,11 @@ export async function POST(req: Request) {
     template: Templates
     model: LLMModel
     config: LLMModelConfig
+    currentFragment?: {
+      files?: Array<{ file_path: string; file_name: string; file_content: string }>
+      code?: string
+      file_path?: string
+    }
   } = await req.json()
 
   const limit = !config.apiKey
@@ -47,18 +53,27 @@ export async function POST(req: Request) {
 
   console.log('userID', userID)
   console.log('teamID', teamID)
-  // console.log('template', template)
   console.log('model', model)
-  // console.log('config', config)
 
   const { model: modelNameString, apiKey: modelApiKey, ...modelParams } = config
   const modelClient = getModelClient(model, config)
+
+  // Build existing files context
+  let existingFilesContext = ''
+  if (currentFragment?.files && currentFragment.files.length > 0) {
+    existingFilesContext = `
+
+IMPORTANT: Preserve these existing files:
+${currentFragment.files.map(f => `- ${f.file_path}`).join('\n')}
+
+Only modify files that need changes. Do not remove or recreate files that aren't mentioned. If adding new features, create new files.`
+  }
 
   try {
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
-      system: toPrompt(template),
+      system: toPrompt(template) + existingFilesContext,
       messages,
       maxRetries: 0, // do not retry on errors
       ...modelParams,

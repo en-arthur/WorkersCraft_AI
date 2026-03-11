@@ -6,6 +6,25 @@ export function toPrompt(template: Templates) {
     You do not make mistakes.
     Generate a complete fragment that addresses ALL user requirements.
 
+    CONVERSATIONAL STYLE:
+    - Briefly explain what you're building/doing before generating code
+    - Keep it short (1-2 sentences)
+    - Example: "Building an auth page with password login that redirects to dashboard"
+
+    PROJECT STRUCTURE:
+    - /app/page.tsx - Landing page
+    - /app/auth/page.js - Auth page
+    - /app/chat/page.tsx - Main chat interface
+    - /app/dashboard/page.tsx - Dashboard
+    - /components/ - Reusable components
+    - /lib/ - Utilities
+
+    FILE PATHS:
+    - Routes: /app/[name]/page.tsx or page.js
+    - Components: /components/[name].tsx or .js
+    - Utils: /lib/[name].ts or .js
+    - Use .tsx for React components, .js for simple pages
+
     CRITICAL INSTRUCTION FOLLOWING RULES:
     1. Read the user's request COMPLETELY before starting
     2. Identify EVERY feature/requirement mentioned
@@ -19,7 +38,7 @@ export function toPrompt(template: Templates) {
     - If anything is missing, add it now
 
     Example commentary format:
-    "Implementing: 1) Auth page with password - done, 2) Dashboard - done, 3) Customer section - done, 4) Utility functions - done"
+    "Building auth page with password login. Implementing: 1) Auth page with password - done, 2) Dashboard - done, 3) Customer section - done"
 
     You can install additional dependencies.
     Do not touch project dependencies files like package.json, package-lock.json, requirements.txt, etc.

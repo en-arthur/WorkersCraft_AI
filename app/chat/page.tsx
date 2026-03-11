@@ -204,6 +204,7 @@ export default function Home() {
       template: currentTemplate,
       model: currentModel,
       config: languageModel,
+      currentFragment: fragment,
       ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
 
@@ -225,6 +226,7 @@ export default function Home() {
       template: currentTemplate,
       model: currentModel,
       config: languageModel,
+      currentFragment: fragment,
       ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
   }
