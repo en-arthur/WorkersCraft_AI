@@ -58,22 +58,50 @@ export async function POST(req: Request) {
   const { model: modelNameString, apiKey: modelApiKey, ...modelParams } = config
   const modelClient = getModelClient(model, config)
 
-  // Build existing files context
-  let existingFilesContext = ''
-  if (currentFragment?.files && currentFragment.files.length > 0) {
-    existingFilesContext = `
+  // Build existing code context
+  let existingCodeContext = ''
+  
+  if (currentFragment) {
+    // Handle multi-file format
+    if (currentFragment.files && currentFragment.files.length > 0) {
+      existingCodeContext = `
 
-IMPORTANT: Preserve these existing files:
-${currentFragment.files.map(f => `- ${f.file_path}`).join('\n')}
+EXISTING CODE (read this before making changes):
 
-Only modify files that need changes. Do not remove or recreate files that aren't mentioned. If adding new features, create new files.`
+${currentFragment.files.map(f => 
+  `=== File: ${f.file_path} ===
+${f.file_content}
+`).join('\n')}
+
+IMPORTANT: 
+- You are EDITING existing code, not creating from scratch
+- Preserve all existing files unless specifically asked to remove them
+- Only modify what the user requested
+- Keep all other code unchanged
+`
+    } 
+    // Handle single-file format
+    else if (currentFragment.code && currentFragment.file_path) {
+      existingCodeContext = `
+
+EXISTING CODE (read this before making changes):
+
+=== File: ${currentFragment.file_path} ===
+${currentFragment.code}
+
+IMPORTANT: 
+- You are EDITING existing code, not creating from scratch
+- Only modify what the user requested
+- Keep all other code unchanged
+`
+    }
   }
 
   try {
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
-      system: toPrompt(template) + existingFilesContext,
+      system: toPrompt(template) + existingCodeContext,
       messages,
       maxRetries: 0, // do not retry on errors
       ...modelParams,

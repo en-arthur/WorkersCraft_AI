@@ -134,9 +134,15 @@ export default function Home() {
   useEffect(() => {
     if (object) {
       setFragment(object)
+      
+      // Get code content from either format
+      const codeContent = object.files && object.files.length > 0
+        ? object.files[0].file_content
+        : object.code || ''
+      
       const content: Message['content'] = [
         { type: 'text', text: object.commentary || '' },
-        { type: 'code', text: object.code || '' },
+        { type: 'code', text: codeContent },
       ]
 
       if (!lastMessage || lastMessage.role !== 'assistant') {
@@ -205,7 +211,6 @@ export default function Home() {
       model: currentModel,
       config: languageModel,
       currentFragment: fragment,
-      ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
 
     setChatInput('')
@@ -227,7 +232,6 @@ export default function Home() {
       model: currentModel,
       config: languageModel,
       currentFragment: fragment,
-      ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
   }
 
