@@ -63,6 +63,7 @@ function ChatContent() {
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
+  const [authChecked, setAuthChecked] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -88,9 +89,17 @@ function ChatContent() {
     }
   }, [languageModel.model])
 
-  // Auth protection - redirect to auth if not logged in
+  // Auth check delay
   useEffect(() => {
-    if (!session) {
+    const timer = setTimeout(() => {
+      setAuthChecked(true)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Auth protection - redirect to auth if not logged in (after initial check)
+  useEffect(() => {
+    if (authChecked && !session) {
       router.push('/auth')
     }
   }, [session, router])
