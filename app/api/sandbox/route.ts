@@ -61,6 +61,20 @@ export async function POST(req: Request) {
     console.log(`Copied file to ${fragment.file_path} in ${sbx.sandboxId}`)
   }
 
+  // Restart Metro bundler for Expo to pick up new files
+  if (fragment.template === 'expo-app') {
+    console.log('Restarting Expo Metro bundler to load new code...')
+    try {
+      await sbx.commands.run('pkill -f "expo start"')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
+      await new Promise(resolve => setTimeout(resolve, 10000))
+      console.log('Metro bundler restarted successfully')
+    } catch (error) {
+      console.error('Error restarting Metro:', error)
+    }
+  }
+
   // Execute code or return a URL to the running sandbox
   if (fragment.template === 'code-interpreter-v1') {
     const code = fragment.files && fragment.files.length > 0
