@@ -210,7 +210,7 @@ export default function Home() {
       template: currentTemplate,
       model: currentModel,
       config: languageModel,
-      currentFragment: fragment,
+      ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
 
     setChatInput('')
@@ -231,7 +231,7 @@ export default function Home() {
       template: currentTemplate,
       model: currentModel,
       config: languageModel,
-      currentFragment: fragment,
+      ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
   }
 
