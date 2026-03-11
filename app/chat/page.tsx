@@ -112,92 +112,12 @@ export default function Home() {
   const shouldUseMorph = useMorphApply && hasFragment && isPureEdit
   const apiEndpoint = shouldUseMorph ? '/api/morph-chat' : '/api/chat'
 
-  // Load project from URL if specified
-  useEffect(() => {
-    const projectId = searchParams.get('project')
-    if (projectId && session?.user?.id) {
-      loadProject(projectId)
-    }
-  }, [searchParams, session])
-
-  async function loadProject(projectId) {
-    try {
-      const response = await fetch(`/api/projects/${projectId}`)
-      const data = await response.json()
-      if (data.latest_version?.fragment_data) {
-        setFragment(data.latest_version.fragment_data)
-        setCurrentProject(data.project)
-        // Load messages from latest conversation if available
-        if (data.conversations?.[0]?.messages) {
-          setMessages(data.conversations[0].messages)
-        }
-      }
-    } catch (error) {
-      console.error('Error loading project:', error)
-    }
-  }
-
-  async function saveProject() {
-    if (!fragment || !session?.user?.id) return
-
-    try {
-      setSaving(true)
-      
-      if (currentProject) {
-        // Save new version
-        await fetch(`/api/projects/${currentProject.id}/versions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ fragment_data: fragment })
-        })
-
-        // Save conversation
-        await fetch(`/api/projects/${currentProject.id}/conversations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages })
-        })
-
-        alert('Project saved successfully!')
-      } else {
-        // Create new project
-        const response = await fetch('/api/projects', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            user_id: session.user.id,
-            name: newProject.name || 'Untitled Project',
-            description: newProject.description,
-            fragment_data: fragment
-          })
-        })
-
-        const data = await response.json()
-        if (data.project) {
-          setCurrentProject(data.project)
-          setNewProject({ name: '', description: '' })
-          setIsSaveDialogOpen(false)
-          alert('Project created successfully!')
-        }
-      }
-    } catch (error) {
-      console.error('Error saving project:', error)
-      alert('Error saving project')
-    } finally {
-      setSaving(false)
-    }
-  }
-        setIsRateLimited(true)
-      }
-
-      setErrorMessage(error.message)
-    },
-    onFinish: async ({ object: fragment, error }) => {
-      if (!error) {
-        // send it to /api/sandbox
-        console.log('fragment', fragment)
-        setIsPreviewLoading(true)
-        posthog.capture('fragment_generated', {
+  const { object, submit, isLoading, stop, error } = useObject({
+    api: apiEndpoint,
+    schema,
+    onError: (error) => {
+      console.error('Error submitting request:', error)
+      if (error.message.includes('limit')) {
           template: fragment?.template,
         })
 
@@ -328,6 +248,82 @@ export default function Home() {
       config: languageModel,
       ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
     })
+  }
+
+  // Load project from URL if specified
+  useEffect(() => {
+    const projectId = searchParams.get('project')
+    if (projectId && session?.user?.id) {
+      loadProject(projectId)
+    }
+  }, [searchParams, session])
+
+  async function loadProject(projectId: string) {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`)
+      const data = await response.json()
+      if (data.latest_version?.fragment_data) {
+        setFragment(data.latest_version.fragment_data)
+        setCurrentProject(data.project)
+        // Load messages from latest conversation if available
+        if (data.conversations?.[0]?.messages) {
+          setMessages(data.conversations[0].messages)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading project:', error)
+    }
+  }
+
+  async function saveProject() {
+    if (!fragment || !session?.user?.id) return
+
+    try {
+      setSaving(true)
+      
+      if (currentProject) {
+        // Save new version
+        await fetch(`/api/projects/${currentProject.id}/versions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fragment_data: fragment })
+        })
+
+        // Save conversation
+        await fetch(`/api/projects/${currentProject.id}/conversations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages })
+        })
+
+        alert('Project saved successfully!')
+      } else {
+        // Create new project
+        const response = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: session.user.id,
+            name: newProject.name || 'Untitled Project',
+            description: newProject.description,
+            fragment_data: fragment
+          })
+        })
+
+        const data = await response.json()
+        if (data.project) {
+          setCurrentProject(data.project)
+          setNewProject({ name: '', description: '' })
+          setIsSaveDialogOpen(false)
+          alert('Project created successfully!')
+        }
+      }
+    } catch (error) {
+      console.error('Error saving project:', error)
+      alert('Error saving project')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function addMessage(message: Message) {
