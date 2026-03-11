@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/lib/auth'
 import Logo from '@/components/logo'
-import { Home, FolderOpen, Settings, LogOut } from 'lucide-react'
+import { Home, FolderOpen, Settings, LogOut, CreditCard, Menu, X } from 'lucide-react'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import Link from 'next/link'
@@ -27,6 +27,7 @@ export default function DashboardPage() {
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   async function logout() {
     await supabase.auth.signOut()
@@ -194,27 +195,30 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-muted/10 p-4 flex flex-col">
-        <div className="flex items-center gap-2 mb-8">
-          <Logo width={32} height={32} />
-          <h2 className="font-bold text-lg">WorkersCraft AI</h2>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r bg-muted/10 overflow-hidden flex flex-col`}>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-8">
+            <Logo width={32} height={32} />
+            <h2 className="font-bold text-lg">WorkersCraft AI</h2>
+          </div>
+          
+          <nav className="space-y-2">
+            <Button variant="secondary" className="w-full justify-start">
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Projects
+            </Button>
+            <Button variant="ghost" className="w-full justify-start">
+              <CreditCard className="mr-2 h-4 w-4" />
+              Billing
+            </Button>
+          </nav>
         </div>
         
-        <nav className="flex-1 space-y-2">
-          <Link href="/chat">
-            <Button variant="ghost" className="w-full justify-start">
-              <Home className="mr-2 h-4 w-4" />
-              Chat
-            </Button>
-          </Link>
-          <Button variant="secondary" className="w-full justify-start">
-            <FolderOpen className="mr-2 h-4 w-4" />
-            Projects
-          </Button>
-        </nav>
-        
-        <div className="space-y-2 border-t pt-4">
-          <ThemeToggle />
+        <div className="mt-auto p-4 space-y-2 border-t">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">Theme</span>
+            <ThemeToggle />
+          </div>
           <div className="flex items-center gap-2 px-2 py-2">
             <Avatar className="w-8 h-8">
               <AvatarImage
@@ -234,8 +238,20 @@ export default function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 p-4 md:p-8 overflow-auto">
-        <div className="max-w-6xl mx-auto">
+      <div className="flex-1 flex flex-col overflow-auto">
+        {/* Toggle Button */}
+        <div className="p-4 border-b">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
+        
+        <div className="flex-1 p-4 md:p-8">
+          <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold">My Projects</h1>
@@ -365,6 +381,7 @@ export default function DashboardPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
         </div>
       </div>
     </div>
