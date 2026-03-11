@@ -561,8 +561,6 @@ function ChatContent() {
             canClear={messages.length > 0}
             canUndo={messages.length > 1 && !isLoading}
             onUndo={handleUndo}
-            onSave={() => setIsSaveDialogOpen(true)}
-            canSave={!!fragment && !!session?.user?.id}
           />
           <Chat
             messages={messages}

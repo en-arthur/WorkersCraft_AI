@@ -52,22 +52,26 @@ export function ChatPicker({
                   <span>Auto</span>
                 </div>
               </SelectItem>
-              {Object.entries(templates).map(([templateId, template]) => (
-                <SelectItem key={templateId} value={templateId}>
-                  <div className="flex items-center space-x-2">
-                    <Image
-                      className="flex"
-                      src={`/thirdparty/templates/${getTemplateId(
-                        templateId,
-                      ) === 'expo-app' ? 'expo-app' : getTemplateId(templateId)}.${getTemplateId(templateId) === 'expo-app' ? 'png' : 'svg'}`}
-                      alt={templateId}
-                      width={14}
-                      height={14}
-                    />
-                    <span>{template.name}</span>
-                  </div>
-                </SelectItem>
-              ))}
+              {Object.entries(templates).map(([templateId, template]) => {
+                const cleanId = getTemplateId(templateId)
+                const isExpo = cleanId === 'expo-app'
+                const imageSrc = `/thirdparty/templates/${cleanId}.${isExpo ? 'png' : 'svg'}`
+                
+                return (
+                  <SelectItem key={templateId} value={templateId}>
+                    <div className="flex items-center space-x-2">
+                      <Image
+                        className="flex"
+                        src={imageSrc}
+                        alt={templateId}
+                        width={14}
+                        height={14}
+                      />
+                      <span>{template.name}</span>
+                    </div>
+                  </SelectItem>
+                )
+              })}
             </SelectGroup>
           </SelectContent>
         </Select>

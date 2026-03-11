@@ -17,7 +17,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Session } from '@supabase/supabase-js'
-import { LogOut, Trash, Undo, Save, FolderOpen } from 'lucide-react'
+import { LogOut, Trash, Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 
 export function NavBar({
@@ -28,8 +28,6 @@ export function NavBar({
   canClear,
   onUndo,
   canUndo,
-  onSave,
-  canSave,
 }: {
   session: Session | null
   showLogin: () => void
@@ -38,8 +36,6 @@ export function NavBar({
   canClear: boolean
   onUndo: () => void
   canUndo: boolean
-  onSave: () => void
-  canSave: boolean
 }) {
   return (
     <nav className="w-full flex bg-background py-4">
@@ -61,23 +57,6 @@ export function NavBar({
             </TooltipTrigger>
             <TooltipContent>
               <p>My Projects</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onSave}
-                disabled={!canSave}
-              >
-                <Save className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Save Project</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

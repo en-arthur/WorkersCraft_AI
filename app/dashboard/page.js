@@ -18,6 +18,8 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [projectToDelete, setProjectToDelete] = useState(null)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
@@ -100,8 +102,6 @@ export default function DashboardPage() {
   }
 
   async function handleDeleteProject(projectId) {
-    if (!confirm('Are you sure you want to delete this project?')) return
-
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
@@ -114,6 +114,8 @@ export default function DashboardPage() {
 
       if (response.ok) {
         setProjects(projects.filter(p => p.id !== projectId))
+        setIsDeleteDialogOpen(false)
+        setProjectToDelete(null)
       }
     } catch (error) {
       console.error('Error deleting project:', error)
@@ -174,7 +176,7 @@ export default function DashboardPage() {
           
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="lg" className="px-6">
+              <Button size="lg" className="px-8 py-6 text-base">
                 + New Project
               </Button>
             </DialogTrigger>
@@ -257,7 +259,10 @@ export default function DashboardPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDeleteProject(project.id)}
+                    onClick={() => {
+                      setProjectToDelete(project)
+                      setIsDeleteDialogOpen(true)
+                    }}
                     className="text-destructive hover:text-destructive"
                   >
                     Delete
@@ -267,6 +272,29 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Project</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete "{projectToDelete?.name}"? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDeleteProject(projectToDelete?.id)}
+              >
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
