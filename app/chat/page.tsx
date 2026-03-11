@@ -136,9 +136,9 @@ export default function Home() {
       setFragment(object)
       
       // Get code content from either format
-      const codeContent = object.files && object.files.length > 0 && object.files[0]
+      const codeContent = (object.files && object.files.length > 0 && object.files[0]
         ? object.files[0].file_content
-        : object.code || ''
+        : object.code) || ''
       
       const content: Message['content'] = [
         { type: 'text', text: object.commentary || '' },
