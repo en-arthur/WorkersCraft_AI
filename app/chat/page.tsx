@@ -377,7 +377,7 @@ function ChatContent() {
       }
     } catch (error) {
       console.error('Error loading project:', error)
-      alert(`Failed to load project: ${error.message}`)
+      alert(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
