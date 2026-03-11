@@ -2,6 +2,10 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(req, { params }) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { id } = params
 
     const { data: project, error } = await supabase
@@ -39,6 +43,10 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { id } = params
     const { name, description } = await req.json()
 
@@ -63,6 +71,10 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { id } = params
 
     const { error } = await supabase

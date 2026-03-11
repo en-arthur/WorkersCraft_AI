@@ -2,6 +2,10 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(req) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { searchParams } = new URL(req.url)
     const user_id = searchParams.get('user_id')
 
@@ -26,6 +30,10 @@ export async function GET(req) {
 
 export async function POST(req) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { user_id, name, description, fragment_data } = await req.json()
 
     if (!user_id || !name) {

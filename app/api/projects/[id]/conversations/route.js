@@ -2,6 +2,10 @@ import { supabase } from '@/lib/supabase'
 
 export async function GET(req, { params }) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { id } = params
 
     const { data: conversations, error } = await supabase
@@ -20,6 +24,10 @@ export async function GET(req, { params }) {
 
 export async function POST(req, { params }) {
   try {
+    if (!supabase) {
+      return Response.json({ error: 'Supabase not configured' }, { status: 500 })
+    }
+
     const { id } = params
     const { messages } = await req.json()
 
