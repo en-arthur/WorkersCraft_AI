@@ -1,0 +1,224 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { useAuth } from '@/lib/auth'
+import Logo from '@/components/logo'
+
+export default function DashboardPage() {
+  const router = useRouter()
+  const { session } = useAuth()
+  const [projects, setProjects] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [newProject, setNewProject] = useState({ name: '', description: '' })
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadProjects()
+    }
+  }, [session])
+
+  async function loadProjects() {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/projects?user_id=${session.user.id}`)
+      const data = await response.json()
+      if (data.projects) {
+        setProjects(data.projects)
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleCreateProject() {
+    if (!newProject.name.trim()) return
+
+    try {
+      setSaving(true)
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: session.user.id,
+          name: newProject.name,
+          description: newProject.description
+        })
+      })
+
+      const data = await response.json()
+      if (data.project) {
+        setProjects([data.project, ...projects])
+        setNewProject({ name: '', description: '' })
+        setIsDialogOpen(false)
+        router.push(`/chat?project=${data.project.id}`)
+      }
+    } catch (error) {
+      console.error('Error creating project:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDeleteProject(projectId) {
+    if (!confirm('Are you sure you want to delete this project?')) return
+
+    try {
+      const response = await fetch(`/api/projects/${projectId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setProjects(projects.filter(p => p.id !== projectId))
+      }
+    } catch (error) {
+      console.error('Error deleting project:', error)
+    }
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-muted animate-spin" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Logo style="fragments" className="w-8 h-8" />
+            </div>
+          </div>
+          <p className="text-muted-foreground text-sm">Loading projects...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">My Projects</h1>
+            <p className="text-muted-foreground mt-1">
+              {projects.length} project{projects.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="px-6">
+                + New Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>
+                  Give your project a name and optional description.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Project Name *</Label>
+                  <Input
+                    id="name"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                    placeholder="My Awesome App"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                    placeholder="A brief description of your project..."
+                    rows={3}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleCreateProject} disabled={saving || !newProject.name.trim()}>
+                  {saving ? 'Creating...' : 'Create Project'}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {projects.length === 0 ? (
+          <div className="text-center py-16 border-2 border-dashed rounded-lg">
+            <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
+              <Logo style="fragments" className="w-full h-full" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Create your first project to start building amazing applications
+            </p>
+            <Button onClick={() => setIsDialogOpen(true)}>
+              Create Your First Project
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {projects.map((project) => (
+              <Card key={project.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <CardTitle className="truncate">{project.name}</CardTitle>
+                  <CardDescription>
+                    Updated {formatDate(project.updated_at)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {project.description || 'No description'}
+                  </p>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push(`/chat?project=${project.id}`)}
+                  >
+                    Open
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteProject(project.id)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    Delete
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

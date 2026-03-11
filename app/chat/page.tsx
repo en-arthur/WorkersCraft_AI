@@ -21,6 +21,12 @@ import { experimental_useObject as useObject } from 'ai/react'
 import { usePostHog } from 'posthog-js/react'
 import { SetStateAction, useEffect, useState } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { useRouter, useSearchParams } from 'next/navigation'
 
 export default function Home() {
   const [chatInput, setChatInput] = useLocalStorage('chat', '')
@@ -52,6 +58,12 @@ export default function Home() {
     true,  // Enabled by default
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [currentProject, setCurrentProject] = useState(null)
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
+  const [newProject, setNewProject] = useState({ name: '', description: '' })
+  const [saving, setSaving] = useState(false)
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   const filteredModels = modelsList.models.filter((model) => {
     if (process.env.NEXT_PUBLIC_HIDE_LOCAL_MODELS) {
@@ -100,12 +112,81 @@ export default function Home() {
   const shouldUseMorph = useMorphApply && hasFragment && isPureEdit
   const apiEndpoint = shouldUseMorph ? '/api/morph-chat' : '/api/chat'
 
-  const { object, submit, isLoading, stop, error } = useObject({
-    api: apiEndpoint,
-    schema,
-    onError: (error) => {
-      console.error('Error submitting request:', error)
-      if (error.message.includes('limit')) {
+  // Load project from URL if specified
+  useEffect(() => {
+    const projectId = searchParams.get('project')
+    if (projectId && session?.user?.id) {
+      loadProject(projectId)
+    }
+  }, [searchParams, session])
+
+  async function loadProject(projectId) {
+    try {
+      const response = await fetch(`/api/projects/${projectId}`)
+      const data = await response.json()
+      if (data.latest_version?.fragment_data) {
+        setFragment(data.latest_version.fragment_data)
+        setCurrentProject(data.project)
+        // Load messages from latest conversation if available
+        if (data.conversations?.[0]?.messages) {
+          setMessages(data.conversations[0].messages)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading project:', error)
+    }
+  }
+
+  async function saveProject() {
+    if (!fragment || !session?.user?.id) return
+
+    try {
+      setSaving(true)
+      
+      if (currentProject) {
+        // Save new version
+        await fetch(`/api/projects/${currentProject.id}/versions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ fragment_data: fragment })
+        })
+
+        // Save conversation
+        await fetch(`/api/projects/${currentProject.id}/conversations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messages })
+        })
+
+        alert('Project saved successfully!')
+      } else {
+        // Create new project
+        const response = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: session.user.id,
+            name: newProject.name || 'Untitled Project',
+            description: newProject.description,
+            fragment_data: fragment
+          })
+        })
+
+        const data = await response.json()
+        if (data.project) {
+          setCurrentProject(data.project)
+          setNewProject({ name: '', description: '' })
+          setIsSaveDialogOpen(false)
+          alert('Project created successfully!')
+        }
+      }
+    } catch (error) {
+      console.error('Error saving project:', error)
+      alert('Error saving project')
+    } finally {
+      setSaving(false)
+    }
+  }
         setIsRateLimited(true)
       }
 
@@ -323,6 +404,8 @@ export default function Home() {
             canClear={messages.length > 0}
             canUndo={messages.length > 1 && !isLoading}
             onUndo={handleUndo}
+            onSave={() => setIsSaveDialogOpen(true)}
+            canSave={!!fragment && !!session?.user?.id}
           />
           <Chat
             messages={messages}
@@ -378,6 +461,61 @@ export default function Home() {
           onToggleFullscreen={toggleFullscreen}
         />
       </div>
+
+      {/* Save Project Dialog */}
+      <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {currentProject ? 'Save Project' : 'Create New Project'}
+            </DialogTitle>
+            <DialogDescription>
+              {currentProject 
+                ? 'Save a new version of your project'
+                : 'Give your project a name and optional description.'
+              }
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {!currentProject && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Project Name *</Label>
+                  <Input
+                    id="name"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                    placeholder="My Awesome App"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description (optional)</Label>
+                  <Textarea
+                    id="description"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                    placeholder="A brief description of your project..."
+                    rows={3}
+                  />
+                </div>
+              </>
+            )}
+            {currentProject && (
+              <div className="text-sm text-muted-foreground">
+                Project: <span className="font-medium">{currentProject.name}</span>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveProject} disabled={saving || (!currentProject && !newProject.name.trim())}>
+              {saving ? 'Saving...' : currentProject ? 'Save Version' : 'Create Project'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   )
 }
