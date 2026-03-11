@@ -82,10 +82,10 @@ const templates = {
   },
   [getTemplateIdSuffix('expo-developer')]: {
     name: 'Expo React Native',
-    lib: ['expo', 'react-native', 'react-native-web', 'react', 'react-dom'],
-    file: 'App.js',
+    lib: ['expo', 'react-native', 'react-native-web', 'react', 'react-dom', 'expo-router'],
+    file: 'app/index.tsx',
     instructions:
-      'An Expo React Native app with web preview. Use React Native components (View, Text, StyleSheet). Avoid native-only APIs.',
+      'An Expo React Native app with Expo Router. Entry file is app/index.tsx. Use React Native components (View, Text, StyleSheet). Avoid native-only APIs.',
     port: 8081,
   },
 }

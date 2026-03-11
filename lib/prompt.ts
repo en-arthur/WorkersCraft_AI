@@ -49,14 +49,14 @@ export function toPrompt(template: Templates) {
     TEMPLATE-SPECIFIC GUIDELINES:
 
     For Expo React Native apps:
-    - Entry file: App.js (default export component)
+    - Entry file: app/index.tsx (Expo Router structure)
     - Use React Native components: View, Text, TouchableOpacity, ScrollView, etc.
     - Styling: Use StyleSheet.create() for styles
-    - Structure: App.js for simple apps, add components/ folder for complex apps
+    - Structure: app/index.tsx for home screen, add app/about.tsx for other screens
     - Web preview limitations: Avoid Camera, Sensors, native-only APIs
     - Example:
       import { View, Text, StyleSheet } from 'react-native';
-      export default function App() {
+      export default function Index() {
         return <View style={styles.container}><Text>Hello</Text></View>;
       }
       const styles = StyleSheet.create({ container: { flex: 1 } });
