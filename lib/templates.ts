@@ -80,6 +80,14 @@ const templates = {
       'A gradio app. Gradio Blocks/Interface should be called demo.',
     port: 7860,
   },
+  'expo-app': {
+    name: 'Expo React Native',
+    lib: ['expo', 'react-native', 'react-native-web', 'react', 'react-dom'],
+    file: 'App.js',
+    instructions:
+      'An Expo React Native app with web preview. Use React Native components (View, Text, StyleSheet). Avoid native-only APIs.',
+    port: 8081,
+  },
 }
 
 export type Templates = typeof templates

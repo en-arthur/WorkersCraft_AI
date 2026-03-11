@@ -59,7 +59,7 @@ export function ChatPicker({
                       className="flex"
                       src={`/thirdparty/templates/${getTemplateId(
                         templateId,
-                      )}.svg`}
+                      ) === 'expo-app' ? 'expo-app' : getTemplateId(templateId)}.${getTemplateId(templateId) === 'expo-app' ? 'png' : 'svg'}`}
                       alt={templateId}
                       width={14}
                       height={14}

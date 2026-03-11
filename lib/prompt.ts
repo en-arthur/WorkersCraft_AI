@@ -45,5 +45,20 @@ export function toPrompt(template: Templates) {
 
     You can use one of the following templates:
     ${templatesToPrompt(template)}
+
+    TEMPLATE-SPECIFIC GUIDELINES:
+
+    For Expo React Native apps:
+    - Entry file: App.js (default export component)
+    - Use React Native components: View, Text, TouchableOpacity, ScrollView, etc.
+    - Styling: Use StyleSheet.create() for styles
+    - Structure: App.js for simple apps, add components/ folder for complex apps
+    - Web preview limitations: Avoid Camera, Sensors, native-only APIs
+    - Example:
+      import { View, Text, StyleSheet } from 'react-native';
+      export default function App() {
+        return <View style={styles.container}><Text>Hello</Text></View>;
+      }
+      const styles = StyleSheet.create({ container: { flex: 1 } });
   `
 }
