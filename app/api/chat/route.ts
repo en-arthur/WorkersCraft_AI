@@ -74,9 +74,10 @@ ${f.file_content}
 `).join('\n')}
 
 IMPORTANT: 
-- You are EDITING existing code, not creating from scratch
+- You are working with an existing project
 - Preserve all existing files unless specifically asked to remove them
-- Only modify what the user requested
+- If adding new files, include them in the files array along with existing files
+- If editing files, only modify what the user requested
 - Keep all other code unchanged
 `
     } 
@@ -90,8 +91,9 @@ EXISTING CODE (read this before making changes):
 ${currentFragment.code}
 
 IMPORTANT: 
-- You are EDITING existing code, not creating from scratch
-- Only modify what the user requested
+- You are working with an existing project
+- If adding new files, use the files array format
+- If editing the existing file, only modify what the user requested
 - Keep all other code unchanged
 `
     }

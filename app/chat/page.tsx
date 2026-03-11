@@ -80,12 +80,24 @@ export default function Home() {
       : { [selectedTemplate]: templates[selectedTemplate] }
   const lastMessage = messages[messages.length - 1]
 
+  // Detect if user wants to create/add/delete files (can't use Morph for these)
+  const userMessage = typeof lastMessage?.content === 'string'
+    ? lastMessage.content
+    : Array.isArray(lastMessage?.content)
+    ? lastMessage.content.map(c => c.type === 'text' ? c.text : '').join(' ')
+    : ''
+  
+  const isCreatingFiles = /\b(add|create|new|make)\s+(a\s+)?(new\s+)?file/i.test(userMessage)
+  const isDeletingFiles = /\b(delete|remove)\s+file/i.test(userMessage)
+  const isRenamingFiles = /\b(rename|move)\s+file/i.test(userMessage)
+  const isPureEdit = !isCreatingFiles && !isDeletingFiles && !isRenamingFiles
+
   // Determine which API to use based on morph toggle and existing fragment
   const hasFragment = fragment && (
     (fragment.code && fragment.file_path) ||
     (fragment.files && fragment.files.length > 0)
   )
-  const shouldUseMorph = useMorphApply && hasFragment
+  const shouldUseMorph = useMorphApply && hasFragment && isPureEdit
   const apiEndpoint = shouldUseMorph ? '/api/morph-chat' : '/api/chat'
 
   const { object, submit, isLoading, stop, error } = useObject({
@@ -202,6 +214,8 @@ export default function Home() {
       role: 'user',
       content,
     })
+
+    console.log('Using API:', apiEndpoint, '| Pure edit:', isPureEdit, '| Has fragment:', hasFragment)
 
     submit({
       userID: session?.user?.id,
