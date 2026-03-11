@@ -31,10 +31,13 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     if (!supabase) {
+      console.error('Supabase not configured')
       return Response.json({ error: 'Supabase not configured' }, { status: 500 })
     }
 
     const { user_id, name, description, fragment_data } = await req.json()
+
+    console.log('Creating project:', { user_id, name, description })
 
     if (!user_id || !name) {
       return Response.json({ error: 'User ID and name required' }, { status: 400 })
@@ -51,21 +54,34 @@ export async function POST(req) {
       .select()
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Supabase error creating project:', error)
+      throw error
+    }
+
+    console.log('Project created:', project)
 
     // Save initial version
     if (fragment_data) {
-      await supabase
+      const { error: versionError } = await supabase
         .from('project_versions')
         .insert({
           project_id: project.id,
           version_number: 1,
           fragment_data
         })
+      
+      if (versionError) {
+        console.error('Error creating version:', versionError)
+      }
     }
 
     return Response.json({ project })
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 })
+    console.error('Error in POST /api/projects:', error)
+    return Response.json({ 
+      error: error.message || 'Internal server error',
+      details: error.toString()
+    }, { status: 500 })
   }
 }
