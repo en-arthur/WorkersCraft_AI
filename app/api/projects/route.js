@@ -67,9 +67,9 @@ export async function POST(req) {
       return Response.json({ error: 'Failed to create auth client' }, { status: 500 })
     }
 
-    const { user_id, name, description, fragment_data } = await req.json()
+    const { user_id, name, description, user_prompt, platform, tech_stack, fragment_data } = await req.json()
 
-    console.log('Creating project:', { user_id, name, description })
+    console.log('Creating project:', { user_id, name, description, user_prompt, platform, tech_stack })
 
     if (!user_id || !name) {
       return Response.json({ error: 'User ID and name required' }, { status: 400 })
@@ -81,6 +81,9 @@ export async function POST(req) {
         user_id,
         name,
         description,
+        user_prompt,
+        platform: platform || 'web',
+        tech_stack: tech_stack || 'nextjs-developer',
         updated_at: new Date().toISOString()
       })
       .select()

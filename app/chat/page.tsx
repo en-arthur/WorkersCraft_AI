@@ -358,6 +358,24 @@ function ChatContent() {
       if (data.project) {
         setCurrentProject(data.project)
         console.log('Set current project:', data.project)
+        
+        // Set tech stack template if available
+        if (data.project.tech_stack) {
+          setSelectedTemplate(data.project.tech_stack)
+          console.log('Set template to:', data.project.tech_stack)
+        }
+        
+        // Auto-start generation with user prompt if available and no messages yet
+        if (data.project.user_prompt && messages.length === 0 && !data.conversation) {
+          console.log('Auto-starting with prompt:', data.project.user_prompt)
+          setChatInput(data.project.user_prompt)
+          // Trigger generation after a short delay
+          setTimeout(() => {
+            const submitButton = document.querySelector('[type="submit"]') as HTMLButtonElement
+            if (submitButton) submitButton.click()
+          }, 500)
+          return // Don't load old data if we're starting fresh
+        }
       }
       
       // Load fragment if available

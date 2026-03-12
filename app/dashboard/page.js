@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/lib/auth'
 import Logo from '@/components/logo'
 
@@ -20,9 +22,26 @@ export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState(null)
-  const [newProject, setNewProject] = useState({ name: '', description: '' })
+  const [newProject, setNewProject] = useState({ 
+    name: '', 
+    user_prompt: '',
+    platform: 'web',
+    tech_stack: 'nextjs-developer'
+  })
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
+
+  const techStacks = {
+    web: [
+      { id: 'nextjs-developer', name: 'Next.js', icon: '⚡' },
+      { id: 'vue-developer', name: 'Vue.js', icon: '💚' },
+      { id: 'streamlit-developer', name: 'Streamlit', icon: '🐍' },
+      { id: 'gradio-developer', name: 'Gradio', icon: '🤖' }
+    ],
+    mobile: [
+      { id: 'expo-developer', name: 'Expo (React Native)', icon: '📱' }
+    ]
+  }
 
   // Auth protection - redirect to auth if not logged in (after initial check)
   useEffect(() => {
@@ -85,7 +104,7 @@ export default function DashboardPage() {
   }
 
   async function handleCreateProject() {
-    if (!newProject.name.trim()) return
+    if (!newProject.name.trim() || !newProject.user_prompt.trim()) return
 
     try {
       setSaving(true)
@@ -102,14 +121,17 @@ export default function DashboardPage() {
         body: JSON.stringify({
           user_id: session.user.id,
           name: newProject.name,
-          description: newProject.description
+          user_prompt: newProject.user_prompt,
+          platform: newProject.platform,
+          tech_stack: newProject.tech_stack,
+          description: newProject.user_prompt.slice(0, 100) // Auto-generate short description
         })
       })
 
       const data = await response.json()
       if (data.project) {
         setProjects([data.project, ...projects])
-        setNewProject({ name: '', description: '' })
+        setNewProject({ name: '', user_prompt: '', platform: 'web', tech_stack: 'nextjs-developer' })
         setIsDialogOpen(false)
         router.push(`/chat?project=${data.project.id}`)
       }
@@ -199,11 +221,11 @@ export default function DashboardPage() {
                 + New Project
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
                 <DialogDescription>
-                  Give your project a name and optional description.
+                  Describe what you want to build and we'll help you create it
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -217,22 +239,65 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="description">Description (optional)</Label>
+                  <Label htmlFor="prompt">What do you want to build? *</Label>
                   <Textarea
-                    id="description"
-                    value={newProject.description}
-                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                    placeholder="A brief description of your project..."
-                    rows={3}
+                    id="prompt"
+                    value={newProject.user_prompt}
+                    onChange={(e) => setNewProject({ ...newProject, user_prompt: e.target.value })}
+                    placeholder="Build a todo app with dark mode, add/delete tasks, and local storage..."
+                    rows={5}
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Describe your project in detail. The AI will use this to generate your code.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Platform *</Label>
+                  <RadioGroup 
+                    value={newProject.platform} 
+                    onValueChange={(value) => {
+                      const defaultStack = value === 'web' ? 'nextjs-developer' : 'expo-developer'
+                      setNewProject({ ...newProject, platform: value, tech_stack: defaultStack })
+                    }}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="web" id="web" />
+                      <Label htmlFor="web" className="cursor-pointer">Web App</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="mobile" id="mobile" />
+                      <Label htmlFor="mobile" className="cursor-pointer">Mobile App</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tech-stack">Tech Stack *</Label>
+                  <Select 
+                    value={newProject.tech_stack} 
+                    onValueChange={(value) => setNewProject({ ...newProject, tech_stack: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {techStacks[newProject.platform].map(stack => (
+                        <SelectItem key={stack.id} value={stack.id}>
+                          {stack.icon} {stack.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreateProject} disabled={saving || !newProject.name.trim()}>
-                  {saving ? 'Creating...' : 'Create Project'}
+                <Button 
+                  onClick={handleCreateProject} 
+                  disabled={saving || !newProject.name.trim() || !newProject.user_prompt.trim() || newProject.user_prompt.length < 10}
+                >
+                  {saving ? 'Creating...' : 'Create & Start Building →'}
                 </Button>
               </DialogFooter>
             </DialogContent>

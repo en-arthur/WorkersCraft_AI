@@ -4,6 +4,9 @@ CREATE TABLE IF NOT EXISTS projects (
   user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
+  user_prompt TEXT,
+  platform TEXT DEFAULT 'web',
+  tech_stack TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_archived BOOLEAN DEFAULT FALSE
