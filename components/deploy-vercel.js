@@ -10,7 +10,9 @@ export function DeployVercel({ fragment }) {
   const [error, setError] = useState(null)
 
   const handleDeploy = async () => {
-    if (!fragment?.code || !fragment?.file_path) return
+    // Check if fragment has code (single file) or files (multi-file)
+    const hasContent = fragment?.code || (fragment?.files && fragment.files.length > 0)
+    if (!hasContent) return
 
     setIsDeploying(true)
     setError(null)
@@ -25,6 +27,7 @@ export function DeployVercel({ fragment }) {
         body: JSON.stringify({
           code: fragment.code,
           filePath: fragment.file_path,
+          files: fragment.files,
           template: fragment.template,
         }),
       })
@@ -43,13 +46,16 @@ export function DeployVercel({ fragment }) {
     }
   }
 
+  // Check if fragment has content (single or multi-file)
+  const hasContent = fragment?.code || (fragment?.files && fragment.files.length > 0)
+
   return (
     <div className="space-y-2">
       <Button
         variant="default"
         size="sm"
         onClick={handleDeploy}
-        disabled={!fragment?.code || isDeploying}
+        disabled={!hasContent || isDeploying}
         className="gap-2"
       >
         {isDeploying ? (
