@@ -195,56 +195,56 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 border-r bg-muted/10 flex flex-col`}>
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-8">
-            <Logo width={32} height={32} />
-            {sidebarOpen && <h2 className="font-bold text-lg whitespace-nowrap">WorkersCraft AI</h2>}
+      <aside className={`${sidebarOpen ? 'w-56' : 'w-14'} transition-all duration-300 border-r bg-muted/10 flex flex-col`}>
+        <div className="p-3">
+          <div className="flex items-center gap-2 mb-6">
+            <Logo width={24} height={24} />
+            {sidebarOpen && <h2 className="font-semibold text-base whitespace-nowrap">WorkersCraft AI</h2>}
           </div>
           
-          <nav className="space-y-2">
-            <Button variant="secondary" className="w-full justify-start">
-              <FolderOpen className="mr-2 h-4 w-4" />
-              {sidebarOpen && 'Projects'}
+          <nav className="space-y-1">
+            <Button variant="secondary" className="w-full justify-start h-9 px-2">
+              <FolderOpen className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+              {sidebarOpen && <span className="text-sm">Projects</span>}
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <Settings className="mr-2 h-4 w-4" />
-              {sidebarOpen && 'Settings'}
+            <Button variant="ghost" className="w-full justify-start h-9 px-2">
+              <Settings className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+              {sidebarOpen && <span className="text-sm">Settings</span>}
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <Plug className="mr-2 h-4 w-4" />
-              {sidebarOpen && 'Integrations'}
+            <Button variant="ghost" className="w-full justify-start h-9 px-2">
+              <Plug className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+              {sidebarOpen && <span className="text-sm">Integrations</span>}
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <CreditCard className="mr-2 h-4 w-4" />
-              {sidebarOpen && 'Billing'}
+            <Button variant="ghost" className="w-full justify-start h-9 px-2">
+              <CreditCard className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+              {sidebarOpen && <span className="text-sm">Billing</span>}
             </Button>
           </nav>
         </div>
         
-        <div className="p-4 mt-auto space-y-2 border-t">
+        <div className="p-3 mt-auto space-y-1 border-t">
           {sidebarOpen && (
             <>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Theme</span>
+              <div className="flex items-center justify-between mb-2 px-2">
+                <span className="text-xs text-muted-foreground">Theme</span>
                 <ThemeToggle />
               </div>
-              <div className="flex items-center gap-2 px-2 py-2">
-                <Avatar className="w-8 h-8">
+              <div className="flex items-center gap-2 px-2 py-1.5">
+                <Avatar className="w-7 h-7">
                   <AvatarImage
                     src={session?.user?.user_metadata?.avatar_url || 'https://avatar.vercel.sh/' + session?.user?.email}
                     alt={session?.user?.email}
                   />
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{session?.user?.email}</p>
+                  <p className="text-xs font-medium truncate">{session?.user?.email}</p>
                 </div>
               </div>
             </>
           )}
-          <Button variant="ghost" className="w-full justify-start text-destructive" onClick={logout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            {sidebarOpen && 'Sign out'}
+          <Button variant="ghost" className="w-full justify-start text-destructive h-9 px-2" onClick={logout}>
+            <LogOut className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
+            {sidebarOpen && <span className="text-sm">Sign out</span>}
           </Button>
         </div>
       </aside>
