@@ -1,4 +1,4 @@
-const CLOUDSERVICE_URL = process.env.NEXT_PUBLIC_CLOUDSERVICE_URL || 'https://api.workercraft.dev'
+const CLOUDSERVICE_URL = process.env.NEXT_PUBLIC_CLOUDSERVICE_URL || 'https://cloud.workerscraft.com'
 
 export async function registerAppWithRetry(
   projectId: string,

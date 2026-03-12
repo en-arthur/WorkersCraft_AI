@@ -3,7 +3,7 @@ import path from 'path'
 
 export function generateBackendSDK(
   appId: string,
-  apiUrl: string = process.env.NEXT_PUBLIC_CLOUDSERVICE_URL || 'https://api.workercraft.dev'
+  apiUrl: string = process.env.NEXT_PUBLIC_CLOUDSERVICE_URL || 'https://cloud.workerscraft.com'
 ): string {
   // Read template
   const templatePath = path.join(process.cwd(), 'lib', 'sdk-templates', 'backend.js.template')
