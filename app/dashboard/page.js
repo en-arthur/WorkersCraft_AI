@@ -26,7 +26,8 @@ export default function DashboardPage() {
     name: '', 
     user_prompt: '',
     platform: 'web',
-    tech_stack: 'nextjs-developer'
+    tech_stack: 'nextjs-developer',
+    backend_enabled: false
   })
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
@@ -124,14 +125,36 @@ export default function DashboardPage() {
           user_prompt: newProject.user_prompt,
           platform: newProject.platform,
           tech_stack: newProject.tech_stack,
-          description: newProject.user_prompt.slice(0, 100) // Auto-generate short description
+          backend_enabled: newProject.backend_enabled,
+          description: newProject.user_prompt.slice(0, 100)
         })
       })
 
       const data = await response.json()
       if (data.project) {
+        // If backend enabled, register app with CloudService
+        if (newProject.backend_enabled) {
+          const { registerAppWithRetry, updateProjectBackendStatus } = await import('@/lib/cloudservice')
+          
+          const appId = await registerAppWithRetry(
+            data.project.id,
+            data.project.name,
+            session.user.id
+          )
+          
+          if (appId) {
+            await updateProjectBackendStatus(data.project.id, 'active', appId)
+            data.project.backend_status = 'active'
+            data.project.backend_app_id = appId
+          } else {
+            await updateProjectBackendStatus(data.project.id, 'registration_failed')
+            data.project.backend_status = 'registration_failed'
+            alert('⚠️ Backend registration failed. You can retry from project settings.')
+          }
+        }
+        
         setProjects([data.project, ...projects])
-        setNewProject({ name: '', user_prompt: '', platform: 'web', tech_stack: 'nextjs-developer' })
+        setNewProject({ name: '', user_prompt: '', platform: 'web', tech_stack: 'nextjs-developer', backend_enabled: false })
         setIsDialogOpen(false)
         router.push(`/chat?project=${data.project.id}`)
       }
@@ -287,6 +310,23 @@ export default function DashboardPage() {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="backend"
+                      checked={newProject.backend_enabled}
+                      onChange={(e) => setNewProject({ ...newProject, backend_enabled: e.target.checked })}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="backend" className="cursor-pointer">
+                      Enable Backend (Authentication & Database)
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Adds user authentication, data storage, and file uploads to your app
+                  </p>
                 </div>
               </div>
               <DialogFooter>

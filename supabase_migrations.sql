@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS projects (
   user_prompt TEXT,
   platform TEXT DEFAULT 'web',
   tech_stack TEXT,
+  backend_enabled BOOLEAN DEFAULT FALSE,
+  backend_status TEXT DEFAULT 'inactive',
+  backend_app_id UUID,
+  backend_registered_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_archived BOOLEAN DEFAULT FALSE
