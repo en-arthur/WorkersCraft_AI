@@ -150,10 +150,18 @@ function ChatContent() {
           template: fragment?.template,
         })
 
+        // Add backend info to fragment
+        const fragmentWithBackend = {
+          ...fragment,
+          backend_enabled: currentProject?.backend_enabled || false,
+          backend_status: currentProject?.backend_status || 'inactive',
+          backend_app_id: currentProject?.backend_app_id || null,
+        }
+
         const response = await fetch('/api/sandbox', {
           method: 'POST',
           body: JSON.stringify({
-            fragment,
+            fragment: fragmentWithBackend,
             userID: session?.user?.id,
             teamID: userTeam?.id,
             accessToken: session?.access_token,
@@ -165,7 +173,7 @@ function ChatContent() {
         posthog.capture('sandbox_created', { url: result.url })
 
         setResult(result)
-        setCurrentPreview({ fragment, result })
+        setCurrentPreview({ fragment: fragmentWithBackend, result })
         setMessage({ result })
         setCurrentTab('fragment')
         setIsPreviewLoading(false)
@@ -255,6 +263,8 @@ function ChatContent() {
       model: currentModel,
       config: languageModel,
       ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
+      backendEnabled: currentProject?.backend_enabled || false,
+      backendStatus: currentProject?.backend_status || 'inactive',
     })
 
     setChatInput('')
@@ -276,6 +286,8 @@ function ChatContent() {
       model: currentModel,
       config: languageModel,
       ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
+      backendEnabled: currentProject?.backend_enabled || false,
+      backendStatus: currentProject?.backend_status || 'inactive',
     })
   }
 

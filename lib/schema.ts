@@ -62,6 +62,10 @@ export const fragmentSchema = z.object({
       'Array of files to create. Use this for multi-file projects. Each file should have a name, path, and content.',
     )
     .optional(),
+  // Backend integration fields
+  backend_enabled: z.boolean().optional().describe('Whether backend is enabled for this project'),
+  backend_status: z.string().optional().describe('Backend registration status: pending, active, registration_failed'),
+  backend_app_id: z.string().optional().describe('CloudService app ID for backend integration'),
 })
 
 export type FragmentSchema = z.infer<typeof fragmentSchema>

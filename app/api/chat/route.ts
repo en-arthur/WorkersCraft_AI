@@ -25,6 +25,8 @@ export async function POST(req: Request) {
     model,
     config,
     currentFragment,
+    backendEnabled,
+    backendStatus,
   }: {
     messages: CoreMessage[]
     userID: string | undefined
@@ -37,6 +39,8 @@ export async function POST(req: Request) {
       code?: string
       file_path?: string
     }
+    backendEnabled?: boolean
+    backendStatus?: string
   } = await req.json()
 
   const limit = !config.apiKey
@@ -100,10 +104,13 @@ IMPORTANT:
   }
 
   try {
+    const { getBackendPrompt } = await import('@/lib/prompt')
+    const backendPrompt = getBackendPrompt(backendEnabled || false, backendStatus || 'inactive')
+    
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
-      system: toPrompt(template) + existingCodeContext,
+      system: toPrompt(template) + existingCodeContext + backendPrompt,
       messages,
       maxRetries: 0, // do not retry on errors
       ...modelParams,

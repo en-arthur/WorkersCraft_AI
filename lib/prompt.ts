@@ -62,3 +62,86 @@ export function toPrompt(template: Templates) {
       const styles = StyleSheet.create({ container: { flex: 1 } });
   `
 }
+
+export function getBackendPrompt(backendEnabled: boolean, backendStatus: string): string {
+  if (!backendEnabled) return ''
+  
+  if (backendStatus !== 'active') {
+    return `
+    
+    BACKEND STATUS: ${backendStatus.toUpperCase()}
+    Backend is not yet ready. Generate the app without backend integration for now.
+    `
+  }
+  
+  return `
+    
+    BACKEND INTEGRATION ENABLED:
+    A backend SDK is available at /lib/backend.js with the following API:
+    
+    Authentication:
+    - await backend.register(email, password) → { user_id, email }
+    - await backend.login(email, password) → { user_id, email }
+    - backend.logout()
+    - await backend.getUser() → { user_id, email, created_at }
+    - backend.isAuthenticated() → boolean
+    
+    Data Storage (any collection name):
+    - await backend.create('collection', data) → { id, data, created_at, updated_at }
+    - await backend.list('collection') → [{ id, data, ... }]
+    - await backend.get('collection', id) → { id, data, ... }
+    - await backend.update('collection', id, data) → { id, data, ... }
+    - await backend.delete('collection', id)
+    
+    File Upload:
+    - await backend.uploadFile(file) → { id, filename, url, size_bytes }
+    - await backend.listFiles() → [{ id, filename, url, ... }]
+    - await backend.deleteFile(id)
+    
+    Error Handling:
+    try {
+      await backend.login(email, password)
+    } catch (err) {
+      if (err.code === 'INVALID_CREDENTIALS') {
+        // Handle wrong password
+      } else if (err.code === 'NETWORK_ERROR') {
+        // Handle network issues
+      }
+    }
+    
+    IMPLEMENTATION GUIDELINES:
+    1. Import: import { backend } from '@/lib/backend'
+    2. Create login/register pages if user authentication is needed
+    3. Use backend.create/list/update/delete for data persistence
+    4. Check backend.isAuthenticated() to protect routes
+    5. Store data in logical collections (e.g., 'todos', 'posts', 'products')
+    6. Handle errors gracefully with try/catch
+    
+    Example Todo App:
+    import { backend } from '@/lib/backend'
+    import { useState, useEffect } from 'react'
+    
+    export default function TodoApp() {
+      const [todos, setTodos] = useState([])
+      
+      useEffect(() => {
+        if (backend.isAuthenticated()) {
+          backend.list('todos').then(setTodos)
+        }
+      }, [])
+      
+      async function addTodo(title) {
+        const todo = await backend.create('todos', { title, completed: false })
+        setTodos([...todos, todo])
+      }
+      
+      return (
+        <div>
+          {todos.map(todo => (
+            <div key={todo.id}>{todo.data.title}</div>
+          ))}
+        </div>
+      )
+    }
+  `
+}

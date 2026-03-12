@@ -61,6 +61,25 @@ export async function POST(req: Request) {
     console.log(`Copied file to ${fragment.file_path} in ${sbx.sandboxId}`)
   }
 
+  // Inject Backend SDK if project has backend enabled
+  if (fragment.backend_enabled && fragment.backend_app_id && fragment.backend_status === 'active') {
+    console.log(`Injecting backend SDK for app ${fragment.backend_app_id}`)
+    const { generateBackendSDK } = await import('@/lib/generate-sdk')
+    const sdkCode = generateBackendSDK(fragment.backend_app_id)
+    await sbx.files.write('/home/user/lib/backend.js', sdkCode)
+    console.log('Backend SDK injected successfully')
+  } else if (fragment.backend_enabled && fragment.backend_status === 'pending') {
+    console.log('Backend registration pending, injecting placeholder SDK')
+    const { generatePlaceholderSDK } = await import('@/lib/generate-sdk')
+    const placeholderSDK = generatePlaceholderSDK('pending', 'Backend is being set up. Please refresh in a moment.')
+    await sbx.files.write('/home/user/lib/backend.js', placeholderSDK)
+  } else if (fragment.backend_enabled && fragment.backend_status === 'registration_failed') {
+    console.log('Backend registration failed, injecting error SDK')
+    const { generatePlaceholderSDK } = await import('@/lib/generate-sdk')
+    const errorSDK = generatePlaceholderSDK('error', 'Backend setup failed. Please retry from project settings.')
+    await sbx.files.write('/home/user/lib/backend.js', errorSDK)
+  }
+
   // Start Metro bundler for Expo after writing files
   if (fragment.template.includes('expo-developer')) {
     console.log('Starting Expo Metro bundler...')
