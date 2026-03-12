@@ -49,3 +49,39 @@ CREATE INDEX idx_projects_user_id ON projects(user_id);
 CREATE INDEX idx_projects_updated_at ON projects(updated_at DESC);
 CREATE INDEX idx_project_versions_project_id ON project_versions(project_id);
 CREATE INDEX idx_conversations_project_id ON conversations(project_id);
+
+-- Create user_integrations table
+CREATE TABLE IF NOT EXISTS user_integrations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  integration_type TEXT NOT NULL,
+  access_token TEXT,
+  status TEXT DEFAULT 'connected',
+  metadata JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, integration_type)
+);
+
+-- Enable RLS for integrations
+ALTER TABLE user_integrations ENABLE ROW LEVEL SECURITY;
+
+-- Create policies for integrations
+CREATE POLICY "Users can view own integrations"
+  ON user_integrations FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own integrations"
+  ON user_integrations FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own integrations"
+  ON user_integrations FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own integrations"
+  ON user_integrations FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Create index for integrations
+CREATE INDEX idx_user_integrations_user_id ON user_integrations(user_id);

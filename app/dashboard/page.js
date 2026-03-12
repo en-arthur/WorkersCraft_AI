@@ -11,10 +11,6 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/lib/auth'
 import Logo from '@/components/logo'
-import { Home, FolderOpen, Settings, LogOut, CreditCard, Menu, X, Plug } from 'lucide-react'
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import Link from 'next/link'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -27,12 +23,6 @@ export default function DashboardPage() {
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-
-  async function logout() {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
 
   // Auth protection - redirect to auth if not logged in (after initial check)
   useEffect(() => {
@@ -193,77 +183,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-56' : 'w-14'} transition-all duration-300 border-r bg-muted/10 flex flex-col`}>
-        <div className="p-3">
-          <div className="flex items-center gap-2 mb-6">
-            <Logo width={24} height={24} />
-            {sidebarOpen && <h2 className="font-semibold text-base whitespace-nowrap">WorkersCraft AI</h2>}
-          </div>
-          
-          <nav className="space-y-1">
-            <Button variant="secondary" className="w-full justify-start h-9 px-2">
-              <FolderOpen className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
-              {sidebarOpen && <span className="text-sm">Projects</span>}
-            </Button>
-            <Button variant="ghost" className="w-full justify-start h-9 px-2">
-              <Settings className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
-              {sidebarOpen && <span className="text-sm">Settings</span>}
-            </Button>
-            <Button variant="ghost" className="w-full justify-start h-9 px-2">
-              <Plug className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
-              {sidebarOpen && <span className="text-sm">Integrations</span>}
-            </Button>
-            <Button variant="ghost" className="w-full justify-start h-9 px-2">
-              <CreditCard className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
-              {sidebarOpen && <span className="text-sm">Billing</span>}
-            </Button>
-          </nav>
-        </div>
-        
-        <div className="p-3 mt-auto space-y-1 border-t">
-          {sidebarOpen && (
-            <>
-              <div className="flex items-center justify-between mb-2 px-2">
-                <span className="text-xs text-muted-foreground">Theme</span>
-                <ThemeToggle />
-              </div>
-              <div className="flex items-center gap-2 px-2 py-1.5">
-                <Avatar className="w-7 h-7">
-                  <AvatarImage
-                    src={session?.user?.user_metadata?.avatar_url || 'https://avatar.vercel.sh/' + session?.user?.email}
-                    alt={session?.user?.email}
-                  />
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium truncate">{session?.user?.email}</p>
-                </div>
-              </div>
-            </>
-          )}
-          <Button variant="ghost" className="w-full justify-start text-destructive h-9 px-2" onClick={logout}>
-            <LogOut className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />
-            {sidebarOpen && <span className="text-sm">Sign out</span>}
-          </Button>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-auto">
-        {/* Toggle Button */}
-        <div className="p-4 border-b">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
-            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
-        </div>
-        
-        <div className="flex-1 p-4 md:p-8">
-          <div className="max-w-6xl mx-auto">
+    <div className="p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold">My Projects</h1>
@@ -393,8 +314,6 @@ export default function DashboardPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        </div>
-        </div>
       </div>
     </div>
   )
