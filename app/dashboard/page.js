@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useAuth } from '@/lib/auth'
 import Logo from '@/components/logo'
-import { Home, FolderOpen, Settings, LogOut, CreditCard, Menu, X } from 'lucide-react'
+import { Home, FolderOpen, Settings, LogOut, CreditCard, Menu, X, Plug } from 'lucide-react'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import Link from 'next/link'
@@ -195,44 +195,56 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r bg-muted/10 overflow-hidden flex flex-col`}>
-        <div className={`${sidebarOpen ? 'p-4' : 'p-0'} w-64 transition-all duration-300`}>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 border-r bg-muted/10 flex flex-col`}>
+        <div className="p-4">
           <div className="flex items-center gap-2 mb-8">
             <Logo width={32} height={32} />
-            <h2 className="font-bold text-lg whitespace-nowrap">WorkersCraft AI</h2>
+            {sidebarOpen && <h2 className="font-bold text-lg whitespace-nowrap">WorkersCraft AI</h2>}
           </div>
           
           <nav className="space-y-2">
             <Button variant="secondary" className="w-full justify-start">
               <FolderOpen className="mr-2 h-4 w-4" />
-              Projects
+              {sidebarOpen && 'Projects'}
+            </Button>
+            <Button variant="ghost" className="w-full justify-start">
+              <Settings className="mr-2 h-4 w-4" />
+              {sidebarOpen && 'Settings'}
+            </Button>
+            <Button variant="ghost" className="w-full justify-start">
+              <Plug className="mr-2 h-4 w-4" />
+              {sidebarOpen && 'Integrations'}
             </Button>
             <Button variant="ghost" className="w-full justify-start">
               <CreditCard className="mr-2 h-4 w-4" />
-              Billing
+              {sidebarOpen && 'Billing'}
             </Button>
           </nav>
         </div>
         
-        <div className={`${sidebarOpen ? 'p-4' : 'p-0'} w-64 mt-auto space-y-2 border-t transition-all duration-300`}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">Theme</span>
-            <ThemeToggle />
-          </div>
-          <div className="flex items-center gap-2 px-2 py-2">
-            <Avatar className="w-8 h-8">
-              <AvatarImage
-                src={session?.user?.user_metadata?.avatar_url || 'https://avatar.vercel.sh/' + session?.user?.email}
-                alt={session?.user?.email}
-              />
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{session?.user?.email}</p>
-            </div>
-          </div>
+        <div className="p-4 mt-auto space-y-2 border-t">
+          {sidebarOpen && (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Theme</span>
+                <ThemeToggle />
+              </div>
+              <div className="flex items-center gap-2 px-2 py-2">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage
+                    src={session?.user?.user_metadata?.avatar_url || 'https://avatar.vercel.sh/' + session?.user?.email}
+                    alt={session?.user?.email}
+                  />
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{session?.user?.email}</p>
+                </div>
+              </div>
+            </>
+          )}
           <Button variant="ghost" className="w-full justify-start text-destructive" onClick={logout}>
             <LogOut className="mr-2 h-4 w-4" />
-            Sign out
+            {sidebarOpen && 'Sign out'}
           </Button>
         </div>
       </aside>

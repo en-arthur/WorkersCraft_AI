@@ -1,15 +1,5 @@
 import Logo from './logo'
-import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import {
   Tooltip,
   TooltipContent,
@@ -17,7 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { Session } from '@supabase/supabase-js'
-import { LogOut, Undo, FolderOpen } from 'lucide-react'
+import { Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 
 export function NavBar({
@@ -71,53 +61,6 @@ export function NavBar({
             <TooltipContent>Undo</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <TooltipProvider>
-          <Tooltip delayDuration={0}>
-            <TooltipTrigger asChild>
-              <ThemeToggle />
-            </TooltipTrigger>
-            <TooltipContent>Toggle theme</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        {session ? (
-          <DropdownMenu>
-            <TooltipProvider>
-              <Tooltip delayDuration={0}>
-                <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage
-                        src={
-                          session.user.user_metadata?.avatar_url ||
-                          'https://avatar.vercel.sh/' + session.user.email
-                        }
-                        alt={session.user.email}
-                      />
-                    </Avatar>
-                  </DropdownMenuTrigger>
-                </TooltipTrigger>
-                <TooltipContent>My Account</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <DropdownMenuContent className="w-56" align="end">
-              <DropdownMenuLabel className="flex flex-col">
-                <span className="text-sm">My Account</span>
-                <span className="text-xs text-muted-foreground">
-                  {session.user.email}
-                </span>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={signOut}>
-                <LogOut className="mr-2 h-4 w-4 text-muted-foreground" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button variant="default" onClick={showLogin}>
-            Sign in
-          </Button>
-        )}
       </div>
     </nav>
   )
