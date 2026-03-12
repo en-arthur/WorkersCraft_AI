@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
@@ -15,6 +16,8 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogMessage, setDialogMessage] = useState({ title: '', description: '', success: false })
 
   useEffect(() => {
     loadIntegrations()
@@ -54,12 +57,14 @@ export default function IntegrationsPage() {
       
       const data = await res.json()
       if (data.valid) {
-        alert('✅ Vercel token is valid!')
+        setDialogMessage({ title: 'Success', description: 'Vercel token is valid!', success: true })
       } else {
-        alert('❌ Invalid Vercel token')
+        setDialogMessage({ title: 'Error', description: 'Invalid Vercel token', success: false })
       }
+      setDialogOpen(true)
     } catch (error) {
-      alert('❌ Failed to test token')
+      setDialogMessage({ title: 'Error', description: 'Failed to test token', success: false })
+      setDialogOpen(true)
     } finally {
       setTesting(false)
     }
@@ -84,12 +89,14 @@ export default function IntegrationsPage() {
       
       if (res.ok) {
         await loadIntegrations()
-        alert('✅ Vercel token saved!')
+        setDialogMessage({ title: 'Success', description: 'Vercel token saved successfully!', success: true })
       } else {
-        alert('❌ Failed to save token')
+        setDialogMessage({ title: 'Error', description: 'Failed to save token', success: false })
       }
+      setDialogOpen(true)
     } catch (error) {
-      alert('❌ Failed to save token')
+      setDialogMessage({ title: 'Error', description: 'Failed to save token', success: false })
+      setDialogOpen(true)
     } finally {
       setSaving(false)
     }
@@ -109,10 +116,14 @@ export default function IntegrationsPage() {
       if (res.ok) {
         setIntegration(null)
         setVercelToken('')
-        alert('✅ Disconnected')
+        setDialogMessage({ title: 'Success', description: 'Disconnected successfully', success: true })
+      } else {
+        setDialogMessage({ title: 'Error', description: 'Failed to disconnect', success: false })
       }
+      setDialogOpen(true)
     } catch (error) {
-      alert('❌ Failed to disconnect')
+      setDialogMessage({ title: 'Error', description: 'Failed to disconnect', success: false })
+      setDialogOpen(true)
     }
   }
 
@@ -229,6 +240,25 @@ export default function IntegrationsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Status Dialog */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                {dialogMessage.success ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-500" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-red-500" />
+                )}
+                {dialogMessage.title}
+              </DialogTitle>
+              <DialogDescription>
+                {dialogMessage.description}
+              </DialogDescription>
+            </DialogHeader>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )
