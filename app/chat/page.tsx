@@ -162,7 +162,7 @@ function ChatContent() {
           ...fragment,
           backend_enabled: currentProject?.backend_enabled || false,
           backend_status: currentProject?.backend_status || 'inactive',
-          backend_app_id: currentProject?.backend_app_id || null,
+          backend_app_id: currentProject?.backend_app_id || undefined,
         }
 
         const response = await fetch('/api/sandbox', {
