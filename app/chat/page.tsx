@@ -59,7 +59,14 @@ function ChatContent() {
     true,  // Enabled by default
   )
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [currentProject, setCurrentProject] = useState<{ id: string; name: string; description?: string } | null>(null)
+  const [currentProject, setCurrentProject] = useState<{ 
+    id: string; 
+    name: string; 
+    description?: string;
+    backend_enabled?: boolean;
+    backend_status?: string;
+    backend_app_id?: string;
+  } | null>(null)
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
