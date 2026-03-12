@@ -225,7 +225,7 @@ export default function DashboardPage() {
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
                 <DialogDescription>
-                  Describe what you want to build and we'll help you create it
+                  Describe what you want to build and we&apos;ll help you create it
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
