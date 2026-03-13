@@ -85,7 +85,7 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
-    // Add package.json based on template
+    // Add package.json and required config files based on template
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
       files['package.json'] = JSON.stringify({
         name: 'workerscraft-app',
@@ -113,6 +113,43 @@ export async function POST(request) {
           'eslint-config-next': '14.2.5',
         },
       }, null, 2)
+      
+      // Add next.config.js if not present
+      if (!files['next.config.js'] && !files['next.config.mjs']) {
+        files['next.config.js'] = `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+}
+
+module.exports = nextConfig`
+      }
+      
+      // Add tsconfig.json if not present
+      if (!files['tsconfig.json']) {
+        files['tsconfig.json'] = JSON.stringify({
+          compilerOptions: {
+            target: 'es5',
+            lib: ['dom', 'dom.iterable', 'esnext'],
+            allowJs: true,
+            skipLibCheck: true,
+            strict: true,
+            forceConsistentCasingInFileNames: true,
+            noEmit: true,
+            esModuleInterop: true,
+            module: 'esnext',
+            moduleResolution: 'bundler',
+            resolveJsonModule: true,
+            isolatedModules: true,
+            jsx: 'preserve',
+            incremental: true,
+            paths: {
+              '@/*': ['./*']
+            }
+          },
+          include: ['next-env.d.ts', '**/*.ts', '**/*.tsx'],
+          exclude: ['node_modules']
+        }, null, 2)
+      }
     } else if (template?.includes('streamlit')) {
       files['requirements.txt'] = 'streamlit\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
     } else if (template?.includes('gradio')) {
