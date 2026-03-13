@@ -3,7 +3,7 @@
 /**
  * Get GitHub access token from Supabase session
  */
-export function getGitHubToken(session) {
+export function getGitHubToken(session: any) {
   if (!session?.provider_token) {
     throw new Error('No GitHub token found. Please sign in with GitHub.')
   }
@@ -13,7 +13,7 @@ export function getGitHubToken(session) {
 /**
  * Get GitHub user info from session
  */
-export function getGitHubUser(session) {
+export function getGitHubUser(session: any) {
   return {
     username: session.user.user_metadata.user_name,
     name: session.user.user_metadata.full_name || session.user.user_metadata.name,
@@ -25,7 +25,7 @@ export function getGitHubUser(session) {
 /**
  * Fetch user's GitHub repositories
  */
-export async function fetchGitHubRepos(token, options = {}) {
+export async function fetchGitHubRepos(token: string, options: any = {}) {
   const { page = 1, perPage = 100, sort = 'updated' } = options
   
   const response = await fetch(
@@ -49,7 +49,7 @@ export async function fetchGitHubRepos(token, options = {}) {
 /**
  * Fetch branches for a repository
  */
-export async function fetchRepoBranches(token, owner, repo) {
+export async function fetchRepoBranches(token: string, owner: string, repo: string) {
   const response = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/branches`,
     {
@@ -71,7 +71,7 @@ export async function fetchRepoBranches(token, owner, repo) {
 /**
  * Get repository details
  */
-export async function fetchRepoDetails(token, owner, repo) {
+export async function fetchRepoDetails(token: string, owner: string, repo: string) {
   const response = await fetch(
     `https://api.github.com/repos/${owner}/${repo}`,
     {
@@ -93,7 +93,7 @@ export async function fetchRepoDetails(token, owner, repo) {
 /**
  * Parse GitHub repo URL to extract owner and repo name
  */
-export function parseGitHubUrl(url) {
+export function parseGitHubUrl(url: string) {
   // Support both HTTPS and SSH URLs
   const httpsMatch = url.match(/github\.com[\/:]([^\/]+)\/([^\/\.]+)(\.git)?/)
   
