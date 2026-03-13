@@ -1,6 +1,7 @@
 import { FragmentCode } from './fragment-code'
 import { FragmentPreview } from './fragment-preview'
 import { DeployVercel } from './deploy-vercel'
+import { ConnectGitHubDialog } from './connect-github-dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -58,6 +59,8 @@ export function Preview({
   onClose,
   isFullscreen,
   onToggleFullscreen,
+  projectId,
+  onGitHubConnect,
 }: {
   teamID: string | undefined
   accessToken: string | undefined
@@ -70,6 +73,8 @@ export function Preview({
   onClose: () => void
   isFullscreen?: boolean
   onToggleFullscreen?: () => void
+  projectId?: string
+  onGitHubConnect?: () => void
 }) {
   if (!fragment) {
     return null
@@ -154,6 +159,12 @@ export function Preview({
                     <TooltipContent>Open in new tab</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
+              )}
+              {projectId && !fragment.github_repo_url && (
+                <ConnectGitHubDialog 
+                  projectId={projectId} 
+                  onConnect={onGitHubConnect}
+                />
               )}
               <DeployVercel fragment={fragment} />
               {onToggleFullscreen && (

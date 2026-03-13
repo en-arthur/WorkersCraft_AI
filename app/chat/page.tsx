@@ -649,6 +649,13 @@ function ChatContent() {
           }}
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
+          projectId={currentProject?.id}
+          onGitHubConnect={() => {
+            // Reload project to get updated GitHub info
+            if (currentProject?.id) {
+              loadProject(currentProject.id)
+            }
+          }}
         />
       </div>
 
