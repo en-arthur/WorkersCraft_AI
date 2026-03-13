@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { decrypt } from '@/lib/encryption'
+import { createClient } from '@supabase/supabase-js'
+import { cookies } from 'next/headers'
+import crypto from 'crypto'
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
+
+function decrypt(text) {
+  const parts = text.split(':')
+  const iv = Buffer.from(parts.shift(), 'hex')
+  const encrypted = Buffer.from(parts.join(':'), 'hex')
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv)
+  let decrypted = decipher.update(encrypted)
+  decrypted = Buffer.concat([decrypted, decipher.final()])
+  return decrypted.toString()
+}
 
 export async function POST(request) {
   try {
@@ -27,7 +40,22 @@ export async function POST(request) {
     }
 
     // Get user's Vercel token from database
-    const supabase = await createClient()
+    const cookieStore = await cookies()
+    const accessToken = cookieStore.get('sb-access-token')?.value
+    
+    if (!accessToken) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+    )
+    
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
