@@ -65,12 +65,14 @@ export async function POST(request) {
       )
     }
 
-    const { data: integration } = await supabase
+    const { data: integration, error: integrationError } = await supabase
       .from('user_integrations')
       .select('encrypted_token')
       .eq('user_id', user.id)
       .eq('provider', 'vercel')
       .single()
+
+    console.log('Integration query:', { user_id: user.id, integration, integrationError })
 
     if (!integration?.encrypted_token) {
       return NextResponse.json(
