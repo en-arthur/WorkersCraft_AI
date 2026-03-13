@@ -96,23 +96,34 @@ export async function POST(request) {
 
     const template = fragment.template
 
-    // Only add package.json if not already present
-    if ((template?.includes('nextjs') || template === 'nextjs-developer') && !files['package.json']) {
-      files['package.json'] = JSON.stringify({
-        name: 'workerscraft-app',
-        version: '0.1.0',
-        private: true,
-        scripts: {
-          dev: 'next dev',
-          build: 'next build',
-          start: 'next start',
-        },
-        dependencies: {
-          next: '14.2.5',
-          react: '^18',
-          'react-dom': '^18',
-        },
-      }, null, 2)
+    // Add required config files for Next.js if not present
+    if (template?.includes('nextjs') || template === 'nextjs-developer') {
+      if (!files['package.json']) {
+        files['package.json'] = JSON.stringify({
+          name: 'workerscraft-app',
+          version: '0.1.0',
+          private: true,
+          scripts: {
+            dev: 'next dev',
+            build: 'next build',
+            start: 'next start',
+          },
+          dependencies: {
+            next: '14.2.5',
+            react: '^18',
+            'react-dom': '^18',
+          },
+        }, null, 2)
+      }
+      
+      if (!files['next.config.js'] && !files['next.config.mjs']) {
+        files['next.config.js'] = `/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+}
+
+module.exports = nextConfig`
+      }
     }
 
     console.log('Deploying files:', Object.keys(files))
@@ -131,7 +142,6 @@ export async function POST(request) {
       projectSettings: {
         framework: template?.includes('nextjs') ? 'nextjs' : null,
         buildCommand: template?.includes('nextjs') ? 'next build' : null,
-        outputDirectory: template?.includes('nextjs') ? '.next' : null,
       }
     }
 
