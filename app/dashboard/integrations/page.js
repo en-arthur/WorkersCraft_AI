@@ -19,27 +19,31 @@ export default function IntegrationsPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMessage, setDialogMessage] = useState({ title: '', description: '', success: false })
 
-  useEffect(() => {
-    loadIntegrations()
-  }, [session])
-
-  async function loadIntegrations() {
+  const loadIntegrations = async () => {
     if (!session?.access_token) return
     
     try {
       const res = await fetch('/api/integrations', {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
       })
-      const data = await res.json()
-      const vercel = data.integrations?.find(i => i.integration_type === 'vercel')
-      setIntegration(vercel || null)
-      if (vercel) setVercelToken('••••••••••••••••')
+      
+      if (res.ok) {
+        const data = await res.json()
+        const vercelIntegration = data.integrations?.find(i => i.integration_type === 'vercel')
+        setIntegration(vercelIntegration || null)
+      }
     } catch (error) {
       console.error('Failed to load integrations:', error)
     } finally {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadIntegrations()
+  }, [session])
 
   async function testConnection() {
     if (!vercelToken || vercelToken.startsWith('•')) return

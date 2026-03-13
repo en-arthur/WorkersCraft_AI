@@ -13,6 +13,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/lib/auth'
 import { ImportGitHubDialog } from '@/components/import-github-dialog'
+import Logo from '@/components/logo'
 
 export default function DashboardPage() {
   const router = useRouter()
