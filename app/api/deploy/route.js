@@ -30,15 +30,17 @@ export async function POST(request) {
     let files = {}
     
     if (fragmentFiles && Array.isArray(fragmentFiles)) {
-      // Multi-file format
+      // Multi-file format - preserve full paths from sandbox
       fragmentFiles.forEach(file => {
-        const fileName = file.file_path?.split('/').pop() || file.name || 'app.js'
-        files[fileName] = file.code || file.content || ''
+        const fullPath = file.file_path || file.name || 'app.js'
+        // Remove /home/user/ prefix if present, keep the rest
+        const relativePath = fullPath.replace(/^\/home\/user\//, '')
+        files[relativePath] = file.code || file.content || ''
       })
     } else if (code && filePath) {
-      // Single file format
-      const fileName = filePath.split('/').pop() || 'app.js'
-      files[fileName] = code
+      // Single file format - preserve path structure
+      const relativePath = filePath.replace(/^\/home\/user\//, '')
+      files[relativePath] = code
     } else {
       return NextResponse.json(
         { error: 'Missing code or file path' },
