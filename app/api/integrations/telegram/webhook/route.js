@@ -94,6 +94,32 @@ export async function POST(request) {
         status: 'active',
       })
       
+      // Create default notification preferences
+      const { data: integration } = await supabase
+        .from('user_integrations')
+        .select('id')
+        .eq('user_id', verification.user_id)
+        .eq('integration_type', 'telegram')
+        .eq('platform_user_id', chatId.toString())
+        .single()
+      
+      if (integration) {
+        const notificationTypes = [
+          'deployment_started',
+          'deployment_success',
+          'deployment_failed',
+        ]
+        
+        await supabase.from('notification_preferences').insert(
+          notificationTypes.map(type => ({
+            user_id: verification.user_id,
+            integration_id: integration.id,
+            notification_type: type,
+            enabled: true
+          }))
+        )
+      }
+      
       // Mark verification as completed
       await supabase
         .from('pending_verifications')

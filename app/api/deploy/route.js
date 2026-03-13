@@ -24,13 +24,64 @@ function getSupabaseWithAuth(token) {
 
 export async function POST(request) {
   try {
-    const { fragment } = await request.json()
+    const { fragment, projectId, userId } = await request.json()
 
-    if (!fragment) {
+    if (!fragment && !projectId) {
       return NextResponse.json(
-        { error: 'Fragment is required' },
+        { error: 'Fragment or projectId is required' },
         { status: 400 }
       )
+    }
+
+    // Get user's Vercel token from database
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token && !userId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    const supabase = getSupabaseWithAuth(token)
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    const actualUserId = userId || user?.id
+    
+    if (!actualUserId) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      )
+    }
+
+    // Get project if projectId provided
+    let projectData = fragment
+    let projectName = 'workerscraft-app'
+    
+    if (projectId) {
+      const { data: project } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .eq('user_id', actualUserId)
+        .single()
+      
+      if (!project) {
+        return NextResponse.json(
+          { error: 'Project not found' },
+          { status: 404 }
+        )
+      }
+      
+      projectData = project
+      projectName = project.name
+      
+      // Send deployment started notification
+      const { sendNotification } = await import('@/lib/bot/notifications')
+      await sendNotification(actualUserId, 'deployment_started', {
+        projectName: project.name,
+        projectId: project.id
+      })
     }
 
     // Extract files from fragment
@@ -50,6 +101,18 @@ export async function POST(request) {
       // Single file format
       const relativePath = fragment.file_path.replace(/^\/home\/user\//, '')
       files[relativePath] = fragment.code
+    } else if (projectData) {
+      // Get files from project
+      const { data: projectFiles } = await supabase
+        .from('project_files')
+        .select('*')
+        .eq('project_id', projectId)
+      
+      if (projectFiles) {
+        projectFiles.forEach(file => {
+          files[file.path] = file.content
+        })
+      }
     } else {
       return NextResponse.json(
         { error: 'No files found in fragment' },
@@ -58,32 +121,14 @@ export async function POST(request) {
     }
 
     // Get user's Vercel token from database
-    const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
-    const supabase = getSupabaseWithAuth(token)
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
-
     const { data: integration, error: integrationError } = await supabase
       .from('user_integrations')
       .select('access_token')
-      .eq('user_id', user.id)
+      .eq('user_id', actualUserId)
       .eq('integration_type', 'vercel')
       .single()
 
-    console.log('Integration query:', { user_id: user.id, integration, integrationError })
+    console.log('Integration query:', { user_id: actualUserId, integration, integrationError })
 
     if (!integration?.access_token) {
       return NextResponse.json(
@@ -94,7 +139,7 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
-    const template = fragment.template
+    const template = projectData.template || fragment.template
 
     // Add required config files for Next.js if not present
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
@@ -182,10 +227,43 @@ module.exports = nextConfig`
 
     if (!response.ok) {
       console.error('Vercel deploy error:', data)
+      
+      // Send failure notification
+      if (projectId) {
+        const { sendNotification } = await import('@/lib/bot/notifications')
+        await sendNotification(actualUserId, 'deployment_failed', {
+          projectName,
+          projectId,
+          error: data.error?.message || 'Deployment failed',
+          deploymentId: data.id
+        })
+      }
+      
       return NextResponse.json(
         { error: data.error?.message || 'Deployment failed' },
         { status: response.status }
       )
+    }
+
+    // Update project with deployment URL
+    if (projectId) {
+      await supabase
+        .from('projects')
+        .update({
+          deployed_url: `https://${data.url}`,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', projectId)
+      
+      // Send success notification
+      const { sendNotification } = await import('@/lib/bot/notifications')
+      await sendNotification(actualUserId, 'deployment_success', {
+        projectName,
+        projectId,
+        url: `https://${data.url}`,
+        buildTime: Math.floor((Date.now() - Date.parse(data.createdAt)) / 1000),
+        deploymentId: data.id
+      })
     }
 
     // Return the deployment URL

@@ -123,17 +123,34 @@ export async function POST(request) {
         break
         
       case BUTTON_ACTIONS.CONFIRM_DEPLOY:
+        // Send initial progress message
         response = {
-          text: `🚀 Deploying project...\n\n⏳ This may take 30-60 seconds\n████░░░░░░ 40%`,
+          text: `🚀 Deploying project...\n\n⏳ Initializing deployment...\n████░░░░░░ 40%`,
           update_message: true,
         }
         
-        // Trigger actual deployment in background
-        fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/deploy`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: data.projectId, userId })
-        }).catch(console.error)
+        // Get project details
+        const { data: deployingProject } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('id', data.projectId)
+          .eq('user_id', userId)
+          .single()
+        
+        if (deployingProject) {
+          // Trigger actual deployment in background
+          fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/deploy`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+              projectId: data.projectId, 
+              userId,
+              fragment: deployingProject
+            })
+          }).catch(console.error)
+        }
         break
         
       case BUTTON_ACTIONS.DELETE_PROJECT:
@@ -196,7 +213,75 @@ export async function POST(request) {
         
       case BUTTON_ACTIONS.HELP:
         response = {
-          text: `📚 *WorkersCraft AI Bot Commands*\n\n*Project Management:*\n/list - Show all your projects\n/new - Create a new project\n/status <project> - Get project status\n\n*Deployment:*\n/deploy <project> - Deploy to Vercel\n\n*Utility:*\n/help - Show this help message\n\n💡 *Tip:* Most actions can be done with buttons - no typing needed!`,
+          text: `📚 *WorkersCraft AI Bot Commands*\n\n*Project Management:*\n/list - Show all your projects\n/new - Create a new project\n/status <project> - Get project status\n\n*Deployment:*\n/deploy <project> - Deploy to Vercel\n\n*Utility:*\n/help - Show this help message\n/settings - Configure preferences\n\n💡 *Tip:* Most actions can be done with buttons - no typing needed!`,
+          update_message: true,
+        }
+        break
+        
+      case BUTTON_ACTIONS.TOGGLE_NOTIFICATION:
+      case 'toggle_notification':
+        // Get current preference
+        const { data: currentPref } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('integration_id', data.integrationId || integrationId)
+          .eq('notification_type', data.type)
+          .single()
+        
+        // Toggle it
+        await supabase
+          .from('notification_preferences')
+          .upsert({
+            user_id: userId,
+            integration_id: data.integrationId || integrationId,
+            notification_type: data.type,
+            enabled: !currentPref?.enabled
+          })
+        
+        // Return updated settings
+        const { data: allPrefs } = await supabase
+          .from('notification_preferences')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('integration_id', data.integrationId || integrationId)
+        
+        const prefMap = {}
+        allPrefs?.forEach(pref => {
+          prefMap[pref.notification_type] = pref.enabled
+        })
+        
+        response = {
+          text: `⚙️ *Bot Settings*\n\n*Notifications:*`,
+          buttons: [
+            {
+              type: 'action',
+              text: prefMap['deployment_success'] ? '✅ Deployment Success' : '❌ Deployment Success',
+              action: 'toggle_notification',
+              data: { type: 'deployment_success', integrationId: data.integrationId || integrationId }
+            },
+            {
+              type: 'action',
+              text: prefMap['deployment_failed'] ? '✅ Deployment Failed' : '❌ Deployment Failed',
+              action: 'toggle_notification',
+              data: { type: 'deployment_failed', integrationId: data.integrationId || integrationId }
+            },
+            {
+              type: 'action',
+              text: '💾 Save',
+              action: 'save_settings',
+              data: {},
+              style: 'primary'
+            }
+          ],
+          update_message: true,
+        }
+        break
+        
+      case BUTTON_ACTIONS.SAVE_SETTINGS:
+      case 'save_settings':
+        response = {
+          text: '✅ Settings saved!',
           update_message: true,
         }
         break

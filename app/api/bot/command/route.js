@@ -48,6 +48,10 @@ export async function POST(request) {
         response = await handleHelpCommand()
         break
         
+      case '/settings':
+        response = await handleSettingsCommand(userId, integrationId, platform)
+        break
+        
       default:
         response = {
           text: `❌ Unknown command: ${command}\n\nType /help to see available commands.`
@@ -203,5 +207,44 @@ async function handleHelpCommand() {
 /settings - Configure preferences
 
 💡 *Tip:* Most actions can be done with buttons - no typing needed!`,
+  }
+}
+
+async function handleSettingsCommand(userId, integrationId, platform) {
+  // Get notification preferences
+  const { data: preferences } = await supabase
+    .from('notification_preferences')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('integration_id', integrationId)
+  
+  const prefMap = {}
+  preferences?.forEach(pref => {
+    prefMap[pref.notification_type] = pref.enabled
+  })
+  
+  return {
+    text: `⚙️ *Bot Settings*\n\n*Notifications:*`,
+    buttons: [
+      {
+        type: 'action',
+        text: prefMap['deployment_success'] ? '✅ Deployment Success' : '❌ Deployment Success',
+        action: 'toggle_notification',
+        data: { type: 'deployment_success', integrationId }
+      },
+      {
+        type: 'action',
+        text: prefMap['deployment_failed'] ? '✅ Deployment Failed' : '❌ Deployment Failed',
+        action: 'toggle_notification',
+        data: { type: 'deployment_failed', integrationId }
+      },
+      {
+        type: 'action',
+        text: '💾 Save',
+        action: 'save_settings',
+        data: {},
+        style: 'primary'
+      }
+    ]
   }
 }
