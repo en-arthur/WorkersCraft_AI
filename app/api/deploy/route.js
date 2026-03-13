@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import { decrypt } from '@/lib/encryption'
 
 export async function POST(request) {
   try {
@@ -24,16 +26,32 @@ export async function POST(request) {
       )
     }
 
-    // Get Vercel token from environment
-    const vercelToken = process.env.VERCEL_TOKEN
-    const vercelTeamId = process.env.VERCEL_TEAM_ID
-
-    if (!vercelToken) {
+    // Get user's Vercel token from database
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) {
       return NextResponse.json(
-        { error: 'Vercel token not configured' },
-        { status: 500 }
+        { error: 'Unauthorized' },
+        { status: 401 }
       )
     }
+
+    const { data: integration } = await supabase
+      .from('user_integrations')
+      .select('encrypted_token')
+      .eq('user_id', user.id)
+      .eq('provider', 'vercel')
+      .single()
+
+    if (!integration?.encrypted_token) {
+      return NextResponse.json(
+        { error: 'Vercel token not configured. Please add it in Settings > Integrations.' },
+        { status: 400 }
+      )
+    }
+
+    const vercelToken = decrypt(integration.encrypted_token)
 
     // Add package.json based on template
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
@@ -87,9 +105,6 @@ export async function POST(request) {
 
     // Build Vercel API URL
     let deployUrl = 'https://api.vercel.com/v13/deployments'
-    if (vercelTeamId) {
-      deployUrl += `?teamId=${vercelTeamId}`
-    }
 
     // Deploy to Vercel
     const response = await fetch(deployUrl, {
