@@ -2,16 +2,28 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Loader2, ExternalLink } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Loader2, ExternalLink, ChevronDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export function DeployVercel({ fragment }) {
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployUrl, setDeployUrl] = useState(null)
   const [error, setError] = useState(null)
+  const [showGitHubDialog, setShowGitHubDialog] = useState(false)
+  const [commitMessage, setCommitMessage] = useState('Deploy from WorkersCraft')
 
-  const handleDeploy = async () => {
-    // Check if fragment has any content
+  const hasGitHub = fragment?.github_repo_url && fragment?.github_branch
+
+  const handleDirectDeploy = async () => {
     if (!fragment) return
 
     setIsDeploying(true)
@@ -31,7 +43,7 @@ export function DeployVercel({ fragment }) {
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          fragment: fragment, // Send entire fragment
+          fragment: fragment,
         }),
       })
 
@@ -49,39 +61,156 @@ export function DeployVercel({ fragment }) {
     }
   }
 
+  const handleGitHubDeploy = async () => {
+    if (!fragment || !commitMessage.trim()) return
+
+    setIsDeploying(true)
+    setError(null)
+    setDeployUrl(null)
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Please log in to deploy')
+      }
+
+      const response = await fetch('/api/deploy-github', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          fragment: fragment,
+          commitMessage: commitMessage.trim(),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Deployment failed')
+      }
+
+      setDeployUrl(data.url)
+      setShowGitHubDialog(false)
+      setCommitMessage('Deploy from WorkersCraft')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setIsDeploying(false)
+    }
+  }
+
   return (
-    <div className="space-y-2">
-      <Button
-        variant="default"
-        size="sm"
-        onClick={handleDeploy}
-        disabled={!fragment || isDeploying}
-        className="gap-2"
-      >
-        {isDeploying ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+    <>
+      <div className="space-y-2">
+        {hasGitHub ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                size="sm"
+                disabled={!fragment || isDeploying}
+                className="gap-2"
+              >
+                {isDeploying ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ExternalLink className="w-4 h-4" />
+                )}
+                Deploy
+                <ChevronDown className="w-3 h-3" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={handleDirectDeploy}>
+                Deploy Now (Direct)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowGitHubDialog(true)}>
+                Deploy from GitHub
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
-          <ExternalLink className="w-4 h-4" />
-        )}
-        Deploy
-      </Button>
-
-      {deployUrl && (
-        <div className="text-sm">
-          <a
-            href={deployUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-green-600 hover:underline flex items-center gap-1"
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleDirectDeploy}
+            disabled={!fragment || isDeploying}
+            className="gap-2"
           >
-            View Deployment <ExternalLink className="w-3 h-3" />
-          </a>
-        </div>
-      )}
+            {isDeploying ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <ExternalLink className="w-4 h-4" />
+            )}
+            Deploy
+          </Button>
+        )}
 
-      {error && (
-        <p className="text-sm text-red-500">{error}</p>
-      )}
-    </div>
+        {deployUrl && (
+          <div className="text-sm">
+            <a
+              href={deployUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-green-600 hover:underline flex items-center gap-1"
+            >
+              View Deployment <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        )}
+
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+      </div>
+
+      {/* GitHub Deploy Dialog */}
+      <Dialog open={showGitHubDialog} onOpenChange={setShowGitHubDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Deploy from GitHub</DialogTitle>
+            <DialogDescription>
+              Push changes to GitHub and deploy from {fragment?.github_repo_url}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="commit-msg">Commit Message</Label>
+              <Input
+                id="commit-msg"
+                value={commitMessage}
+                onChange={(e) => setCommitMessage(e.target.value)}
+                placeholder="Describe your changes..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    handleGitHubDeploy()
+                  }
+                }}
+              />
+            </div>
+
+            <Button
+              onClick={handleGitHubDeploy}
+              disabled={!commitMessage.trim() || isDeploying}
+              className="w-full"
+            >
+              {isDeploying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Deploying...
+                </>
+              ) : (
+                'Push & Deploy'
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
