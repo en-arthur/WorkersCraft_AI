@@ -98,7 +98,25 @@ export async function POST(request) {
 
     // Add required config files for Next.js if not present
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
+      // Check if any TypeScript files exist
+      const hasTypeScript = Object.keys(files).some(path => 
+        path.endsWith('.ts') || path.endsWith('.tsx')
+      )
+
       if (!files['package.json']) {
+        const dependencies = {
+          next: '14.2.5',
+          react: '^18',
+          'react-dom': '^18',
+        }
+
+        const devDependencies = hasTypeScript ? {
+          typescript: '^5',
+          '@types/react': '^18',
+          '@types/node': '^20',
+          '@types/react-dom': '^18',
+        } : {}
+
         files['package.json'] = JSON.stringify({
           name: 'workerscraft-app',
           version: '0.1.0',
@@ -108,11 +126,8 @@ export async function POST(request) {
             build: 'next build',
             start: 'next start',
           },
-          dependencies: {
-            next: '14.2.5',
-            react: '^18',
-            'react-dom': '^18',
-          },
+          dependencies,
+          ...(hasTypeScript && { devDependencies }),
         }, null, 2)
       }
       
