@@ -17,7 +17,13 @@ export const DEVICES = {
   'mobile-large': { width: 414, height: 896, label: 'Mobile L', icon: Smartphone },
 }
 
-export function DeviceSelector({ device, onDeviceChange }) {
+export function DeviceSelector({ 
+  device, 
+  onDeviceChange 
+}: { 
+  device: keyof typeof DEVICES
+  onDeviceChange: (device: keyof typeof DEVICES) => void
+}) {
   const CurrentIcon = DEVICES[device].icon
 
   return (
