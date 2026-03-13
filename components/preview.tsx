@@ -2,6 +2,7 @@ import { FragmentCode } from './fragment-code'
 import { FragmentPreview } from './fragment-preview'
 import { DeployVercel } from './deploy-vercel'
 import { ConnectGitHubDialog } from './connect-github-dialog'
+import { PushGitHubDialog } from './push-github-dialog'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -164,6 +165,14 @@ export function Preview({
                 <ConnectGitHubDialog 
                   projectId={projectId} 
                   onConnect={onGitHubConnect}
+                />
+              )}
+              {projectId && fragment.github_repo_url && fragment.github_branch && (
+                <PushGitHubDialog
+                  projectId={projectId}
+                  repoUrl={fragment.github_repo_url}
+                  branch={fragment.github_branch}
+                  onPush={onGitHubConnect}
                 />
               )}
               <DeployVercel fragment={fragment} />
