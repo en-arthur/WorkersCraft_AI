@@ -249,7 +249,7 @@ export default function DashboardPage() {
                   + New Project
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
                 <DialogDescription>
@@ -347,6 +347,7 @@ export default function DashboardPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {projects.length === 0 ? (
