@@ -5,6 +5,13 @@ import { ConnectGitHubDialog } from './connect-github-dialog'
 import { PushGitHubDialog } from './push-github-dialog'
 import { DeviceSelector, DEVICES } from './device-selector'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Tooltip,
@@ -16,7 +23,7 @@ import { FragmentSchema } from '@/lib/schema'
 import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
-import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
+import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2, MoreVertical, GitBranch } from 'lucide-react'
 import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 
 interface FragmentFiles {
@@ -161,42 +168,113 @@ export function Preview({
             </TabsList>
           </div>
           {fragment && (
-            <div className="flex items-center justify-end gap-1">
+            <div className="flex items-center justify-end gap-2">
+              {/* Device Selector - Always visible on Preview tab */}
               {selectedTab === 'fragment' && (
-                <DeviceSelector device={device} onDeviceChange={handleDeviceChange} />
+                <div className="hidden md:block">
+                  <DeviceSelector device={device} onDeviceChange={handleDeviceChange} />
+                </div>
               )}
-              {previewUrl && (
-                <TooltipProvider>
-                  <Tooltip delayDuration={0}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground"
-                        onClick={() => window.open(previewUrl, '_blank')}
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Open in new tab</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-              {projectId && !fragment.github_repo_url && (
-                <ConnectGitHubDialog 
-                  projectId={projectId} 
-                  onConnect={onGitHubConnect}
-                />
-              )}
-              {projectId && fragment.github_repo_url && fragment.github_branch && (
-                <PushGitHubDialog
-                  projectId={projectId}
-                  repoUrl={fragment.github_repo_url}
-                  branch={fragment.github_branch}
-                  onPush={onGitHubConnect}
-                />
-              )}
+
+              {/* Deploy - Always visible */}
               <DeployVercel fragment={fragment} />
+
+              {/* Desktop: Show all actions */}
+              <div className="hidden lg:flex items-center gap-2">
+                {previewUrl && (
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-muted-foreground"
+                          onClick={() => window.open(previewUrl, '_blank')}
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Open in new tab</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+                {projectId && !fragment.github_repo_url && (
+                  <ConnectGitHubDialog 
+                    projectId={projectId} 
+                    onConnect={onGitHubConnect}
+                  />
+                )}
+                {projectId && fragment.github_repo_url && fragment.github_branch && (
+                  <PushGitHubDialog
+                    projectId={projectId}
+                    repoUrl={fragment.github_repo_url}
+                    branch={fragment.github_branch}
+                    onPush={onGitHubConnect}
+                  />
+                )}
+              </div>
+
+              {/* Mobile/Tablet: More menu */}
+              <div className="lg:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {selectedTab === 'fragment' && (
+                      <div className="md:hidden">
+                        <DropdownMenuItem className="font-semibold text-xs text-muted-foreground">
+                          Device Preview
+                        </DropdownMenuItem>
+                        {Object.entries(DEVICES).map(([key, config]) => {
+                          const Icon = config.icon
+                          const deviceKey = key as keyof typeof DEVICES
+                          return (
+                            <DropdownMenuItem
+                              key={key}
+                              onClick={() => handleDeviceChange(deviceKey)}
+                              className="gap-2"
+                            >
+                              <Icon className="h-4 w-4" />
+                              {config.label}
+                              {device === key && <span className="ml-auto">✓</span>}
+                            </DropdownMenuItem>
+                          )
+                        })}
+                        <DropdownMenuSeparator />
+                      </div>
+                    )}
+                    {previewUrl && (
+                      <DropdownMenuItem onClick={() => window.open(previewUrl, '_blank')}>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open in new tab
+                      </DropdownMenuItem>
+                    )}
+                    {projectId && !fragment.github_repo_url && (
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <ConnectGitHubDialog 
+                          projectId={projectId} 
+                          onConnect={onGitHubConnect}
+                        />
+                      </DropdownMenuItem>
+                    )}
+                    {projectId && fragment.github_repo_url && fragment.github_branch && (
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <PushGitHubDialog
+                          projectId={projectId}
+                          repoUrl={fragment.github_repo_url}
+                          branch={fragment.github_branch}
+                          onPush={onGitHubConnect}
+                        />
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              {/* Fullscreen - Always visible */}
               {onToggleFullscreen && (
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
