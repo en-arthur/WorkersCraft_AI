@@ -31,10 +31,7 @@ export function DeployVercel({ fragment }) {
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          code: fragment.code,
-          filePath: fragment.file_path,
-          files: fragment.files,
-          template: fragment.template,
+          fragment: fragment, // Send entire fragment
         }),
       })
 

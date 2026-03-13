@@ -24,26 +24,35 @@ function getSupabaseWithAuth(token) {
 
 export async function POST(request) {
   try {
-    const { code, filePath, files: fragmentFiles, template } = await request.json()
+    const { fragment } = await request.json()
 
-    // Handle both single file (code/filePath) and multi-file (files array) formats
+    if (!fragment) {
+      return NextResponse.json(
+        { error: 'Fragment is required' },
+        { status: 400 }
+      )
+    }
+
+    // Extract files from fragment
     let files = {}
     
-    if (fragmentFiles && Array.isArray(fragmentFiles)) {
-      // Multi-file format - preserve full paths from sandbox
-      fragmentFiles.forEach(file => {
-        const fullPath = file.file_path || file.name || 'app.js'
-        // Remove /home/user/ prefix if present, keep the rest
-        const relativePath = fullPath.replace(/^\/home\/user\//, '')
-        files[relativePath] = file.code || file.content || ''
+    if (fragment.files && Array.isArray(fragment.files)) {
+      // Multi-file format - use all files from sandbox
+      fragment.files.forEach(file => {
+        const fullPath = file.file_path || file.name
+        if (fullPath) {
+          // Remove /home/user/ prefix if present
+          const relativePath = fullPath.replace(/^\/home\/user\//, '')
+          files[relativePath] = file.code || file.content || file.file_content || ''
+        }
       })
-    } else if (code && filePath) {
-      // Single file format - preserve path structure
-      const relativePath = filePath.replace(/^\/home\/user\//, '')
-      files[relativePath] = code
+    } else if (fragment.code && fragment.file_path) {
+      // Single file format
+      const relativePath = fragment.file_path.replace(/^\/home\/user\//, '')
+      files[relativePath] = fragment.code
     } else {
       return NextResponse.json(
-        { error: 'Missing code or file path' },
+        { error: 'No files found in fragment' },
         { status: 400 }
       )
     }
@@ -85,8 +94,10 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
-    // Add package.json and required config files based on template
-    if (template?.includes('nextjs') || template === 'nextjs-developer') {
+    const template = fragment.template
+
+    // Only add package.json if not already present
+    if ((template?.includes('nextjs') || template === 'nextjs-developer') && !files['package.json']) {
       files['package.json'] = JSON.stringify({
         name: 'workerscraft-app',
         version: '0.1.0',
@@ -95,65 +106,13 @@ export async function POST(request) {
           dev: 'next dev',
           build: 'next build',
           start: 'next start',
-          lint: 'next lint',
         },
         dependencies: {
           next: '14.2.5',
           react: '^18',
           'react-dom': '^18',
         },
-        devDependencies: {
-          typescript: '^5',
-          '@types/node': '^20',
-          '@types/react': '^18',
-          '@types/react-dom': '^18',
-          postcss: '^8',
-          tailwindcss: '^3.4.1',
-          eslint: '^8',
-          'eslint-config-next': '14.2.5',
-        },
       }, null, 2)
-      
-      // Add next.config.js if not present
-      if (!files['next.config.js'] && !files['next.config.mjs']) {
-        files['next.config.js'] = `/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-}
-
-module.exports = nextConfig`
-      }
-      
-      // Add tsconfig.json if not present
-      if (!files['tsconfig.json']) {
-        files['tsconfig.json'] = JSON.stringify({
-          compilerOptions: {
-            target: 'es5',
-            lib: ['dom', 'dom.iterable', 'esnext'],
-            allowJs: true,
-            skipLibCheck: true,
-            strict: true,
-            forceConsistentCasingInFileNames: true,
-            noEmit: true,
-            esModuleInterop: true,
-            module: 'esnext',
-            moduleResolution: 'bundler',
-            resolveJsonModule: true,
-            isolatedModules: true,
-            jsx: 'preserve',
-            incremental: true,
-            paths: {
-              '@/*': ['./*']
-            }
-          },
-          include: ['next-env.d.ts', '**/*.ts', '**/*.tsx'],
-          exclude: ['node_modules']
-        }, null, 2)
-      }
-    } else if (template?.includes('streamlit')) {
-      files['requirements.txt'] = 'streamlit\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
-    } else if (template?.includes('gradio')) {
-      files['requirements.txt'] = 'gradio\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
     }
 
     console.log('Deploying files:', Object.keys(files))
