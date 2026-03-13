@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS projects (
   backend_status TEXT DEFAULT 'inactive',
   backend_app_id UUID,
   backend_registered_at TIMESTAMP WITH TIME ZONE,
+  github_repo_url TEXT,
+  github_branch TEXT DEFAULT 'main',
+  github_last_synced_at TIMESTAMP WITH TIME ZONE,
+  github_last_commit_sha TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   is_archived BOOLEAN DEFAULT FALSE

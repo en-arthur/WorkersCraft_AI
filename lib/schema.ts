@@ -66,6 +66,11 @@ export const fragmentSchema = z.object({
   backend_enabled: z.boolean().optional().describe('Whether backend is enabled for this project'),
   backend_status: z.string().optional().describe('Backend registration status: pending, active, registration_failed'),
   backend_app_id: z.string().optional().describe('CloudService app ID for backend integration'),
+  // GitHub integration fields
+  github_repo_url: z.string().optional().describe('GitHub repository URL'),
+  github_branch: z.string().optional().describe('GitHub branch name'),
+  github_last_synced_at: z.string().optional().describe('Last GitHub sync timestamp'),
+  github_last_commit_sha: z.string().optional().describe('Last commit SHA pushed to GitHub'),
 })
 
 export type FragmentSchema = z.infer<typeof fragmentSchema>
