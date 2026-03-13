@@ -33,12 +33,39 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
   const [selectedRepo, setSelectedRepo] = useState(null)
   const [selectedBranch, setSelectedBranch] = useState('')
   const [error, setError] = useState(null)
+  const [needsGitHubAuth, setNeedsGitHubAuth] = useState(false)
 
   useEffect(() => {
     if (open) {
-      fetchRepos()
+      checkGitHubAuth()
     }
   }, [open])
+
+  const checkGitHubAuth = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      // Check if user signed in with GitHub
+      if (!session?.provider_token || session?.user?.app_metadata?.provider !== 'github') {
+        setNeedsGitHubAuth(true)
+        return
+      }
+      
+      setNeedsGitHubAuth(false)
+      fetchRepos()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
+  const handleGitHubSignIn = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'github',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      }
+    })
+  }
 
   const fetchRepos = async () => {
     setLoading(true)
@@ -157,13 +184,31 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
           </DialogDescription>
         </DialogHeader>
 
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
-            {error}
+        {needsGitHubAuth ? (
+          <div className="py-8 text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+              <GitBranch className="w-8 h-8 text-gray-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg mb-2">GitHub Authentication Required</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                To connect to GitHub repositories, you need to sign in with your GitHub account.
+              </p>
+            </div>
+            <Button onClick={handleGitHubSignIn} className="gap-2">
+              <GitBranch className="w-4 h-4" />
+              Sign in with GitHub
+            </Button>
           </div>
-        )}
+        ) : (
+          <>
+            {error && (
+              <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
+                {error}
+              </div>
+            )}
 
-        <div className="space-y-4">
+            <div className="space-y-4">
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
@@ -242,6 +287,8 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
             )}
           </Button>
         </div>
+        </>
+        )}
       </DialogContent>
     </Dialog>
   )
