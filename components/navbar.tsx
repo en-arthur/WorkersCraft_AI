@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { ConnectGitHubDialog } from './connect-github-dialog'
 import { Session } from '@supabase/supabase-js'
 import { Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
@@ -16,12 +17,18 @@ export function NavBar({
   signOut,
   onUndo,
   canUndo,
+  projectId,
+  hasGitHubRepo,
+  onGitHubConnect,
 }: {
   session: Session | null
   showLogin: () => void
   signOut: () => void
   onUndo: () => void
   canUndo: boolean
+  projectId?: string
+  hasGitHubRepo?: boolean
+  onGitHubConnect?: () => void
 }) {
   return (
     <nav className="w-full flex bg-background py-4">
@@ -46,6 +53,12 @@ export function NavBar({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+        {projectId && !hasGitHubRepo && onGitHubConnect && (
+          <ConnectGitHubDialog 
+            projectId={projectId} 
+            onConnect={onGitHubConnect}
+          />
+        )}
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>

@@ -1,7 +1,6 @@
 import { FragmentCode } from './fragment-code'
 import { FragmentPreview } from './fragment-preview'
 import { DeployVercel } from './deploy-vercel'
-import { ConnectGitHubDialog } from './connect-github-dialog'
 import { PushGitHubDialog } from './push-github-dialog'
 import { DeviceSelector, DEVICES } from './device-selector'
 import { Button } from '@/components/ui/button'
@@ -23,7 +22,7 @@ import { FragmentSchema } from '@/lib/schema'
 import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
-import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2, MoreVertical, GitBranch } from 'lucide-react'
+import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2, MoreVertical } from 'lucide-react'
 import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 
 interface FragmentFiles {
@@ -198,12 +197,6 @@ export function Preview({
                     </Tooltip>
                   </TooltipProvider>
                 )}
-                {projectId && !fragment.github_repo_url && (
-                  <ConnectGitHubDialog 
-                    projectId={projectId} 
-                    onConnect={onGitHubConnect}
-                  />
-                )}
                 {projectId && fragment.github_repo_url && fragment.github_branch && (
                   <PushGitHubDialog
                     projectId={projectId}
@@ -250,14 +243,6 @@ export function Preview({
                       <DropdownMenuItem onClick={() => window.open(previewUrl, '_blank')}>
                         <ExternalLink className="h-4 w-4 mr-2" />
                         Open in new tab
-                      </DropdownMenuItem>
-                    )}
-                    {projectId && !fragment.github_repo_url && (
-                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                        <ConnectGitHubDialog 
-                          projectId={projectId} 
-                          onConnect={onGitHubConnect}
-                        />
                       </DropdownMenuItem>
                     )}
                     {projectId && fragment.github_repo_url && fragment.github_branch && (

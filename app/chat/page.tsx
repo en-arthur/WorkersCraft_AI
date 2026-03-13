@@ -596,6 +596,13 @@ function ChatContent() {
             signOut={logout}
             canUndo={messages.length > 1 && !isLoading}
             onUndo={handleUndo}
+            projectId={currentProject?.id}
+            hasGitHubRepo={!!fragment?.github_repo_url}
+            onGitHubConnect={() => {
+              if (currentProject?.id) {
+                loadProject(currentProject.id)
+              }
+            }}
           />
           <Chat
             messages={messages}
