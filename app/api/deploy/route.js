@@ -83,7 +83,7 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
-    // Add package.json and proper structure based on template
+    // Add package.json based on template
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
       files['package.json'] = JSON.stringify({
         name: 'workerscraft-app',
@@ -111,19 +111,6 @@ export async function POST(request) {
           'eslint-config-next': '14.2.5',
         },
       }, null, 2)
-      
-      // Ensure Next.js files are in correct paths
-      const fileEntries = Object.entries(files)
-      for (const [path, content] of fileEntries) {
-        if (path.endsWith('.tsx') || path.endsWith('.jsx')) {
-          // If not already in app/ or pages/, put in app/
-          if (!path.startsWith('app/') && !path.startsWith('pages/')) {
-            delete files[path]
-            const fileName = path.split('/').pop()
-            files[`app/${fileName}`] = content
-          }
-        }
-      }
     } else if (template?.includes('streamlit')) {
       files['requirements.txt'] = 'streamlit\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
     } else if (template?.includes('gradio')) {
@@ -139,19 +126,19 @@ export async function POST(request) {
       data: content
     }))
 
-    // Build deployment payload with proper framework detection
+    // Build deployment payload with framework at top level
     const deploymentPayload = {
       name: 'workerscraft-app',
       files: vercelFiles,
-      projectSettings: {
-        framework: template?.includes('nextjs') ? 'nextjs' : null,
-      }
+      framework: template?.includes('nextjs') ? 'nextjs' : null,
+      buildCommand: template?.includes('nextjs') ? 'next build' : null,
+      outputDirectory: template?.includes('nextjs') ? '.next' : null,
     }
 
     console.log('Deployment payload:', {
       fileCount: vercelFiles.length,
       filePaths: vercelFiles.map(f => f.file),
-      framework: deploymentPayload.projectSettings.framework
+      framework: deploymentPayload.framework
     })
 
     // Deploy to Vercel
