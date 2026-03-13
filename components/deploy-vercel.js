@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Loader2, ExternalLink } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export function DeployVercel({ fragment }) {
   const [isDeploying, setIsDeploying] = useState(false)
@@ -18,10 +19,16 @@ export function DeployVercel({ fragment }) {
     setDeployUrl(null)
 
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        throw new Error('Please log in to deploy')
+      }
+
       const response = await fetch('/api/deploy', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           code: fragment.code,
