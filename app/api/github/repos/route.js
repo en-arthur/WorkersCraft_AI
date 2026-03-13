@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { getGitHubToken, fetchGitHubRepos } from '@/lib/github'
 
+export const dynamic = 'force-dynamic'
+
 function getSupabaseWithAuth(token) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
