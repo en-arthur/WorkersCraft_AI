@@ -288,6 +288,7 @@ export default function DashboardPage() {
                       const defaultStack = value === 'web' ? 'nextjs-developer' : 'expo-developer'
                       setNewProject({ ...newProject, platform: value, tech_stack: defaultStack })
                     }}
+                    className="flex flex-row gap-4"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="web" id="web" />

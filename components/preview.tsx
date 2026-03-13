@@ -86,13 +86,21 @@ export function Preview({
 }) {
   const [device, setDevice] = useState<keyof typeof DEVICES>('desktop')
 
-  // Load device preference from localStorage
+  // Auto-set device based on template and load preference
   useEffect(() => {
-    const saved = localStorage.getItem('workerscraft_preview_device')
-    if (saved && saved in DEVICES) {
-      setDevice(saved as keyof typeof DEVICES)
+    const templateId = result?.template ? getTemplateId(result.template) : null
+    const isMobileTemplate = templateId === 'expo-developer'
+    
+    if (isMobileTemplate) {
+      setDevice('mobile-large')
+      localStorage.setItem('workerscraft_preview_device', 'mobile-large')
+    } else {
+      const saved = localStorage.getItem('workerscraft_preview_device')
+      if (saved && saved in DEVICES) {
+        setDevice(saved as keyof typeof DEVICES)
+      }
     }
-  }, [])
+  }, [result?.template])
 
   // Save device preference
   const handleDeviceChange = (newDevice: keyof typeof DEVICES) => {
