@@ -3,6 +3,7 @@ import { FragmentPreview } from './fragment-preview'
 import { DeployVercel } from './deploy-vercel'
 import { ConnectGitHubDialog } from './connect-github-dialog'
 import { PushGitHubDialog } from './push-github-dialog'
+import { DeviceSelector, DEVICES } from './device-selector'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
@@ -16,7 +17,7 @@ import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
 import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2 } from 'lucide-react'
-import { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 
 interface FragmentFiles {
   name: string
@@ -77,6 +78,22 @@ export function Preview({
   projectId?: string
   onGitHubConnect?: () => void
 }) {
+  const [device, setDevice] = useState<keyof typeof DEVICES>('desktop')
+
+  // Load device preference from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('workerscraft_preview_device')
+    if (saved && saved in DEVICES) {
+      setDevice(saved as keyof typeof DEVICES)
+    }
+  }, [])
+
+  // Save device preference
+  const handleDeviceChange = (newDevice: keyof typeof DEVICES) => {
+    setDevice(newDevice)
+    localStorage.setItem('workerscraft_preview_device', newDevice)
+  }
+
   if (!fragment) {
     return null
   }
@@ -87,6 +104,7 @@ export function Preview({
 
   const previewUrl = (result as ExecutionResultWeb)?.url
   const fragmentFiles = getFragmentFiles(fragment)
+  const deviceConfig = DEVICES[device]
 
   return (
     <div className={`relative transition-all duration-300 ${isFullscreen ? 'fixed inset-0 z-50' : 'absolute md:relative'} top-0 left-0 shadow-2xl md:rounded-tl-3xl md:rounded-bl-3xl md:border-l md:border-y bg-popover h-full w-full overflow-auto`}>
@@ -144,6 +162,9 @@ export function Preview({
           </div>
           {fragment && (
             <div className="flex items-center justify-end gap-1">
+              {selectedTab === 'fragment' && (
+                <DeviceSelector device={device} onDeviceChange={handleDeviceChange} />
+              )}
               {previewUrl && (
                 <TooltipProvider>
                   <Tooltip delayDuration={0}>
@@ -208,7 +229,7 @@ export function Preview({
               <FragmentCode files={fragmentFiles} />
             </TabsContent>
             <TabsContent value="fragment" className="h-full">
-              {result && <FragmentPreview result={result as ExecutionResult} />}
+              {result && <FragmentPreview result={result as ExecutionResult} device={deviceConfig} />}
             </TabsContent>
           </div>
         )}
