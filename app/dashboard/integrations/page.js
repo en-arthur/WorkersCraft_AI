@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { TelegramIntegration } from '@/components/telegram-integration'
 
 export default function IntegrationsPage() {
   const { session } = useAuth()
@@ -208,6 +209,9 @@ export default function IntegrationsPage() {
               )}
             </CardFooter>
           </Card>
+
+          {/* Telegram Integration */}
+          <TelegramIntegration session={session} />
 
           {/* Coming Soon Integrations */}
           <Card className="opacity-60">
