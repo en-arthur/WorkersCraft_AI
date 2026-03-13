@@ -36,10 +36,11 @@ export function DeviceSelector({
       <DropdownMenuContent align="end">
         {Object.entries(DEVICES).map(([key, config]) => {
           const Icon = config.icon
+          const deviceKey = key as keyof typeof DEVICES
           return (
             <DropdownMenuItem
               key={key}
-              onClick={() => onDeviceChange(key)}
+              onClick={() => onDeviceChange(deviceKey)}
               className="gap-2"
             >
               <Icon className="h-4 w-4" />
