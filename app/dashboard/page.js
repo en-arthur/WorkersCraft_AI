@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAuth } from '@/lib/auth'
-import Logo from '@/components/logo'
+import { ImportGitHubDialog } from '@/components/import-github-dialog'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -238,12 +238,17 @@ export default function DashboardPage() {
             </p>
           </div>
           
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="px-8 py-6 text-base">
-                + New Project
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <ImportGitHubDialog onImport={(project) => {
+              router.push(`/chat?project=${project.id}`)
+            }} />
+            
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="px-8 py-6 text-base">
+                  + New Project
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
