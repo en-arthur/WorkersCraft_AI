@@ -286,6 +286,123 @@ export async function POST(request) {
         }
         break
         
+      case BUTTON_ACTIONS.SCHEDULE_DEPLOY:
+      case 'schedule_deploy':
+        const { data: scheduleProject } = await supabase
+          .from('projects')
+          .select('name')
+          .eq('id', data.projectId)
+          .eq('user_id', userId)
+          .single()
+        
+        if (!scheduleProject) {
+          response = { text: '❌ Project not found' }
+          break
+        }
+        
+        response = {
+          text: `⏰ Schedule Deployment\n\nProject: ${scheduleProject.name}\n\nChoose schedule:`,
+          buttons: [
+            { type: 'action', text: '📅 Every Day', action: 'confirm_schedule', data: { projectId: data.projectId, schedule: 'daily' } },
+            { type: 'action', text: '📅 Every Week', action: 'confirm_schedule', data: { projectId: data.projectId, schedule: 'weekly' } },
+            { type: 'action', text: '📅 Friday 5PM', action: 'confirm_schedule', data: { projectId: data.projectId, schedule: 'friday-5pm' } },
+            { type: 'action', text: '📅 Monday 9AM', action: 'confirm_schedule', data: { projectId: data.projectId, schedule: 'monday-9am' } },
+            { type: 'action', text: '📋 View Schedules', action: 'view_schedules', data: { projectId: data.projectId } },
+            { type: 'action', text: '❌ Cancel', action: 'cancel', data: {} }
+          ],
+          update_message: true,
+        }
+        break
+        
+      case 'confirm_schedule':
+        const scheduleResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/schedules`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            projectId: data.projectId,
+            schedule: data.schedule
+          })
+        })
+        
+        const scheduleData = await scheduleResponse.json()
+        
+        if (scheduleData.success) {
+          response = {
+            text: `✅ Deployment Scheduled!\n\n${scheduleData.schedule.label}\nNext run: ${new Date(scheduleData.nextRun).toLocaleString()}`,
+            buttons: [
+              { type: 'action', text: '📋 View All Schedules', action: 'view_schedules', data: { projectId: data.projectId } }
+            ],
+            update_message: true,
+          }
+        } else {
+          response = {
+            text: `❌ Failed to schedule: ${scheduleData.error}`,
+            update_message: true,
+          }
+        }
+        break
+        
+      case BUTTON_ACTIONS.VIEW_SCHEDULES:
+      case 'view_schedules':
+        const schedulesResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/schedules?userId=${userId}${data.projectId ? `&projectId=${data.projectId}` : ''}`
+        )
+        
+        const schedulesData = await schedulesResponse.json()
+        
+        if (schedulesData.schedules && schedulesData.schedules.length > 0) {
+          let text = '📋 Scheduled Deployments\n\n'
+          const buttons = []
+          
+          schedulesData.schedules.forEach((schedule, index) => {
+            text += `${index + 1}. ${schedule.label}\n`
+            text += `   Next run: ${new Date(schedule.next_run_at).toLocaleString()}\n`
+            text += `   Status: ${schedule.enabled ? '✅ Active' : '❌ Disabled'}\n\n`
+            
+            buttons.push({
+              type: 'action',
+              text: `🗑️ Cancel #${index + 1}`,
+              action: 'cancel_schedule',
+              data: { scheduleId: schedule.id }
+            })
+          })
+          
+          response = {
+            text,
+            buttons,
+            update_message: true,
+          }
+        } else {
+          response = {
+            text: '📋 No scheduled deployments',
+            update_message: true,
+          }
+        }
+        break
+        
+      case BUTTON_ACTIONS.CANCEL_SCHEDULE:
+      case 'cancel_schedule':
+        const cancelResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL}/api/schedules?id=${data.scheduleId}&userId=${userId}`,
+          { method: 'DELETE' }
+        )
+        
+        const cancelData = await cancelResponse.json()
+        
+        if (cancelData.success) {
+          response = {
+            text: '✅ Schedule cancelled',
+            update_message: true,
+          }
+        } else {
+          response = {
+            text: '❌ Failed to cancel schedule',
+            update_message: true,
+          }
+        }
+        break
+        
       default:
         response = { text: '❌ Unknown action' }
     }

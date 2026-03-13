@@ -52,6 +52,10 @@ export async function POST(request) {
         response = await handleSettingsCommand(userId, integrationId, platform)
         break
         
+      case '/schedule':
+        response = await handleScheduleCommand(userId, args)
+        break
+        
       default:
         response = {
           text: `❌ Unknown command: ${command}\n\nType /help to see available commands.`
@@ -201,6 +205,8 @@ async function handleHelpCommand() {
 
 *Deployment:*
 /deploy <project> - Deploy to Vercel
+/schedule <project> - Schedule automatic deployments
+/schedule - View all scheduled deployments
 
 *Utility:*
 /help - Show this help message
@@ -245,6 +251,66 @@ async function handleSettingsCommand(userId, integrationId, platform) {
         data: {},
         style: 'primary'
       }
+    ]
+  }
+}
+
+async function handleScheduleCommand(userId, args) {
+  const projectName = args[0]
+  
+  if (!projectName) {
+    // Show all schedules
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/api/schedules?userId=${userId}`
+    )
+    
+    const data = await response.json()
+    
+    if (data.schedules && data.schedules.length > 0) {
+      let text = '📋 *Scheduled Deployments*\n\n'
+      const buttons = []
+      
+      data.schedules.forEach((schedule, index) => {
+        text += `${index + 1}. ${schedule.label}\n`
+        text += `   Next run: ${new Date(schedule.next_run_at).toLocaleString()}\n\n`
+        
+        buttons.push({
+          type: 'action',
+          text: `🗑️ Cancel #${index + 1}`,
+          action: 'cancel_schedule',
+          data: { scheduleId: schedule.id }
+        })
+      })
+      
+      return { text, buttons }
+    } else {
+      return {
+        text: '📋 No scheduled deployments\n\nUse /schedule <project> to create one',
+      }
+    }
+  }
+  
+  // Schedule specific project
+  const { data: project } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('user_id', userId)
+    .ilike('name', `%${projectName}%`)
+    .single()
+  
+  if (!project) {
+    return {
+      text: `❌ Project "${projectName}" not found.`,
+    }
+  }
+  
+  return {
+    text: `⏰ Schedule Deployment\n\nProject: ${project.name}\n\nChoose schedule:`,
+    buttons: [
+      { type: 'action', text: '📅 Every Day', action: 'confirm_schedule', data: { projectId: project.id, schedule: 'daily' } },
+      { type: 'action', text: '📅 Every Week', action: 'confirm_schedule', data: { projectId: project.id, schedule: 'weekly' } },
+      { type: 'action', text: '📅 Friday 5PM', action: 'confirm_schedule', data: { projectId: project.id, schedule: 'friday-5pm' } },
+      { type: 'action', text: '📅 Monday 9AM', action: 'confirm_schedule', data: { projectId: project.id, schedule: 'monday-9am' } },
     ]
   }
 }
