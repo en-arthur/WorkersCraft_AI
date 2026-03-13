@@ -128,19 +128,21 @@ export async function POST(request) {
       data: content
     }))
 
-    // Build deployment payload with framework at top level
+    // Build deployment payload according to Vercel API docs
     const deploymentPayload = {
       name: 'workerscraft-app',
       files: vercelFiles,
-      framework: template?.includes('nextjs') ? 'nextjs' : null,
-      buildCommand: template?.includes('nextjs') ? 'next build' : null,
-      outputDirectory: template?.includes('nextjs') ? '.next' : null,
+      projectSettings: {
+        framework: template?.includes('nextjs') ? 'nextjs' : null,
+        buildCommand: template?.includes('nextjs') ? 'next build' : null,
+        outputDirectory: template?.includes('nextjs') ? '.next' : null,
+      }
     }
 
     console.log('Deployment payload:', {
       fileCount: vercelFiles.length,
       filePaths: vercelFiles.map(f => f.file),
-      framework: deploymentPayload.framework
+      framework: deploymentPayload.projectSettings.framework
     })
 
     // Deploy to Vercel
@@ -154,6 +156,8 @@ export async function POST(request) {
     })
 
     const data = await response.json()
+
+    console.log('Vercel response:', { status: response.status, data })
 
     if (!response.ok) {
       console.error('Vercel deploy error:', data)
