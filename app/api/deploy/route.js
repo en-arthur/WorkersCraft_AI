@@ -67,21 +67,21 @@ export async function POST(request) {
 
     const { data: integration, error: integrationError } = await supabase
       .from('user_integrations')
-      .select('encrypted_token')
+      .select('access_token')
       .eq('user_id', user.id)
-      .eq('provider', 'vercel')
+      .eq('integration_type', 'vercel')
       .single()
 
     console.log('Integration query:', { user_id: user.id, integration, integrationError })
 
-    if (!integration?.encrypted_token) {
+    if (!integration?.access_token) {
       return NextResponse.json(
         { error: 'Vercel token not configured. Please add it in Settings > Integrations.' },
         { status: 400 }
       )
     }
 
-    const vercelToken = decrypt(integration.encrypted_token)
+    const vercelToken = decrypt(integration.access_token)
 
     // Add package.json based on template
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
