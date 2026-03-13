@@ -2,9 +2,22 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request) {
   try {
-    const { code, filePath, template } = await request.json()
+    const { code, filePath, files: fragmentFiles, template } = await request.json()
 
-    if (!code || !filePath) {
+    // Handle both single file (code/filePath) and multi-file (files array) formats
+    let files = {}
+    
+    if (fragmentFiles && Array.isArray(fragmentFiles)) {
+      // Multi-file format
+      fragmentFiles.forEach(file => {
+        const fileName = file.file_path?.split('/').pop() || file.name || 'app.js'
+        files[fileName] = file.code || file.content || ''
+      })
+    } else if (code && filePath) {
+      // Single file format
+      const fileName = filePath.split('/').pop() || 'app.js'
+      files[fileName] = code
+    } else {
       return NextResponse.json(
         { error: 'Missing code or file path' },
         { status: 400 }
@@ -20,13 +33,6 @@ export async function POST(request) {
         { error: 'Vercel token not configured' },
         { status: 500 }
       )
-    }
-
-    // Prepare files for Vercel deploy
-    const fileName = filePath.split('/').pop() || 'app.js'
-    
-    const files = {
-      [fileName]: code,
     }
 
     // Add package.json based on template
