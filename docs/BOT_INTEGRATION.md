@@ -12,6 +12,70 @@ Manage your WorkersCraft AI projects directly from Slack and Telegram with inter
 
 ## Setup
 
+### Slack App
+
+#### 1. Create Slack App
+
+1. Go to https://api.slack.com/apps
+2. Click "Create New App" → "From scratch"
+3. Name: "WorkersCraft AI"
+4. Choose your workspace
+5. Click "Create App"
+
+#### 2. Configure OAuth & Permissions
+
+1. Go to "OAuth & Permissions"
+2. Add Redirect URL: `https://your-domain.com/api/integrations/slack/callback`
+3. Add Bot Token Scopes:
+   - `chat:write`
+   - `commands`
+   - `users:read`
+4. Add User Token Scopes:
+   - `chat:write`
+5. Save Changes
+
+#### 3. Configure Slash Commands
+
+1. Go to "Slash Commands"
+2. Click "Create New Command"
+3. Command: `/workerscraft`
+4. Request URL: `https://your-domain.com/api/integrations/slack/events`
+5. Short Description: "Manage WorkersCraft AI projects"
+6. Usage Hint: `list | new | deploy <project> | status <project> | help`
+7. Save
+
+#### 4. Configure Interactivity
+
+1. Go to "Interactivity & Shortcuts"
+2. Turn on Interactivity
+3. Request URL: `https://your-domain.com/api/integrations/slack/events`
+4. Save Changes
+
+#### 5. Get Credentials
+
+1. Go to "Basic Information"
+2. Copy "Signing Secret"
+3. Go to "OAuth & Permissions"
+4. Copy "Client ID" and "Client Secret"
+
+#### 6. Configure Environment Variables
+
+Add to `.env.local`:
+
+```bash
+SLACK_CLIENT_ID=your_client_id
+SLACK_CLIENT_SECRET=your_client_secret
+SLACK_SIGNING_SECRET=your_signing_secret
+SLACK_REDIRECT_URI=https://your-domain.com/api/integrations/slack/callback
+```
+
+#### 7. Link Your Account
+
+1. Go to `https://your-domain.com/dashboard/integrations`
+2. Click "Connect to Slack"
+3. Authorize the app
+4. Done! Your account is linked
+
 ### Telegram Bot
 
 #### 1. Create Bot with BotFather

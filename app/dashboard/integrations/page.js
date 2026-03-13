@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAuth } from '@/lib/auth'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { TelegramIntegration } from '@/components/telegram-integration'
+import { SlackIntegration } from '@/components/slack-integration'
 
 export default function IntegrationsPage() {
   const { session } = useAuth()
@@ -209,6 +210,9 @@ export default function IntegrationsPage() {
               )}
             </CardFooter>
           </Card>
+
+          {/* Slack Integration */}
+          <SlackIntegration session={session} />
 
           {/* Telegram Integration */}
           <TelegramIntegration session={session} />
