@@ -117,32 +117,29 @@ export async function POST(request) {
       files['requirements.txt'] = 'gradio\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
     }
 
-    // Create form data for Vercel Deploy API
-    const formData = new FormData()
-    
-    // Add files
-    Object.entries(files).forEach(([path, content]) => {
-      const blob = new Blob([content], { type: 'application/javascript' })
-      formData.append('files', blob, path)
-    })
+    // Prepare files for Vercel deployment (JSON format)
+    const vercelFiles = Object.entries(files).map(([path, content]) => ({
+      file: path,
+      data: content
+    }))
 
-    // Add project settings
-    const projectSettings = {
+    // Build deployment payload
+    const deploymentPayload = {
       name: 'workerscraft-app',
-      framework: template?.includes('nextjs') ? 'nextjs' : null,
+      files: vercelFiles,
+      projectSettings: {
+        framework: template?.includes('nextjs') ? 'nextjs' : null,
+      }
     }
-    formData.append('projectSettings', JSON.stringify(projectSettings))
-
-    // Build Vercel API URL
-    let deployUrl = 'https://api.vercel.com/v13/deployments'
 
     // Deploy to Vercel
-    const response = await fetch(deployUrl, {
+    const response = await fetch('https://api.vercel.com/v13/deployments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${vercelToken}`,
+        'Content-Type': 'application/json',
       },
-      body: formData,
+      body: JSON.stringify(deploymentPayload),
     })
 
     const data = await response.json()
