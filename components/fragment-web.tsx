@@ -52,8 +52,8 @@ export function FragmentWeb({
           src={result.url}
         />
       </div>
-      <div className="p-2 border-t w-full bg-white">
-        <div className="flex items-center bg-muted dark:bg-white/10 rounded-2xl">
+      <div className="p-2 border-t w-full bg-popover">
+        <div className="flex items-center bg-muted rounded-2xl">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
