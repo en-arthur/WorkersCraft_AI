@@ -169,8 +169,10 @@ export async function POST(request) {
 
     // Return the deployment URL
     return NextResponse.json({
-      url: data.url,
+      url: `https://${data.url}`,
       deploymentId: data.id,
+      status: data.status,
+      inspectorUrl: data.inspectorUrl,
     })
   } catch (error) {
     console.error('Deploy error:', error)
