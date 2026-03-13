@@ -83,6 +83,29 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
+    // Determine if it's a static HTML file or needs wrapping
+    const isHtmlFile = Object.keys(files).some(f => f.endsWith('.html'))
+    
+    if (!isHtmlFile && !template?.includes('nextjs')) {
+      // Wrap JS/other files in an HTML page for static deployment
+      const mainFile = Object.keys(files)[0]
+      const mainContent = files[mainFile]
+      
+      files['index.html'] = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WorkersCraft App</title>
+</head>
+<body>
+  <div id="root"></div>
+  <script>${mainContent}</script>
+</body>
+</html>`
+      delete files[mainFile]
+    }
+
     // Add package.json based on template
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
       files['package.json'] = JSON.stringify({
