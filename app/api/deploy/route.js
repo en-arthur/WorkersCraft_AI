@@ -83,30 +83,7 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
-    // Determine if it's a static HTML file or needs wrapping
-    const isHtmlFile = Object.keys(files).some(f => f.endsWith('.html'))
-    
-    if (!isHtmlFile && !template?.includes('nextjs')) {
-      // Wrap JS/other files in an HTML page for static deployment
-      const mainFile = Object.keys(files)[0]
-      const mainContent = files[mainFile]
-      
-      files['index.html'] = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WorkersCraft App</title>
-</head>
-<body>
-  <div id="root"></div>
-  <script>${mainContent}</script>
-</body>
-</html>`
-      delete files[mainFile]
-    }
-
-    // Add package.json based on template
+    // Add package.json and proper structure based on template
     if (template?.includes('nextjs') || template === 'nextjs-developer') {
       files['package.json'] = JSON.stringify({
         name: 'workerscraft-app',
@@ -134,11 +111,27 @@ export async function POST(request) {
           'eslint-config-next': '14.2.5',
         },
       }, null, 2)
+      
+      // Ensure Next.js files are in correct paths
+      const fileEntries = Object.entries(files)
+      for (const [path, content] of fileEntries) {
+        if (path.endsWith('.tsx') || path.endsWith('.jsx')) {
+          // If not already in app/ or pages/, put in app/
+          if (!path.startsWith('app/') && !path.startsWith('pages/')) {
+            delete files[path]
+            const fileName = path.split('/').pop()
+            files[`app/${fileName}`] = content
+          }
+        }
+      }
     } else if (template?.includes('streamlit')) {
       files['requirements.txt'] = 'streamlit\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
     } else if (template?.includes('gradio')) {
       files['requirements.txt'] = 'gradio\npandas\nnumpy\nmatplotlib\nrequests\nseaborn\nplotly\n'
     }
+
+    console.log('Deploying files:', Object.keys(files))
+    console.log('Template:', template)
 
     // Prepare files for Vercel deployment (JSON format)
     const vercelFiles = Object.entries(files).map(([path, content]) => ({
@@ -146,7 +139,7 @@ export async function POST(request) {
       data: content
     }))
 
-    // Build deployment payload
+    // Build deployment payload with proper framework detection
     const deploymentPayload = {
       name: 'workerscraft-app',
       files: vercelFiles,
@@ -154,6 +147,12 @@ export async function POST(request) {
         framework: template?.includes('nextjs') ? 'nextjs' : null,
       }
     }
+
+    console.log('Deployment payload:', {
+      fileCount: vercelFiles.length,
+      filePaths: vercelFiles.map(f => f.file),
+      framework: deploymentPayload.projectSettings.framework
+    })
 
     // Deploy to Vercel
     const response = await fetch('https://api.vercel.com/v13/deployments', {
