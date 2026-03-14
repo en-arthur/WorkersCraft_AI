@@ -120,7 +120,7 @@ export async function POST(req: Request) {
     JSON.stringify({
       sbxId: sbx?.sandboxId,
       template: fragment.template,
-      url: `https://${sbx?.getHost(fragment.port || 80)}`,
+      url: `https://${sbx?.getHost(fragment.port ?? 80)}`,
     } as ExecutionResultWeb),
   )
 }

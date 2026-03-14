@@ -66,11 +66,28 @@ export async function POST(request) {
       })
     ).then(r => r.filter(Boolean))
 
-    // Detect template
+    // Detect template and port
     const paths = files.map(f => f.file_path)
+    const reqTxt = files.find(f => f.file_path === 'requirements.txt')?.file_content || ''
+    const appPy = files.find(f => f.file_path === 'app.py')?.file_content || ''
+
     let template = 'code-interpreter-stateless'
+    let port = null
     if (paths.some(p => p.includes('next.config') || p.startsWith('app/') || p.startsWith('pages/'))) {
       template = 'nextjs-developer'
+      port = 3000
+    } else if (paths.some(p => p.includes('nuxt.config') || p.includes('app.vue'))) {
+      template = 'vue-developer'
+      port = 3000
+    } else if (paths.some(p => p.includes('app.json') || p.includes('expo')) || paths.some(p => p.startsWith('app/') && p.endsWith('.tsx'))) {
+      template = 'expo-developer'
+      port = 8081
+    } else if (appPy.includes('streamlit') || reqTxt.includes('streamlit')) {
+      template = 'streamlit-developer'
+      port = 8501
+    } else if (appPy.includes('gradio') || reqTxt.includes('gradio')) {
+      template = 'gradio-developer'
+      port = 7860
     }
 
     // Save project
@@ -95,7 +112,7 @@ export async function POST(request) {
       .insert({
         project_id: project.id,
         version_number: 1,
-        fragment_data: { template, files, github_repo_url: repoUrl, github_branch: branch },
+        fragment_data: { template, port, files, github_repo_url: repoUrl, github_branch: branch },
       })
 
     if (versionError) throw new Error(`Failed to create version: ${versionError.message}`)
