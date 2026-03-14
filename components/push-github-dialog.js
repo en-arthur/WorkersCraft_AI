@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label'
 import { GitBranch, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function PushGitHubDialog({ projectId, repoUrl, branch, onPush }) {
+export function PushGitHubDialog({ projectId, repoUrl, branch, onPush, triggerLabel }) {
   const [open, setOpen] = useState(false)
   const [pushing, setPushing] = useState(false)
   const [commitMessage, setCommitMessage] = useState('Update from WorkersCraft')
@@ -62,9 +62,9 @@ export function PushGitHubDialog({ projectId, repoUrl, branch, onPush }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="rounded-r-none">
           <GitBranch className="w-4 h-4 mr-2" />
-          Push to GitHub
+          {triggerLabel ?? 'Push to GitHub'}
         </Button>
       </DialogTrigger>
       <DialogContent>

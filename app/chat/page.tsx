@@ -629,6 +629,11 @@ function ChatContent() {
                 loadProject(currentProject.id)
               }
             }}
+            onGitHubDisconnect={() => {
+              if (currentProject?.id) {
+                loadProject(currentProject.id)
+              }
+            }}
           />
           <Chat
             messages={messages}
