@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   if (fragment.github_repo_url && fragment.github_branch && githubToken) {
     console.log(`Cloning ${fragment.github_repo_url}@${fragment.github_branch} in sandbox`)
 
-    const sbx = await SdkSandbox.create(fragment.template, sandboxOpts as any)
+    const sbx = await SdkSandbox.create({ template: fragment.template, ...sandboxOpts } as any)
 
     // Kill any existing dev server from the template default files
     const killCmds: Record<string, string> = {
