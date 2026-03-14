@@ -91,8 +91,8 @@ export async function POST(req: Request) {
     }
   }
 
-  // For imported projects (many files), restart dev server with new files
-  const isImportedProject = fragment.files && fragment.files.length > 5
+  // For imported projects (cloned from GitHub), restart dev server with new files
+  const isImportedProject = !!fragment.github_repo_url
   if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
     const startCommands: Record<string, string> = {
       'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev -- --port 3000',
@@ -101,16 +101,16 @@ export async function POST(req: Request) {
       'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py',
     }
     const killCommands: Record<string, string> = {
-      'nextjs-developer': 'pkill -f "next" || true',
-      'vue-developer': 'pkill -f "nuxt\\|vite" || true',
-      'streamlit-developer': 'pkill -f "streamlit" || true',
-      'gradio-developer': 'pkill -f "python" || true',
+      'nextjs-developer': 'pkill -f "next" 2>/dev/null; true',
+      'vue-developer': 'pkill -f "nuxt|vite" 2>/dev/null; true',
+      'streamlit-developer': 'pkill -f "streamlit" 2>/dev/null; true',
+      'gradio-developer': 'pkill -f "python" 2>/dev/null; true',
     }
     const killCmd = killCommands[fragment.template]
     const startCmd = startCommands[fragment.template]
     if (killCmd && startCmd) {
       console.log(`Restarting dev server for imported project template: ${fragment.template}`)
-      await sbx.commands.run(killCmd)
+      await sbx.commands.run(killCmd).catch(() => {})
       sbx.commands.run(startCmd, { background: true })
 
       // Poll until the port is ready (max 60s)
