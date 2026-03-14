@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import {
   Select,
   SelectContent,
@@ -36,21 +36,16 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
   const [needsGitHubAuth, setNeedsGitHubAuth] = useState(false)
 
   useEffect(() => {
-    if (open) {
-      checkGitHubAuth()
-    }
+    if (open) checkGitHubAuth()
   }, [open])
 
   const checkGitHubAuth = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      
-      // Check if user signed in with GitHub
       if (!session?.provider_token || session?.user?.app_metadata?.provider !== 'github') {
         setNeedsGitHubAuth(true)
         return
       }
-      
       setNeedsGitHubAuth(false)
       fetchRepos()
     } catch (err) {
@@ -61,9 +56,7 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
   const handleGitHubSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/dashboard`,
-      }
+      options: { redirectTo: `${window.location.origin}/dashboard` },
     })
   }
 
@@ -78,11 +71,7 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
           'X-GitHub-Token': session.provider_token,
         },
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch repositories')
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch repositories')
       const data = await response.json()
       setRepos(data.repos)
     } catch (err) {
@@ -92,30 +81,21 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
     }
   }
 
-  const fetchBranches = async (repoUrl) => {
+  const fetchBranches = async (repo) => {
     setLoadingBranches(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      const response = await fetch(`/api/github/branches?repo_url=${encodeURIComponent(repoUrl)}`, {
+      const response = await fetch(`/api/github/branches?repo_url=${encodeURIComponent(repo.cloneUrl)}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
           'X-GitHub-Token': session.provider_token,
         },
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch branches')
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch branches')
       const data = await response.json()
       setBranches(data.branches)
-      
-      const defaultBranch = data.branches.find(b => b.name === selectedRepo.defaultBranch)
-      if (defaultBranch) {
-        setSelectedBranch(defaultBranch.name)
-      } else if (data.branches.length > 0) {
-        setSelectedBranch(data.branches[0].name)
-      }
+      const def = data.branches.find(b => b.name === repo.defaultBranch)
+      setSelectedBranch(def ? def.name : data.branches[0]?.name ?? '')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -127,15 +107,13 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
     setSelectedRepo(repo)
     setSelectedBranch('')
     setBranches([])
-    fetchBranches(repo.cloneUrl)
+    fetchBranches(repo)
   }
 
   const handleConnect = async () => {
     if (!selectedRepo || !selectedBranch) return
-
     setConnecting(true)
     setError(null)
-
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/projects/${projectId}/connect-github`, {
@@ -144,17 +122,12 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          repoUrl: selectedRepo.cloneUrl,
-          branch: selectedBranch,
-        }),
+        body: JSON.stringify({ repoUrl: selectedRepo.cloneUrl, branch: selectedBranch }),
       })
-
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.error || 'Failed to connect repository')
       }
-
       const data = await response.json()
       setOpen(false)
       onConnect?.(data)
@@ -171,20 +144,20 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
   )
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant="outline" size="sm">
           <GitBranch className="w-4 h-4 mr-2" />
           Connect to GitHub
         </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Connect to GitHub</DialogTitle>
-          <DialogDescription>
+      </SheetTrigger>
+      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>Connect to GitHub</SheetTitle>
+          <SheetDescription>
             Connect this project to a GitHub repository for version control
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         {needsGitHubAuth ? (
           <div className="py-8 text-center space-y-4">
@@ -203,95 +176,91 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
             </Button>
           </div>
         ) : (
-          <>
+          <div className="space-y-4 mt-4">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
-                {error}
+              <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>
+            )}
+
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search repositories..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto">
+                {filteredRepos.map((repo) => (
+                  <div
+                    key={repo.id}
+                    onClick={() => handleRepoSelect(repo)}
+                    className={`p-3 border rounded cursor-pointer hover:bg-accent ${
+                      selectedRepo?.id === repo.id ? 'border-primary bg-accent' : ''
+                    }`}
+                  >
+                    <div className="font-medium">{repo.fullName}</div>
+                    {repo.description && (
+                      <div className="text-sm text-muted-foreground">{repo.description}</div>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      {repo.language && <span>{repo.language}</span>}
+                      {repo.private && <span className="text-yellow-600">Private</span>}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
-            <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search repositories..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
-            </div>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredRepos.map((repo) => (
-                <div
-                  key={repo.id}
-                  onClick={() => handleRepoSelect(repo)}
-                  className={`p-3 border rounded cursor-pointer hover:bg-accent ${
-                    selectedRepo?.id === repo.id ? 'border-primary bg-accent' : ''
-                  }`}
-                >
-                  <div className="font-medium">{repo.fullName}</div>
-                  {repo.description && (
-                    <div className="text-sm text-muted-foreground">{repo.description}</div>
-                  )}
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    {repo.language && <span>{repo.language}</span>}
-                    {repo.private && <span className="text-yellow-600">Private</span>}
+            {selectedRepo && (
+              <div className="space-y-2">
+                <Label>Branch</Label>
+                {loadingBranches ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading branches...
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {selectedRepo && (
-            <div className="space-y-2">
-              <Label>Branch</Label>
-              {loadingBranches ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading branches...
-                </div>
-              ) : (
-                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch.name} value={branch.name}>
-                        {branch.name}
-                        {branch.name === selectedRepo.defaultBranch && ' (default)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          )}
-
-          <Button
-            onClick={handleConnect}
-            disabled={!selectedRepo || !selectedBranch || connecting}
-            className="w-full"
-          >
-            {connecting ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Connecting...
-              </>
-            ) : (
-              'Connect Repository'
+                ) : (
+                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.name} value={branch.name}>
+                          {branch.name}
+                          {branch.name === selectedRepo.defaultBranch && ' (default)'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             )}
-          </Button>
-        </div>
-        </>
+
+            <Button
+              onClick={handleConnect}
+              disabled={!selectedRepo || !selectedBranch || connecting}
+              className="w-full"
+            >
+              {connecting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                'Connect Repository'
+              )}
+            </Button>
+          </div>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
