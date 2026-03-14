@@ -188,14 +188,15 @@ export function ImportGitHubDialog({ onImport }) {
           Import from GitHub
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="flex flex-col w-full max-w-lg sm:max-w-2xl max-h-[90vh] p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
           <DialogTitle>Import from GitHub</DialogTitle>
           <DialogDescription>
             Select a repository and branch to import into WorkersCraft
           </DialogDescription>
         </DialogHeader>
 
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
         {needsGitHubAuth ? (
           <div className="py-8 text-center space-y-4">
             <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
@@ -213,98 +214,93 @@ export function ImportGitHubDialog({ onImport }) {
             </Button>
           </div>
         ) : (
-          <>
+          <div className="space-y-4">
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
                 {error}
               </div>
             )}
 
-            <div className="space-y-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search repositories..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Repository List */}
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin" />
+            <div className="relative">
+              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search repositories..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
             </div>
-          ) : (
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {filteredRepos.map((repo) => (
-                <div
-                  key={repo.id}
-                  onClick={() => handleRepoSelect(repo)}
-                  className={`p-3 border rounded cursor-pointer hover:bg-accent ${
-                    selectedRepo?.id === repo.id ? 'border-primary bg-accent' : ''
-                  }`}
-                >
-                  <div className="font-medium">{repo.fullName}</div>
-                  {repo.description && (
-                    <div className="text-sm text-muted-foreground">{repo.description}</div>
-                  )}
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    {repo.language && <span>{repo.language}</span>}
-                    {repo.private && <span className="text-yellow-600">Private</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
 
-          {/* Branch Selection */}
-          {selectedRepo && (
-            <div className="space-y-2">
-              <Label>Branch</Label>
-              {loadingBranches ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Loading branches...
-                </div>
-              ) : (
-                <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch.name} value={branch.name}>
-                        {branch.name}
-                        {branch.name === selectedRepo.defaultBranch && ' (default)'}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-          )}
-
-          {/* Import Button */}
-          <Button
-            onClick={handleImport}
-            disabled={!selectedRepo || !selectedBranch || importing}
-            className="w-full"
-          >
-            {importing ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Importing...
-              </>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin" />
+              </div>
             ) : (
-              'Import Repository'
+              <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+                {filteredRepos.map((repo) => (
+                  <div
+                    key={repo.id}
+                    onClick={() => handleRepoSelect(repo)}
+                    className={`p-3 border rounded cursor-pointer hover:bg-accent ${
+                      selectedRepo?.id === repo.id ? 'border-primary bg-accent' : ''
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{repo.fullName}</div>
+                    {repo.description && (
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{repo.description}</div>
+                    )}
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      {repo.language && <span>{repo.language}</span>}
+                      {repo.private && <span className="text-yellow-600">Private</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
-          </Button>
-        </div>
-        </>
+
+            {selectedRepo && (
+              <div className="space-y-2">
+                <Label>Branch</Label>
+                {loadingBranches ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading branches...
+                  </div>
+                ) : (
+                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.name} value={branch.name}>
+                          {branch.name}
+                          {branch.name === selectedRepo.defaultBranch && ' (default)'}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+            )}
+
+            <Button
+              onClick={handleImport}
+              disabled={!selectedRepo || !selectedBranch || importing}
+              className="w-full"
+            >
+              {importing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Importing...
+                </>
+              ) : (
+                'Import Repository'
+              )}
+            </Button>
+          </div>
         )}
+        </div>
       </DialogContent>
     </Dialog>
   )
