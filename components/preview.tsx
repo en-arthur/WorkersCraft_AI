@@ -2,6 +2,7 @@ import { FragmentCode } from './fragment-code'
 import { FragmentPreview } from './fragment-preview'
 import { DeployVercel } from './deploy-vercel'
 import { PushGitHubDialog } from './push-github-dialog'
+import { BackendPanel } from './backend-panel'
 import { DeviceSelector, DEVICES } from './device-selector'
 import { Button } from '@/components/ui/button'
 import {
@@ -68,12 +69,13 @@ export function Preview({
   isFullscreen,
   onToggleFullscreen,
   projectId,
+  backendAppId,
   onGitHubConnect,
 }: {
   teamID: string | undefined
   accessToken: string | undefined
-  selectedTab: 'code' | 'fragment'
-  onSelectedTabChange: Dispatch<SetStateAction<'code' | 'fragment'>>
+  selectedTab: 'code' | 'fragment' | 'backend'
+  onSelectedTabChange: Dispatch<SetStateAction<'code' | 'fragment' | 'backend'>>
   isChatLoading: boolean
   isPreviewLoading: boolean
   fragment?: DeepPartial<FragmentSchema>
@@ -82,6 +84,7 @@ export function Preview({
   isFullscreen?: boolean
   onToggleFullscreen?: () => void
   projectId?: string
+  backendAppId?: string
   onGitHubConnect?: () => void
 }) {
   const [device, setDevice] = useState<keyof typeof DEVICES>('desktop')
@@ -172,6 +175,11 @@ export function Preview({
                   />
                 )}
               </TabsTrigger>
+              {backendAppId && (
+                <TabsTrigger className="font-normal text-xs py-1 px-2" value="backend">
+                  Backend
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
           {fragment && (
@@ -302,6 +310,11 @@ export function Preview({
             <TabsContent value="fragment" className="h-full">
               {result && <FragmentPreview result={result as ExecutionResult} device={deviceConfig} />}
             </TabsContent>
+            {backendAppId && (
+              <TabsContent value="backend" className="h-full">
+                <BackendPanel appId={backendAppId} projectId={projectId} />
+              </TabsContent>
+            )}
           </div>
         )}
       </Tabs>

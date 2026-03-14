@@ -47,7 +47,7 @@ function ChatContent() {
   const [result, setResult] = useState<ExecutionResult>()
   const [messages, setMessages] = useState<Message[]>([])
   const [fragment, setFragment] = useState<DeepPartial<FragmentSchema>>()
-  const [currentTab, setCurrentTab] = useState<'code' | 'fragment'>('code')
+  const [currentTab, setCurrentTab] = useState<'code' | 'fragment' | 'backend'>('code')
   const [isPreviewLoading, setIsPreviewLoading] = useState(false)
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [authView, setAuthView] = useState<ViewType>('sign_in')
@@ -688,8 +688,8 @@ function ChatContent() {
           isFullscreen={isFullscreen}
           onToggleFullscreen={toggleFullscreen}
           projectId={currentProject?.id}
+          backendAppId={currentProject?.backend_app_id}
           onGitHubConnect={() => {
-            // Reload project to get updated GitHub info
             if (currentProject?.id) {
               loadProject(currentProject.id)
             }
