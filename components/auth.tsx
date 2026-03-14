@@ -148,7 +148,10 @@ function SocialAuth({
     const callbackUrl = `${window.location.origin}/auth/callback`
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: callbackUrl },
+      options: {
+        redirectTo: callbackUrl,
+        scopes: provider === 'github' ? 'repo read:user user:email' : undefined,
+      },
     })
     if (error) setError(error.message)
   }

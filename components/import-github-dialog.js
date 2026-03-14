@@ -62,7 +62,8 @@ export function ImportGitHubDialog({ onImport }) {
     await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback`,
+        scopes: 'repo read:user user:email',
       }
     })
   }
