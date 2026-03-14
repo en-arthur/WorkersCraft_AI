@@ -112,7 +112,23 @@ export async function POST(req: Request) {
       console.log(`Restarting dev server for imported project template: ${fragment.template}`)
       await sbx.commands.run(killCmd)
       sbx.commands.run(startCmd, { background: true })
-      await new Promise(resolve => setTimeout(resolve, 25000))
+
+      // Poll until the port is ready (max 60s)
+      const port = fragment.port ?? 3000
+      const host = sbx.getHost(port)
+      const url = `https://${host}`
+      const maxWait = 60000
+      const interval = 2000
+      const start = Date.now()
+      let ready = false
+      while (Date.now() - start < maxWait) {
+        try {
+          const res = await fetch(url, { signal: AbortSignal.timeout(3000) })
+          if (res.status < 500) { ready = true; break }
+        } catch {}
+        await new Promise(r => setTimeout(r, interval))
+      }
+      console.log(`Dev server ready: ${ready} after ${Date.now() - start}ms`)
     }
   }
 
