@@ -154,11 +154,6 @@ export async function POST(req: Request) {
   } as ExecutionResultWeb))
 }
 
-const sandboxTimeout = 10 * 60 * 1000 // 10 minutes
-
-export const maxDuration = 60
-
-export async function POST(req: Request) {
   const {
     fragment,
     userID,
