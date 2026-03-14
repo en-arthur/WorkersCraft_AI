@@ -189,7 +189,7 @@ export function ImportGitHubDialog({ onImport }) {
           Import from GitHub
         </Button>
       </DialogTrigger>
-      <DialogContent className="flex flex-col w-full max-w-[700px] max-h-[85vh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="flex flex-col w-full max-w-lg max-h-[85vh] p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
