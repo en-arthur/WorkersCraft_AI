@@ -49,17 +49,20 @@ export async function POST(request) {
     }
     const { tree } = await treeRes.json()
 
-    // Fetch file contents (skip binaries, limit size)
-    const textExtensions = /\.(js|jsx|ts|tsx|json|md|css|html|env|yml|yaml|toml|txt|sh|py|rb|go|rs|java|c|cpp|h)$/i
-    const blobs = tree.filter(f => f.type === 'blob' && textExtensions.test(f.path) && f.size < 100_000)
+    // Fetch all file contents
+    const blobs = tree.filter(f => f.type === 'blob')
 
     const files = await Promise.all(
       blobs.map(async (f) => {
         const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${f.path}?ref=${branch}`, { headers: ghHeaders })
         if (!res.ok) return null
         const data = await res.json()
-        const content = Buffer.from(data.content, 'base64').toString('utf-8')
-        return { file_path: f.path, file_content: content }
+        // Store as base64 for binary files, utf-8 for text
+        const isText = /\.(js|jsx|ts|tsx|json|md|css|html|env|yml|yaml|toml|txt|sh|py|rb|go|rs|java|c|cpp|h)$/i.test(f.path)
+        const content = isText
+          ? Buffer.from(data.content, 'base64').toString('utf-8')
+          : data.content // keep as base64
+        return { file_path: f.path, file_content: content, encoding: isText ? 'utf-8' : 'base64' }
       })
     ).then(r => r.filter(Boolean))
 
