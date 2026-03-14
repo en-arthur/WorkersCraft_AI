@@ -75,6 +75,7 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
       const response = await fetch('/api/github/repos', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token,
         },
       })
 
@@ -98,6 +99,7 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
       const response = await fetch(`/api/github/branches?repo_url=${encodeURIComponent(repoUrl)}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token,
         },
       })
 
