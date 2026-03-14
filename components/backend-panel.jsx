@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase'
-import { Loader2, Trash2, RefreshCw, Users, Database } from 'lucide-react'
+import { Loader2, Trash2, RefreshCw, Users, Database, FileIcon } from 'lucide-react'
 
 export function BackendPanel({ appId, projectId }) {
   const [tab, setTab] = useState('users')
   const [users, setUsers] = useState([])
   const [records, setRecords] = useState([])
+  const [files, setFiles] = useState([])
   const [collections, setCollections] = useState([])
   const [selectedCollection, setSelectedCollection] = useState('')
   const [loading, setLoading] = useState(false)
@@ -47,6 +48,8 @@ export function BackendPanel({ appId, projectId }) {
         setCollections(cols)
         if (cols.length > 0 && !selectedCollection) setSelectedCollection(cols[0])
       })
+    } else if (tab === 'files') {
+      fetchData('files').then(data => data && setFiles(data.files || []))
     }
   }, [tab, fetchData])
 
@@ -57,6 +60,15 @@ export function BackendPanel({ appId, projectId }) {
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
     setUsers(users.filter(u => u.user_id !== userId))
+  }
+
+  const handleDeleteFile = async (fileId) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    await fetch(`/api/backend/${appId}?resource=files&record_id=${fileId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    })
+    setFiles(files.filter(f => f.id !== fileId))
   }
 
   const handleDeleteRecord = async (recordId) => {
@@ -78,6 +90,7 @@ export function BackendPanel({ appId, projectId }) {
         <h2 className="font-semibold text-sm">Backend Data</h2>
         <Button variant="ghost" size="icon" onClick={() => {
           if (tab === 'users') fetchData('users').then(d => d && setUsers(d.users || []))
+          else if (tab === 'files') fetchData('files').then(d => d && setFiles(d.files || []))
           else fetchData('storage').then(d => d && setRecords(d.records || []))
         }}>
           <RefreshCw className="w-4 h-4" />
@@ -93,6 +106,9 @@ export function BackendPanel({ appId, projectId }) {
           </TabsTrigger>
           <TabsTrigger value="storage" className="gap-1 text-xs">
             <Database className="w-3 h-3" /> Storage
+          </TabsTrigger>
+          <TabsTrigger value="files" className="gap-1 text-xs">
+            <FileIcon className="w-3 h-3" /> Files
           </TabsTrigger>
         </TabsList>
 
@@ -149,6 +165,37 @@ export function BackendPanel({ appId, projectId }) {
                   <Button variant="ghost" size="icon" className="ml-2 shrink-0" onClick={() => handleDeleteRecord(r.id)}>
                     <Trash2 className="w-4 h-4 text-red-500" />
                   </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="files">
+          {loading ? (
+            <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin" /></div>
+          ) : files.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No files yet</p>
+          ) : (
+            <div className="space-y-2">
+              {files.map(f => (
+                <div key={f.id} className="flex items-center justify-between p-2 border rounded text-sm">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{f.filename}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {f.mime_type} · {f.size_bytes ? `${(f.size_bytes / 1024).toFixed(1)} KB` : 'unknown size'} · {new Date(f.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 ml-2 shrink-0">
+                    {f.url && (
+                      <Button variant="ghost" size="icon" onClick={() => window.open(f.url, '_blank')}>
+                        <FileIcon className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteFile(f.id)}>
+                      <Trash2 className="w-4 h-4 text-red-500" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>

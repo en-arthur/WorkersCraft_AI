@@ -50,6 +50,8 @@ export async function GET(request, { params }) {
 
   const url = resource === 'storage'
     ? `${CLOUDSERVICE_URL}/api/admin/apps/${app_id}/storage${collection ? `?collection=${collection}` : ''}`
+    : resource === 'files'
+    ? `${CLOUDSERVICE_URL}/api/admin/apps/${app_id}/files`
     : `${CLOUDSERVICE_URL}/api/admin/apps/${app_id}/users`
 
   const res = await fetch(url, { headers: { Authorization: `Bearer ${adminToken}` } })
