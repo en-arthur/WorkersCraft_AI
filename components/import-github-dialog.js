@@ -189,119 +189,133 @@ export function ImportGitHubDialog({ onImport }) {
           Import from GitHub
         </Button>
       </DialogTrigger>
-      <DialogContent className="flex flex-col w-full max-w-lg sm:max-w-2xl max-h-[90vh] p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
-          <DialogTitle>Import from GitHub</DialogTitle>
+      <DialogContent className="flex flex-col w-full max-w-lg max-h-[85vh] p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
+          <DialogTitle className="flex items-center gap-2">
+            <GitBranch className="w-5 h-5" />
+            Import from GitHub
+          </DialogTitle>
           <DialogDescription>
             Select a repository and branch to import into WorkersCraft
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
         {needsGitHubAuth ? (
-          <div className="py-8 text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-              <GitBranch className="w-8 h-8 text-gray-600" />
+          <div className="flex flex-col items-center justify-center flex-1 py-12 px-6 text-center gap-4">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+              <GitBranch className="w-8 h-8 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg mb-2">GitHub Authentication Required</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                To import repositories from GitHub, you need to sign in with your GitHub account.
+              <h3 className="font-semibold text-lg mb-1">GitHub Authentication Required</h3>
+              <p className="text-sm text-muted-foreground">
+                Sign in with GitHub to access your repositories.
               </p>
             </div>
-            <Button onClick={handleGitHubSignIn} className="gap-2">
+            <Button onClick={handleGitHubSignIn} className="gap-2 mt-2">
               <GitBranch className="w-4 h-4" />
               Sign in with GitHub
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
-                {error}
+          <>
+            {/* Search — pinned */}
+            <div className="px-6 py-3 border-b shrink-0">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search repositories..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-            )}
-
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search repositories..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
             </div>
 
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
-                {filteredRepos.map((repo) => (
-                  <div
-                    key={repo.id}
-                    onClick={() => handleRepoSelect(repo)}
-                    className={`p-3 border rounded cursor-pointer hover:bg-accent ${
-                      selectedRepo?.id === repo.id ? 'border-primary bg-accent' : ''
-                    }`}
-                  >
-                    <div className="font-medium text-sm">{repo.fullName}</div>
-                    {repo.description && (
-                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{repo.description}</div>
-                    )}
-                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                      {repo.language && <span>{repo.language}</span>}
-                      {repo.private && <span className="text-yellow-600">Private</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {selectedRepo && (
-              <div className="space-y-2">
-                <Label>Branch</Label>
-                {loadingBranches ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Loading branches...
-                  </div>
-                ) : (
-                  <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a branch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branches.map((branch) => (
-                        <SelectItem key={branch.name} value={branch.name}>
-                          {branch.name}
-                          {branch.name === selectedRepo.defaultBranch && ' (default)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            )}
-
-            <Button
-              onClick={handleImport}
-              disabled={!selectedRepo || !selectedBranch || importing}
-              className="w-full"
-            >
-              {importing ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Importing...
-                </>
-              ) : (
-                'Import Repository'
+            {/* Repo list — scrollable middle */}
+            <div className="flex-1 overflow-y-auto px-6 py-3 min-h-0">
+              {error && (
+                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm mb-3">
+                  {error}
+                </div>
               )}
-            </Button>
-          </div>
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : filteredRepos.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-12">No repositories found.</p>
+              ) : (
+                <div className="space-y-2">
+                  {filteredRepos.map((repo) => (
+                    <div
+                      key={repo.id}
+                      onClick={() => handleRepoSelect(repo)}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-accent ${
+                        selectedRepo?.id === repo.id ? 'border-primary bg-accent' : 'border-border'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-sm truncate">{repo.fullName}</span>
+                        {repo.private && (
+                          <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded shrink-0">Private</span>
+                        )}
+                      </div>
+                      {repo.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{repo.description}</p>
+                      )}
+                      {repo.language && (
+                        <span className="text-xs text-muted-foreground mt-1 inline-block">{repo.language}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Branch + Import — pinned footer */}
+            <div className="px-6 py-4 border-t shrink-0 space-y-3 bg-background">
+              {selectedRepo && (
+                <div className="space-y-1.5">
+                  <Label>Branch</Label>
+                  {loadingBranches ? (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground h-10">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading branches...
+                    </div>
+                  ) : (
+                    <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.name} value={branch.name}>
+                            {branch.name}
+                            {branch.name === selectedRepo.defaultBranch && ' (default)'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
+              <Button
+                onClick={handleImport}
+                disabled={!selectedRepo || !selectedBranch || importing}
+                className="w-full"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Importing...
+                  </>
+                ) : (
+                  'Import Repository'
+                )}
+              </Button>
+            </div>
+          </>
         )}
-        </div>
       </DialogContent>
     </Dialog>
   )
