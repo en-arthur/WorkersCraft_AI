@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { ConnectGitHubDialog } from './connect-github-dialog'
+import { PushGitHubDialog } from './push-github-dialog'
 import { Session } from '@supabase/supabase-js'
 import { Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
@@ -19,7 +20,10 @@ export function NavBar({
   canUndo,
   projectId,
   hasGitHubRepo,
+  githubRepoUrl,
+  githubBranch,
   onGitHubConnect,
+  onGitHubPush,
 }: {
   session: Session | null
   showLogin: () => void
@@ -28,7 +32,10 @@ export function NavBar({
   canUndo: boolean
   projectId?: string
   hasGitHubRepo?: boolean
+  githubRepoUrl?: string
+  githubBranch?: string
   onGitHubConnect?: () => void
+  onGitHubPush?: () => void
 }) {
   return (
     <nav className="w-full flex bg-background py-4">
@@ -57,6 +64,14 @@ export function NavBar({
           <ConnectGitHubDialog 
             projectId={projectId} 
             onConnect={onGitHubConnect}
+          />
+        )}
+        {projectId && hasGitHubRepo && githubRepoUrl && githubBranch && (
+          <PushGitHubDialog
+            projectId={projectId}
+            repoUrl={githubRepoUrl}
+            branch={githubBranch}
+            onPush={onGitHubPush}
           />
         )}
         <TooltipProvider>

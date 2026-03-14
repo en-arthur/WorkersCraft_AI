@@ -617,7 +617,14 @@ function ChatContent() {
             onUndo={handleUndo}
             projectId={currentProject?.id}
             hasGitHubRepo={!!fragment?.github_repo_url}
+            githubRepoUrl={fragment?.github_repo_url}
+            githubBranch={fragment?.github_branch}
             onGitHubConnect={() => {
+              if (currentProject?.id) {
+                loadProject(currentProject.id)
+              }
+            }}
+            onGitHubPush={() => {
               if (currentProject?.id) {
                 loadProject(currentProject.id)
               }
