@@ -55,15 +55,25 @@ export async function updateProjectBackendStatus(
 ) {
   try {
     const body: any = { backend_status: status }
-    
     if (status === 'active' && appId) {
       body.backend_app_id = appId
       body.backend_registered_at = new Date().toISOString()
     }
-    
+
+    // Get auth token from supabase client
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    const { data: { session } } = await supabase.auth.getSession()
+
     const response = await fetch(`/api/projects/${projectId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+      },
       body: JSON.stringify(body)
     })
     
