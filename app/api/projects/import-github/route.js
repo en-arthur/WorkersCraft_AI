@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import { Sandbox } from '@e2b/code-interpreter'
-import { getGitHubToken, getGitHubUser, parseGitHubUrl } from '@/lib/github'
+import { parseGitHubUrl } from '@/lib/github'
 
 function getSupabaseWithAuth(token) {
   return createClient(
@@ -28,16 +28,28 @@ export async function POST(request) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = getSupabaseWithAuth(token)
-    const { data: { session } } = await supabase.auth.getSession()
-    
-    if (!session) {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    )
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      console.error('[import-github] Invalid JWT:', userError?.message)
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get GitHub credentials
-    const githubToken = getGitHubToken(session)
-    const githubUser = getGitHubUser(session)
+    const githubToken = request.headers.get('x-github-token')
+    if (!githubToken) {
+      console.error('[import-github] Missing X-GitHub-Token for user:', user.id)
+      return Response.json({ error: 'No GitHub token. Please sign in with GitHub.' }, { status: 401 })
+    }
+
+    const githubUser = {
+      username: user.user_metadata.user_name,
+      name: user.user_metadata.full_name || user.user_metadata.name,
+      email: user.email,
+    }
 
     console.log('Importing GitHub repo:', { repoUrl, branch, user: githubUser.username })
 
@@ -109,7 +121,7 @@ export async function POST(request) {
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
-        user_id: session.user.id,
+        user_id: user.id,
         name: repoName,
         description: description || `Imported from GitHub: ${repoUrl}`,
         platform: 'web',

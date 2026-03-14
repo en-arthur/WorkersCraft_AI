@@ -152,6 +152,7 @@ export function ImportGitHubDialog({ onImport }) {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token || '',
         },
         body: JSON.stringify({
           repoUrl: selectedRepo.cloneUrl,
