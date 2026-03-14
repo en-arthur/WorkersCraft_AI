@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 import {
   Select,
   SelectContent,
@@ -182,23 +182,23 @@ export function ImportGitHubDialog({ onImport }) {
   )
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
         <Button variant="outline">
           <GitBranch className="w-4 h-4 mr-2" />
           Import from GitHub
         </Button>
-      </DialogTrigger>
-      <DialogContent className="flex flex-col w-full max-w-lg h-[85vh] p-0 gap-0 overflow-hidden [&>button]:absolute [&>button]:right-4 [&>button]:top-4">
-        <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
-          <DialogTitle className="flex items-center gap-2">
+      </SheetTrigger>
+      <SheetContent side="right" className="flex flex-col w-full sm:max-w-lg p-0 gap-0">
+        <SheetHeader className="px-6 pt-6 pb-3 border-b shrink-0">
+          <SheetTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
             Import from GitHub
-          </DialogTitle>
-          <DialogDescription>
+          </SheetTitle>
+          <SheetDescription>
             Select a repository and branch to import into WorkersCraft
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
 
         {needsGitHubAuth ? (
           <div className="flex flex-col items-center justify-center flex-1 py-12 px-6 text-center gap-4">
@@ -316,7 +316,7 @@ export function ImportGitHubDialog({ onImport }) {
             </div>
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
