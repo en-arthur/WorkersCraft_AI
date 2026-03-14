@@ -189,7 +189,7 @@ export function ImportGitHubDialog({ onImport }) {
           Import from GitHub
         </Button>
       </DialogTrigger>
-      <DialogContent className="!flex !flex-col w-full max-w-lg !h-[85vh] p-0 gap-0 overflow-hidden">
+      <DialogContent className="flex flex-col w-full max-w-lg h-[85vh] p-0 gap-0 overflow-hidden [&>button]:absolute [&>button]:right-4 [&>button]:top-4">
         <DialogHeader className="px-6 pt-6 pb-3 border-b shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <GitBranch className="w-5 h-5" />
@@ -273,7 +273,7 @@ export function ImportGitHubDialog({ onImport }) {
             </div>
 
             {/* Branch + Import — pinned footer */}
-            <div className="px-6 py-4 border-t shrink-0 space-y-3 bg-background">
+            <div className="px-6 py-4 border-t shrink-0 space-y-3 bg-background mt-auto">
               {selectedRepo && (
                 <div className="space-y-1.5">
                   <Label>Branch</Label>
