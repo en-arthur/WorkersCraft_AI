@@ -247,12 +247,12 @@ Make sure you've completed the verification flow:
 - [x] Button-driven UI
 - [x] Project management
 - [x] Deployment support
-- [ ] Slack integration
-- [ ] Notifications
-- [ ] Team collaboration
-- [ ] Analytics dashboard
+- [x] Slack integration
+- [x] Notifications
+- [x] Scheduled deployments (database storage)
 - [ ] Voice commands (Telegram)
 - [ ] File uploads
+- [ ] Team collaboration
 
 ## Support
 

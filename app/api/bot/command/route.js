@@ -203,14 +203,16 @@ async function handleHelpCommand() {
 
 *Deployment:*
 /deploy <project> - Deploy to Vercel
-/schedule <project> - Schedule automatic deployments
-/schedule - View all scheduled deployments
+/schedule <project> - Save deployment schedule
+/schedule - View all saved schedules
 
 *Utility:*
 /help - Show this help message
 /settings - Configure preferences
 
-💡 *Tip:* Most actions can be done with buttons - no typing needed!`,
+💡 *Tip:* Most actions can be done with buttons - no typing needed!
+
+📝 *Note:* Schedules are saved but require manual execution or external automation.`,
   }
 }
 
