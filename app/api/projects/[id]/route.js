@@ -18,8 +18,8 @@ export async function GET(request, { params }) {
   const { supabase, error } = getAuth(request)
   if (error) return Response.json({ error }, { status: 401 })
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = params
 
@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
     .from('projects')
     .select('*')
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (dbError || !project) return Response.json({ error: 'Project not found' }, { status: 404 })
@@ -55,8 +55,8 @@ export async function PATCH(request, { params }) {
   const { supabase, error } = getAuth(request)
   if (error) return Response.json({ error }, { status: 401 })
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data: { user: u1 }, error: e1 } = await supabase.auth.getUser()
+  if (e1 || !u1) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = params
   const body = await request.json()
@@ -65,7 +65,7 @@ export async function PATCH(request, { params }) {
     .from('projects')
     .update(body)
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', u1.id)
 
   if (dbError) return Response.json({ error: dbError.message }, { status: 500 })
 
@@ -76,8 +76,8 @@ export async function DELETE(request, { params }) {
   const { supabase, error } = getAuth(request)
   if (error) return Response.json({ error }, { status: 401 })
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  const { data: { user: u2 }, error: e2 } = await supabase.auth.getUser()
+  if (e2 || !u2) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = params
 
@@ -85,7 +85,7 @@ export async function DELETE(request, { params }) {
     .from('projects')
     .delete()
     .eq('id', id)
-    .eq('user_id', session.user.id)
+    .eq('user_id', u2.id)
 
   if (dbError) return Response.json({ error: dbError.message }, { status: 500 })
 
