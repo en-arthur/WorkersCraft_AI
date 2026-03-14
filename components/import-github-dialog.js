@@ -72,19 +72,27 @@ export function ImportGitHubDialog({ onImport }) {
     setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
+      console.debug('[ImportGitHub] session provider:', session?.user?.app_metadata?.provider)
+      console.debug('[ImportGitHub] has provider_token:', !!session?.provider_token)
+
       const response = await fetch('/api/github/repos', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token || '',
         },
       })
 
+      console.debug('[ImportGitHub] /api/github/repos status:', response.status)
       if (!response.ok) {
-        throw new Error('Failed to fetch repositories')
+        const body = await response.json()
+        console.error('[ImportGitHub] repos error body:', body)
+        throw new Error(body.error || 'Failed to fetch repositories')
       }
 
       const data = await response.json()
       setRepos(data.repos)
     } catch (err) {
+      console.error('[ImportGitHub] fetchRepos error:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -98,6 +106,7 @@ export function ImportGitHubDialog({ onImport }) {
       const response = await fetch(`/api/github/branches?repo_url=${encodeURIComponent(repoUrl)}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token || '',
         },
       })
 

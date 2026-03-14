@@ -145,9 +145,10 @@ function SocialAuth({
   const handleProviderSignIn = async (provider: Provider) => {
     clearMessages()
     setLoading(true)
+    const callbackUrl = `${window.location.origin}/auth/callback`
     const { error } = await supabaseClient.auth.signInWithOAuth({
       provider,
-      options: { redirectTo },
+      options: { redirectTo: callbackUrl },
     })
     if (error) setError(error.message)
   }
