@@ -1,14 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { BUTTON_ACTIONS, getCreateProjectButtons } from '@/lib/bot/buttons'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request) {
   const { action, data, userId, integrationId, platform } = await request.json()
   
+  const supabase = getSupabaseAdmin()
   const startTime = Date.now()
   
   try {

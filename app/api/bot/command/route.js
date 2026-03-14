@@ -1,14 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { BUTTON_ACTIONS, getCreateProjectButtons } from '@/lib/bot/buttons'
 import { formatProjectListMessage, formatProjectStatusMessage } from '@/lib/bot/slack-formatter'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request) {
   const { command, userId, integrationId, platform, args = [] } = await request.json()
+  
+  const supabase = getSupabaseAdmin()
   
   // Verify integration
   const { data: integration } = await supabase

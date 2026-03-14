@@ -1,9 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request) {
   const { userId, projectId, schedule } = await request.json()
@@ -11,6 +7,8 @@ export async function POST(request) {
   if (!userId || !projectId || !schedule) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
+  
+  const supabase = getSupabaseAdmin()
   
   try {
     // Calculate next run time
@@ -53,6 +51,8 @@ export async function GET(request) {
     return Response.json({ error: 'User ID required' }, { status: 400 })
   }
   
+  const supabase = getSupabaseAdmin()
+  
   let query = supabase
     .from('scheduled_deployments')
     .select('*')
@@ -79,6 +79,8 @@ export async function DELETE(request) {
   if (!scheduleId || !userId) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
+  
+  const supabase = getSupabaseAdmin()
   
   const { error } = await supabase
     .from('scheduled_deployments')

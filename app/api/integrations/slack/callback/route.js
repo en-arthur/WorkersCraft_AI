@@ -1,11 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import { getWelcomeMessage } from '@/lib/bot/slack-formatter'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
@@ -82,6 +78,8 @@ export async function GET(request) {
       console.error('Slack OAuth error:', data)
       return Response.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/integrations?error=slack_oauth`)
     }
+    
+    const supabase = getSupabaseAdmin()
     
     // Store integration
     const { data: integration } = await supabase.from('user_integrations').insert({

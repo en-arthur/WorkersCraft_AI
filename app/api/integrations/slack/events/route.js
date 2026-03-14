@@ -1,10 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
@@ -114,6 +110,8 @@ export async function POST(request) {
 async function handleSlashCommand(payload) {
   const { command, text, user_id, team_id, channel_id } = payload
   
+  const supabase = getSupabaseAdmin()
+  
   // Find user integration
   const { data: integration } = await supabase
     .from('user_integrations')
@@ -161,6 +159,8 @@ async function handleSlashCommand(payload) {
 
 async function handleInteraction(payload) {
   const { user, team, actions, message, channel } = payload
+  
+  const supabase = getSupabaseAdmin()
   
   // Find user integration
   const { data: integration } = await supabase

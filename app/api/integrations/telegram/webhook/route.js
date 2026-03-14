@@ -1,11 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import { getWelcomeMessage } from '@/lib/bot/telegram-formatter'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
@@ -60,6 +56,8 @@ export async function POST(request) {
       const chatId = update.message.chat.id
       const username = update.message.from.username
       const firstName = update.message.from.first_name
+      
+      const supabase = getSupabaseAdmin()
       
       // Verify code
       const { data: verification } = await supabase
@@ -138,6 +136,8 @@ export async function POST(request) {
       const text = update.message.text
       const [command, ...args] = text.split(' ')
       
+      const supabase = getSupabaseAdmin()
+      
       // Find user integration
       const { data: integration } = await supabase
         .from('user_integrations')
@@ -199,6 +199,8 @@ export async function POST(request) {
       // Parse callback data
       const [action, dataStr] = callbackData.split(':')
       const data = JSON.parse(dataStr || '{}')
+      
+      const supabase = getSupabaseAdmin()
       
       // Find user integration
       const { data: integration } = await supabase
