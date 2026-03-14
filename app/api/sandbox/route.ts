@@ -84,15 +84,28 @@ export async function POST(req: Request) {
   if (fragment.template.includes('expo-developer')) {
     console.log('Starting Expo Metro bundler...')
     try {
-      // Start Metro in background
       sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
-      console.log('Metro start command executed')
-      
-      // Wait for Metro to compile and start
       await new Promise(resolve => setTimeout(resolve, 15000))
-      console.log('Metro bundler should be ready')
     } catch (error) {
       console.error('Error starting Metro:', error)
+    }
+  }
+
+  // For imported projects (many files), install deps and start dev server
+  const isImportedProject = fragment.files && fragment.files.length > 5
+  if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
+    const startCommands: Record<string, string> = {
+      'nextjs-developer': 'cd /home/user && npm install && npm run dev',
+      'vue-developer': 'cd /home/user && npm install && npm run dev',
+      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501',
+      'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py',
+    }
+    const cmd = startCommands[fragment.template]
+    if (cmd) {
+      console.log(`Starting dev server for imported project: ${cmd}`)
+      sbx.commands.run(cmd, { background: true })
+      // Wait for server to be ready
+      await new Promise(resolve => setTimeout(resolve, 20000))
     }
   }
 
