@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Sandbox } from '@e2b/code-interpreter'
+import { Sandbox } from '@e2b/sdk'
 import { parseGitHubUrl } from '@/lib/github'
 
 function getSupabaseWithAuth(token) {
@@ -56,19 +56,12 @@ export async function POST(request) {
     // Create sandbox
     sandbox = await Sandbox.create()
 
-    // Authenticate with GitHub
-    await sandbox.git.dangerouslyAuthenticate({
-      username: githubUser.username,
-      password: githubToken,
-    })
-
-    // Configure git user
-    await sandbox.git.configureUser(githubUser.name, githubUser.email)
-
-    // Clone repository
+    // Clone with credentials inline
     await sandbox.git.clone(repoUrl, {
       path: '/home/user',
       branch,
+      username: githubUser.username,
+      password: githubToken,
     })
 
     console.log('Repository cloned successfully')
