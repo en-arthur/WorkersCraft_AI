@@ -1,10 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-)
+import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
@@ -18,9 +13,8 @@ function encrypt(text) {
 
 function generateSecureState(userId) {
   const state = crypto.randomBytes(32).toString('hex')
-  // Store state temporarily (you might want to use Redis in production)
   global.oauthStates = global.oauthStates || {}
-  global.oauthStates[state] = { userId, expires: Date.now() + 600000 } // 10 min
+  global.oauthStates[state] = { userId, expires: Date.now() + 600000 }
   return state
 }
 

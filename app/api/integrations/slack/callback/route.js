@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 import { getWelcomeMessage } from '@/lib/bot/slack-formatter'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
