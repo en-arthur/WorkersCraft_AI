@@ -1,32 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
-import { Sandbox } from '@e2b/sdk'
-import { parseGitHubUrl } from '@/lib/github'
 
-function getSupabaseWithAuth(token) {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    { global: { headers: { Authorization: `Bearer ${token}` } } }
-  )
-}
+export const dynamic = 'force-dynamic'
 
 export async function POST(request) {
-  let sandbox = null
-  
   try {
     const { repoUrl, repoName, branch, description } = await request.json()
 
     if (!repoUrl || !repoName || !branch) {
-      return Response.json(
-        { error: 'repoUrl, repoName, and branch are required' },
-        { status: 400 }
-      )
+      return Response.json({ error: 'repoUrl, repoName, and branch are required' }, { status: 400 })
     }
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
-    if (!token) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -35,82 +20,57 @@ export async function POST(request) {
     )
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError || !user) {
-      console.error('[import-github] Invalid JWT:', userError?.message)
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const githubToken = request.headers.get('x-github-token')
     if (!githubToken) {
-      console.error('[import-github] Missing X-GitHub-Token for user:', user.id)
       return Response.json({ error: 'No GitHub token. Please sign in with GitHub.' }, { status: 401 })
     }
 
-    const githubUser = {
-      username: user.user_metadata.user_name,
-      name: user.user_metadata.full_name || user.user_metadata.name,
-      email: user.email,
+    // Parse owner/repo from URL
+    const match = repoUrl.match(/github\.com[/:]([^/]+)\/([^/.]+)/)
+    if (!match) return Response.json({ error: 'Invalid GitHub URL' }, { status: 400 })
+    const [, owner, repo] = match
+
+    const ghHeaders = {
+      'Authorization': `Bearer ${githubToken}`,
+      'Accept': 'application/vnd.github.v3+json',
     }
 
-    console.log('Importing GitHub repo:', { repoUrl, branch, user: githubUser.username })
-
-    // Create sandbox
-    sandbox = await Sandbox.create()
-
-    // Clone with credentials inline
-    await sandbox.git.clone(repoUrl, {
-      path: '/home/user',
-      branch,
-      username: githubUser.username,
-      password: githubToken,
-    })
-
-    console.log('Repository cloned successfully')
-
-    // Read all files from the cloned repo
-    const files = []
-    const readDir = async (path) => {
-      const entries = await sandbox.files.list(path)
-      
-      for (const entry of entries) {
-        const fullPath = `${path}/${entry.name}`
-        
-        if (entry.type === 'dir') {
-          // Skip .git directory and node_modules
-          if (entry.name !== '.git' && entry.name !== 'node_modules') {
-            await readDir(fullPath)
-          }
-        } else if (entry.type === 'file') {
-          try {
-            const content = await sandbox.files.read(fullPath)
-            files.push({
-              file_path: fullPath,
-              file_content: content,
-            })
-          } catch (err) {
-            console.error(`Failed to read file ${fullPath}:`, err)
-          }
-        }
-      }
+    // Fetch full file tree via GitHub API (no sandbox needed)
+    const treeRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
+      { headers: ghHeaders }
+    )
+    if (!treeRes.ok) {
+      const err = await treeRes.json()
+      throw new Error(err.message || 'Failed to fetch repo tree')
     }
+    const { tree } = await treeRes.json()
 
-    await readDir('/home/user')
+    // Fetch file contents (skip binaries, limit size)
+    const textExtensions = /\.(js|jsx|ts|tsx|json|md|css|html|env|yml|yaml|toml|txt|sh|py|rb|go|rs|java|c|cpp|h)$/i
+    const blobs = tree.filter(f => f.type === 'blob' && textExtensions.test(f.path) && f.size < 100_000)
 
-    console.log(`Read ${files.length} files from repository`)
+    const files = await Promise.all(
+      blobs.map(async (f) => {
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${f.path}?ref=${branch}`, { headers: ghHeaders })
+        if (!res.ok) return null
+        const data = await res.json()
+        const content = Buffer.from(data.content, 'base64').toString('utf-8')
+        return { file_path: f.path, file_content: content }
+      })
+    ).then(r => r.filter(Boolean))
 
-    // Detect template/framework
-    const hasPackageJson = files.some(f => f.file_path.includes('package.json'))
-    const hasNextConfig = files.some(f => f.file_path.includes('next.config'))
-    const hasPagesDir = files.some(f => f.file_path.includes('/pages/'))
-    const hasAppDir = files.some(f => f.file_path.includes('/app/'))
-    
+    // Detect template
+    const paths = files.map(f => f.file_path)
     let template = 'code-interpreter-stateless'
-    if (hasNextConfig || hasPagesDir || hasAppDir) {
+    if (paths.some(p => p.includes('next.config') || p.startsWith('app/') || p.startsWith('pages/'))) {
       template = 'nextjs-developer'
-    } else if (hasPackageJson) {
-      template = 'code-interpreter-stateless'
     }
 
-    // Create project in database
+    // Save project
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -125,29 +85,17 @@ export async function POST(request) {
       .select()
       .single()
 
-    if (projectError) {
-      throw new Error(`Failed to create project: ${projectError.message}`)
-    }
+    if (projectError) throw new Error(`Failed to create project: ${projectError.message}`)
 
-    // Create initial version with files
     const { error: versionError } = await supabase
       .from('project_versions')
       .insert({
         project_id: project.id,
         version_number: 1,
-        fragment_data: {
-          template,
-          files,
-          github_repo_url: repoUrl,
-          github_branch: branch,
-        },
+        fragment_data: { template, files, github_repo_url: repoUrl, github_branch: branch },
       })
 
-    if (versionError) {
-      throw new Error(`Failed to create version: ${versionError.message}`)
-    }
-
-    console.log('Project created successfully:', project.id)
+    if (versionError) throw new Error(`Failed to create version: ${versionError.message}`)
 
     return Response.json({
       project: {
@@ -159,14 +107,7 @@ export async function POST(request) {
       },
     })
   } catch (error) {
-    console.error('Import GitHub error:', error)
-    return Response.json(
-      { error: error.message || 'Failed to import repository' },
-      { status: 500 }
-    )
-  } finally {
-    if (sandbox) {
-      await sandbox.kill().catch(console.error)
-    }
+    console.error('[import-github] Error:', error)
+    return Response.json({ error: error.message || 'Failed to import repository' }, { status: 500 })
   }
 }
