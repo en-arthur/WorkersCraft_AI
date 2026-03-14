@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     const sbx = await SdkSandbox.create({
       template: fragment.template,
       metadata: sandboxOpts.metadata,
-      timeoutMs: sandboxTimeout,
+      timeout: sandboxTimeout,
     })
 
     // Kill any existing dev server from the template default files
