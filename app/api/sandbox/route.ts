@@ -91,21 +91,28 @@ export async function POST(req: Request) {
     }
   }
 
-  // For imported projects (many files), install deps and start dev server
+  // For imported projects (many files), restart dev server with new files
   const isImportedProject = fragment.files && fragment.files.length > 5
   if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
     const startCommands: Record<string, string> = {
-      'nextjs-developer': 'cd /home/user && npm install && npm run dev',
-      'vue-developer': 'cd /home/user && npm install && npm run dev',
-      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501',
+      'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev -- --port 3000',
+      'vue-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev',
+      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true',
       'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py',
     }
-    const cmd = startCommands[fragment.template]
-    if (cmd) {
-      console.log(`Starting dev server for imported project: ${cmd}`)
-      sbx.commands.run(cmd, { background: true })
-      // Wait for server to be ready
-      await new Promise(resolve => setTimeout(resolve, 20000))
+    const killCommands: Record<string, string> = {
+      'nextjs-developer': 'pkill -f "next" || true',
+      'vue-developer': 'pkill -f "nuxt\\|vite" || true',
+      'streamlit-developer': 'pkill -f "streamlit" || true',
+      'gradio-developer': 'pkill -f "python" || true',
+    }
+    const killCmd = killCommands[fragment.template]
+    const startCmd = startCommands[fragment.template]
+    if (killCmd && startCmd) {
+      console.log(`Restarting dev server for imported project template: ${fragment.template}`)
+      await sbx.commands.run(killCmd)
+      sbx.commands.run(startCmd, { background: true })
+      await new Promise(resolve => setTimeout(resolve, 25000))
     }
   }
 
