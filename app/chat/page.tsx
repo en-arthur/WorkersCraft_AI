@@ -399,8 +399,26 @@ function ChatContent() {
       
       // Load fragment if available
       if (data.latest_version?.fragment_data) {
-        const fragmentData = data.latest_version.fragment_data
-        setFragment(fragmentData)
+        const rawFragment = data.latest_version.fragment_data
+
+        // Normalize imported files to match schema (add file_name if missing)
+        const normalizedFragment = {
+          ...rawFragment,
+          title: rawFragment.title || data.project?.name || 'Imported Project',
+          commentary: rawFragment.commentary || '',
+          description: rawFragment.description || '',
+          additional_dependencies: rawFragment.additional_dependencies || [],
+          has_additional_dependencies: rawFragment.has_additional_dependencies || false,
+          install_dependencies_command: rawFragment.install_dependencies_command || '',
+          port: rawFragment.port ?? null,
+          files: rawFragment.files?.map((f: any) => ({
+            file_name: f.file_name || f.file_path?.split('/').pop() || 'file',
+            file_path: f.file_path,
+            file_content: f.file_content,
+          })),
+        }
+
+        setFragment(normalizedFragment)
         console.log('Loaded fragment data')
         
         // Run the fragment in sandbox to show preview
@@ -409,10 +427,11 @@ function ChatContent() {
           const sandboxResponse = await fetch('/api/sandbox', {
             method: 'POST',
             body: JSON.stringify({
-              fragment: fragmentData,
+              fragment: normalizedFragment,
               userID: session?.user?.id,
               teamID: userTeam?.id,
               accessToken: session?.access_token,
+              githubToken: session?.provider_token ?? undefined,
             }),
           })
           

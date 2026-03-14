@@ -1,8 +1,9 @@
 import { FragmentSchema } from '@/lib/schema'
 import { ExecutionResultInterpreter, ExecutionResultWeb } from '@/lib/types'
 import { Sandbox } from '@e2b/code-interpreter'
+import { Sandbox as SdkSandbox } from '@e2b/sdk'
 
-const sandboxTimeout = 10 * 60 * 1000 // 10 minute in ms
+const sandboxTimeout = 10 * 60 * 1000 // 10 minutes
 
 export const maxDuration = 60
 
@@ -12,17 +13,19 @@ export async function POST(req: Request) {
     userID,
     teamID,
     accessToken,
+    githubToken,
   }: {
     fragment: FragmentSchema
     userID: string | undefined
     teamID: string | undefined
     accessToken: string | undefined
+    githubToken?: string
   } = await req.json()
-  console.log('fragment', fragment)
-  console.log('userID', userID)
 
-  // Create an interpreter or a sandbox
-  const sbx = await Sandbox.create(fragment.template, {
+  console.log('fragment template:', fragment.template)
+  console.log('isImported:', !!fragment.github_repo_url)
+
+  const sandboxOpts = {
     metadata: {
       template: fragment.template,
       userID: userID ?? '',
@@ -30,133 +33,123 @@ export async function POST(req: Request) {
     },
     timeoutMs: sandboxTimeout,
     ...(teamID && accessToken
-      ? {
-          headers: {
-            'X-Supabase-Team': teamID,
-            'X-Supabase-Token': accessToken,
-          },
-        }
+      ? { headers: { 'X-Supabase-Team': teamID, 'X-Supabase-Token': accessToken } }
       : {}),
-  })
+  }
 
-  // Install packages
+  // ── Imported GitHub project: clone directly in sandbox ──────────────────
+  if (fragment.github_repo_url && fragment.github_branch && githubToken) {
+    console.log(`Cloning ${fragment.github_repo_url}@${fragment.github_branch} in sandbox`)
+
+    const sbx = await SdkSandbox.create(fragment.template, sandboxOpts as any)
+
+    // Kill any existing dev server from the template default files
+    const killCmds: Record<string, string> = {
+      'nextjs-developer': 'pkill -f next || true',
+      'vue-developer':    'pkill -f "nuxt|vite" || true',
+      'streamlit-developer': 'pkill -f streamlit || true',
+      'gradio-developer': 'pkill -f python || true',
+    }
+    if (killCmds[fragment.template]) {
+      await sbx.commands.run(killCmds[fragment.template])
+    }
+
+    // Clone repo into /home/user (overwrites template default files)
+    await sbx.commands.run('rm -rf /home/user && mkdir -p /home/user')
+    await sbx.git.clone(fragment.github_repo_url, {
+      path: '/home/user',
+      branch: fragment.github_branch,
+      depth: 1,
+      username: userID ?? 'git',
+      password: githubToken,
+    })
+
+    // Start dev server in background
+    const startCmds: Record<string, string> = {
+      'nextjs-developer':    'cd /home/user && npm install --legacy-peer-deps --silent && npm run dev -- --port 3000',
+      'vue-developer':       'cd /home/user && npm install --legacy-peer-deps --silent && npm run dev',
+      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true',
+      'gradio-developer':    'cd /home/user && pip install -r requirements.txt -q && python app.py',
+    }
+    const startCmd = startCmds[fragment.template]
+    if (startCmd) {
+      sbx.commands.run(startCmd, { background: true })
+    }
+
+    // Poll until port responds (max 90s)
+    const port = fragment.port ?? 3000
+    const url = `https://${sbx.getHost(port)}`
+    const deadline = Date.now() + 90_000
+    let ready = false
+    while (Date.now() < deadline) {
+      try {
+        const r = await fetch(url, { signal: AbortSignal.timeout(3000) })
+        if (r.status < 500) { ready = true; break }
+      } catch {}
+      await new Promise(r => setTimeout(r, 3000))
+    }
+    console.log(`Imported project ready: ${ready}, url: ${url}`)
+
+    return new Response(JSON.stringify({
+      sbxId: sbx.sandboxId,
+      template: fragment.template,
+      url,
+    } as ExecutionResultWeb))
+  }
+
+  // ── Normal AI-generated fragment flow (unchanged) ────────────────────────
+  const sbx = await Sandbox.create(fragment.template, sandboxOpts)
+
+  // Install additional packages
   if (fragment.has_additional_dependencies) {
     await sbx.commands.run(fragment.install_dependencies_command)
-    console.log(
-      `Installed dependencies: ${fragment.additional_dependencies.join(', ')} in sandbox ${sbx.sandboxId}`,
-    )
+    console.log(`Installed: ${fragment.additional_dependencies.join(', ')}`)
   }
 
-  // Copy files to sandbox filesystem
-  // Handle multi-file format
+  // Write files
   if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
-    // Write all files from the files array
     for (const file of fragment.files) {
       await sbx.files.write(file.file_path, file.file_content)
-      console.log(`Copied file ${file.file_name} to ${file.file_path} in ${sbx.sandboxId}`)
     }
   } else if (fragment.code && fragment.file_path) {
-    // Fallback to single file format
     await sbx.files.write(fragment.file_path, fragment.code)
-    console.log(`Copied file to ${fragment.file_path} in ${sbx.sandboxId}`)
   }
 
-  // Inject Backend SDK if project has backend enabled
+  // Inject Backend SDK
   if (fragment.backend_enabled && fragment.backend_app_id && fragment.backend_status === 'active') {
-    console.log(`Injecting backend SDK for app ${fragment.backend_app_id}`)
     const { generateBackendSDK } = await import('@/lib/generate-sdk')
-    const sdkCode = generateBackendSDK(fragment.backend_app_id)
-    await sbx.files.write('/home/user/lib/backend.js', sdkCode)
-    console.log('Backend SDK injected successfully')
+    await sbx.files.write('/home/user/lib/backend.js', generateBackendSDK(fragment.backend_app_id))
   } else if (fragment.backend_enabled && fragment.backend_status === 'pending') {
-    console.log('Backend registration pending, injecting placeholder SDK')
     const { generatePlaceholderSDK } = await import('@/lib/generate-sdk')
-    const placeholderSDK = generatePlaceholderSDK('pending', 'Backend is being set up. Please refresh in a moment.')
-    await sbx.files.write('/home/user/lib/backend.js', placeholderSDK)
+    await sbx.files.write('/home/user/lib/backend.js', generatePlaceholderSDK('pending', 'Backend is being set up.'))
   } else if (fragment.backend_enabled && fragment.backend_status === 'registration_failed') {
-    console.log('Backend registration failed, injecting error SDK')
     const { generatePlaceholderSDK } = await import('@/lib/generate-sdk')
-    const errorSDK = generatePlaceholderSDK('error', 'Backend setup failed. Please retry from project settings.')
-    await sbx.files.write('/home/user/lib/backend.js', errorSDK)
+    await sbx.files.write('/home/user/lib/backend.js', generatePlaceholderSDK('error', 'Backend setup failed.'))
   }
 
-  // Start Metro bundler for Expo after writing files
+  // Expo Metro bundler
   if (fragment.template.includes('expo-developer')) {
-    console.log('Starting Expo Metro bundler...')
-    try {
-      sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
-      await new Promise(resolve => setTimeout(resolve, 15000))
-    } catch (error) {
-      console.error('Error starting Metro:', error)
-    }
+    sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
+    await new Promise(r => setTimeout(r, 15000))
   }
 
-  // For imported projects (many files), restart dev server with new files
-  const isImportedProject = fragment.files && fragment.files.length > 5
-  if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
-    const startCommands: Record<string, string> = {
-      'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev -- --port 3000',
-      'vue-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev',
-      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true',
-      'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py',
-    }
-    const killCommands: Record<string, string> = {
-      'nextjs-developer': 'pkill -f "next" || true',
-      'vue-developer': 'pkill -f "nuxt\\|vite" || true',
-      'streamlit-developer': 'pkill -f "streamlit" || true',
-      'gradio-developer': 'pkill -f "python" || true',
-    }
-    const killCmd = killCommands[fragment.template]
-    const startCmd = startCommands[fragment.template]
-    if (killCmd && startCmd) {
-      console.log(`Restarting dev server for imported project template: ${fragment.template}`)
-      await sbx.commands.run(killCmd)
-      sbx.commands.run(startCmd, { background: true })
-
-      // Poll until the port is ready (max 60s)
-      const port = fragment.port ?? 3000
-      const host = sbx.getHost(port)
-      const url = `https://${host}`
-      const maxWait = 60000
-      const interval = 2000
-      const start = Date.now()
-      let ready = false
-      while (Date.now() - start < maxWait) {
-        try {
-          const res = await fetch(url, { signal: AbortSignal.timeout(3000) })
-          if (res.status < 500) { ready = true; break }
-        } catch {}
-        await new Promise(r => setTimeout(r, interval))
-      }
-      console.log(`Dev server ready: ${ready} after ${Date.now() - start}ms`)
-    }
-  }
-
-  // Execute code or return a URL to the running sandbox
+  // Code interpreter
   if (fragment.template === 'code-interpreter-v1') {
-    const code = fragment.files && fragment.files.length > 0
-      ? fragment.files[0].file_content
-      : fragment.code || ''
-
+    const code = fragment.files?.length ? fragment.files[0].file_content : fragment.code || ''
     const { logs, error, results } = await sbx.runCode(code)
-
-    return new Response(
-      JSON.stringify({
-        sbxId: sbx?.sandboxId,
-        template: fragment.template,
-        stdout: logs.stdout,
-        stderr: logs.stderr,
-        runtimeError: error,
-        cellResults: results,
-      } as ExecutionResultInterpreter),
-    )
+    return new Response(JSON.stringify({
+      sbxId: sbx.sandboxId,
+      template: fragment.template,
+      stdout: logs.stdout,
+      stderr: logs.stderr,
+      runtimeError: error,
+      cellResults: results,
+    } as ExecutionResultInterpreter))
   }
 
-  return new Response(
-    JSON.stringify({
-      sbxId: sbx?.sandboxId,
-      template: fragment.template,
-      url: `https://${sbx?.getHost(fragment.port ?? 80)}`,
-    } as ExecutionResultWeb),
-  )
+  return new Response(JSON.stringify({
+    sbxId: sbx.sandboxId,
+    template: fragment.template,
+    url: `https://${sbx.getHost(fragment.port ?? 80)}`,
+  } as ExecutionResultWeb))
 }
