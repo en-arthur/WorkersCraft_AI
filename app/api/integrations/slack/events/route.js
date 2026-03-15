@@ -162,7 +162,7 @@ async function handleSlashCommand(payload) {
     })
   })
   
-  const data = await response.json()
+  const data = await response.json().catch(() => ({ text: '❌ Command failed. Please try again.' }))
   
   // Format for Slack
   const slackFormatter = await import('@/lib/bot/slack-formatter')
@@ -212,7 +212,7 @@ async function handleInteraction(payload) {
     })
   })
   
-  const responseData = await response.json()
+  const responseData = await response.json().catch(() => ({ text: '❌ Action failed. Please try again.' }))
   
   // Get access token
   const accessToken = decrypt(integration.access_token)

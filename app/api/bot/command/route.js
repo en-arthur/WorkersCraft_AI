@@ -60,14 +60,14 @@ export async function POST(request) {
     }
     
     // Log interaction (non-blocking)
-    supabase.from('bot_interactions').insert({
+    Promise.resolve(supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'command',
       command,
       success: true,
       response_time_ms: Date.now() - startTime,
-    }).catch(() => {})
+    })).catch(() => {})
     
     return Response.json(response)
     
@@ -75,7 +75,7 @@ export async function POST(request) {
     console.error('Command error:', error)
     
     // Log error (non-blocking)
-    supabase.from('bot_interactions').insert({
+    Promise.resolve(supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'command',
@@ -83,7 +83,7 @@ export async function POST(request) {
       success: false,
       error_message: error.message,
       response_time_ms: Date.now() - startTime,
-    }).catch(() => {})
+    })).catch(() => {})
     
     return Response.json({
       text: '❌ An error occurred. Please try again.',
@@ -117,12 +117,12 @@ async function handleListCommand(userId, platform) {
 
 async function handleNewCommand(userId, integrationId, platform) {
   // Create bot session (non-blocking)
-  supabase.from('bot_sessions').insert({
+  Promise.resolve(supabase.from('bot_sessions').insert({
     user_id: userId,
     integration_id: integrationId,
     state: 'creating_project',
     context: { step: 'platform' },
-  }).catch(() => {})
+  })).catch(() => {})
   
   return {
     text: '🎨 Choose Platform\n\nWhat type of app do you want to build?',
