@@ -11,10 +11,14 @@ function encrypt(text) {
   return iv.toString('hex') + ':' + encrypted.toString('hex')
 }
 
-function generateSecureState(userId) {
+async function generateSecureState(userId) {
   const state = crypto.randomBytes(32).toString('hex')
-  global.oauthStates = global.oauthStates || {}
-  global.oauthStates[state] = { userId, expires: Date.now() + 600000 }
+  const supabase = getSupabaseAdmin()
+  await supabase.from('oauth_states').insert({
+    state,
+    user_id: userId,
+    expires_at: new Date(Date.now() + 600000).toISOString()
+  })
   return state
 }
 
@@ -26,7 +30,7 @@ export async function GET(request) {
     return Response.json({ error: 'User ID required' }, { status: 400 })
   }
   
-  const state = generateSecureState(userId)
+  const state = await generateSecureState(userId)
   
   const slackAuthUrl = new URL('https://slack.com/oauth/v2/authorize')
   slackAuthUrl.searchParams.set('client_id', process.env.SLACK_CLIENT_ID)

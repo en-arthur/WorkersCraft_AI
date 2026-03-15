@@ -94,5 +94,37 @@ CREATE POLICY "Users can delete own integrations"
   ON user_integrations FOR DELETE
   USING (auth.uid() = user_id);
 
--- Create index for integrations
-CREATE INDEX idx_user_integrations_user_id ON user_integrations(user_id);
+-- Add missing columns to user_integrations for Slack/Telegram
+ALTER TABLE user_integrations ADD COLUMN IF NOT EXISTS platform_user_id TEXT;
+ALTER TABLE user_integrations ADD COLUMN IF NOT EXISTS platform_team_id TEXT;
+ALTER TABLE user_integrations ADD COLUMN IF NOT EXISTS platform_team_name TEXT;
+
+-- Drop old unique constraint and add new one that allows multiple integration types per user
+ALTER TABLE user_integrations DROP CONSTRAINT IF EXISTS user_integrations_user_id_integration_type_key;
+ALTER TABLE user_integrations ADD CONSTRAINT user_integrations_user_platform_unique UNIQUE(user_id, integration_type, platform_team_id);
+
+-- Create notification_preferences table
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  integration_id UUID REFERENCES user_integrations(id) ON DELETE CASCADE,
+  notification_type TEXT NOT NULL,
+  enabled BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(integration_id, notification_type)
+);
+
+ALTER TABLE notification_preferences ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own notification preferences"
+  ON notification_preferences FOR ALL
+  USING (auth.uid() = user_id);
+
+-- OAuth state table for serverless-safe state verification
+CREATE TABLE IF NOT EXISTS oauth_states (
+  state TEXT PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+ALTER TABLE oauth_states ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Service role only" ON oauth_states FOR ALL USING (false);
