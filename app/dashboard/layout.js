@@ -22,9 +22,9 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden">
+    <div className="h-screen bg-background flex overflow-hidden" style={{ height: '100dvh' }}>
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-36' : 'w-12'} transition-all duration-300 border-r bg-muted/10 flex flex-col flex-shrink-0`}>
+      <aside className={`${sidebarOpen ? 'w-36' : 'w-12'} transition-all duration-300 border-r bg-muted/10 flex flex-col flex-shrink-0 h-full`}>
         <div className="p-2">
           <div className="flex items-center gap-2 mb-4">
             <Logo width={20} height={20} />
