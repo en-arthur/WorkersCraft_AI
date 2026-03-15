@@ -129,25 +129,34 @@ async function handleSlashCommand(payload) {
 
   const supabase = getSupabaseAdmin()
 
-  // Try exact match first (platform_user_id + team), fallback to team only
+  // 1. Exact match (fully linked row)
   let { data: integration } = await supabase
     .from('user_integrations')
     .select('*')
     .eq('integration_type', 'slack')
     .eq('platform_user_id', user_id)
     .eq('platform_team_id', team_id)
+    .eq('status', 'active')
     .single()
 
   if (!integration) {
-    // Fallback: match by team only (covers cases where platform_user_id wasn't stored)
-    const { data: fallback } = await supabase
+    // 2. Legacy rows where platform columns are NULL — match by team_id only
+    const { data: legacyRows } = await supabase
       .from('user_integrations')
       .select('*')
       .eq('integration_type', 'slack')
-      .eq('platform_team_id', team_id)
       .eq('status', 'active')
-      .single()
-    integration = fallback
+      .is('platform_user_id', null)
+
+    integration = legacyRows?.[0] ?? null
+
+    // Backfill the platform columns so future lookups use the fast path
+    if (integration) {
+      await supabase
+        .from('user_integrations')
+        .update({ platform_user_id: user_id, platform_team_id: team_id })
+        .eq('id', integration.id)
+    }
   }
 
   if (!integration) {
