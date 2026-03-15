@@ -49,6 +49,7 @@ function ChatContent() {
   const [fragment, setFragment] = useState<DeepPartial<FragmentSchema>>()
   const [currentTab, setCurrentTab] = useState<'code' | 'fragment' | 'backend'>('code')
   const [isPreviewLoading, setIsPreviewLoading] = useState(false)
+  const [isProjectLoading, setIsProjectLoading] = useState(false)
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [authView, setAuthView] = useState<ViewType>('sign_in')
   const [isRateLimited, setIsRateLimited] = useState(false)
@@ -352,7 +353,7 @@ function ChatContent() {
 
   async function loadProject(projectId: string) {
     if (!supabase) return
-    
+    setIsProjectLoading(true)
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
@@ -458,6 +459,8 @@ function ChatContent() {
     } catch (error) {
       console.error('Error loading project:', error)
       alert(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsProjectLoading(false)
     }
   }
 
@@ -609,6 +612,14 @@ function ChatContent() {
         <div
           className={`flex flex-col w-full max-h-full max-w-[800px] mx-auto px-4 overflow-auto transition-all duration-300 ${isFullscreen ? 'hidden' : 'block'} ${fragment ? 'col-span-1' : 'col-span-2'}`}
         >
+          {isProjectLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 rounded-full border-4 border-muted border-t-primary animate-spin" />
+                <p className="text-sm text-muted-foreground">Loading project...</p>
+              </div>
+            </div>
+          )}
           <NavBar
             session={session}
             showLogin={() => setAuthDialog(true)}

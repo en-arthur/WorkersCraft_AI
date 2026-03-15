@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label'
 import { GitBranch, Loader2, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function ImportGitHubDialog({ onImport }) {
+export function ImportGitHubDialog({ onImport, disabled = false }) {
   const [open, setOpen] = useState(false)
   const [repos, setRepos] = useState([])
   const [branches, setBranches] = useState([])
@@ -185,7 +185,7 @@ export function ImportGitHubDialog({ onImport }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline">
+        <Button variant="outline" disabled={disabled}>
           <GitBranch className="w-4 h-4 mr-2" />
           Import from GitHub
         </Button>

@@ -15,6 +15,7 @@ export function BackendPanel({ appId, projectId }) {
   const [selectedCollection, setSelectedCollection] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   const fetchData = useCallback(async (resource, collection = '') => {
     setLoading(true)
@@ -54,30 +55,36 @@ export function BackendPanel({ appId, projectId }) {
   }, [tab, fetchData])
 
   const handleDeleteUser = async (userId) => {
+    setDeletingId(userId)
     const { data: { session } } = await supabase.auth.getSession()
     await fetch(`/api/backend/${appId}?resource=users&record_id=${userId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
     setUsers(users.filter(u => u.user_id !== userId))
+    setDeletingId(null)
   }
 
   const handleDeleteFile = async (fileId) => {
+    setDeletingId(fileId)
     const { data: { session } } = await supabase.auth.getSession()
     await fetch(`/api/backend/${appId}?resource=files&record_id=${fileId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
     setFiles(files.filter(f => f.id !== fileId))
+    setDeletingId(null)
   }
 
   const handleDeleteRecord = async (recordId) => {
+    setDeletingId(recordId)
     const { data: { session } } = await supabase.auth.getSession()
     await fetch(`/api/backend/${appId}?resource=storage&record_id=${recordId}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${session.access_token}` }
     })
     setRecords(records.filter(r => r.id !== recordId))
+    setDeletingId(null)
   }
 
   const filteredRecords = selectedCollection
@@ -125,8 +132,8 @@ export function BackendPanel({ appId, projectId }) {
                     <div className="font-medium">{u.email}</div>
                     <div className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u.user_id)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                  <Button variant="ghost" size="icon" disabled={deletingId === u.user_id} onClick={() => handleDeleteUser(u.user_id)}>
+                    {deletingId === u.user_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-red-500" />}
                   </Button>
                 </div>
               ))}
@@ -162,8 +169,8 @@ export function BackendPanel({ appId, projectId }) {
                     <div className="text-xs text-muted-foreground mb-1">{r.collection} · {new Date(r.created_at).toLocaleDateString()}</div>
                     <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-24">{JSON.stringify(r.data, null, 2)}</pre>
                   </div>
-                  <Button variant="ghost" size="icon" className="ml-2 shrink-0" onClick={() => handleDeleteRecord(r.id)}>
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                  <Button variant="ghost" size="icon" className="ml-2 shrink-0" disabled={deletingId === r.id} onClick={() => handleDeleteRecord(r.id)}>
+                    {deletingId === r.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-red-500" />}
                   </Button>
                 </div>
               ))}
@@ -192,8 +199,8 @@ export function BackendPanel({ appId, projectId }) {
                         <FileIcon className="w-4 h-4" />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteFile(f.id)}>
-                      <Trash2 className="w-4 h-4 text-red-500" />
+                    <Button variant="ghost" size="icon" disabled={deletingId === f.id} onClick={() => handleDeleteFile(f.id)}>
+                      {deletingId === f.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4 text-red-500" />}
                     </Button>
                   </div>
                 </div>
