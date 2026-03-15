@@ -229,21 +229,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div className="h-screen flex flex-col overflow-hidden">
+      {/* Fixed header */}
+      <div className="flex-shrink-0 px-4 md:px-8 pt-6 pb-4 border-b">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">My Projects</h1>
             <p className="text-muted-foreground mt-1">
               {projects.length} project{projects.length !== 1 ? 's' : ''}
             </p>
           </div>
-          
           <div className="flex gap-2">
             <ImportGitHubDialog onImport={(project) => {
               router.push(`/chat?project=${project.id}`)
             }} />
-            
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="px-8 py-6 text-base">
@@ -351,8 +350,11 @@ export default function DashboardPage() {
           </Dialog>
           </div>
         </div>
+      </div>
 
-        {projects.length === 0 ? (
+      {/* Scrollable content */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
+        <div className="max-w-6xl mx-auto">
           <div className="text-center py-16 border-2 border-dashed rounded-lg">
             <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
               <Logo style="fragments" className="w-full h-full" />
@@ -427,6 +429,7 @@ export default function DashboardPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
     </div>
   )

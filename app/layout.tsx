@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <PostHogProvider>
-        <body className={inter.className}>
+        <body className={`${inter.className} h-screen overflow-hidden`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
