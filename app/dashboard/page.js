@@ -355,6 +355,7 @@ export default function DashboardPage() {
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
         <div className="max-w-6xl mx-auto">
+          {projects.length === 0 ? (
           <div className="text-center py-16 border-2 border-dashed rounded-lg">
             <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
               <Logo style="fragments" className="w-full h-full" />
