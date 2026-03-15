@@ -1,12 +1,11 @@
-import { createClient } from '@supabase/supabase-js'
 import { BUTTON_ACTIONS, getCreateProjectButtons } from '@/lib/bot/buttons'
 import { formatProjectListMessage, formatProjectStatusMessage } from '@/lib/bot/slack-formatter'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
 
+const supabase = getSupabaseAdmin()
+
 export async function POST(request) {
   const { command, userId, integrationId, platform, args = [] } = await request.json()
-  
-  const supabase = getSupabaseAdmin()
   
   // Verify integration
   const { data: integration } = await supabase
@@ -60,23 +59,23 @@ export async function POST(request) {
         }
     }
     
-    // Log interaction
-    await supabase.from('bot_interactions').insert({
+    // Log interaction (non-blocking)
+    supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'command',
       command,
       success: true,
       response_time_ms: Date.now() - startTime,
-    })
+    }).catch(() => {})
     
     return Response.json(response)
     
   } catch (error) {
     console.error('Command error:', error)
     
-    // Log error
-    await supabase.from('bot_interactions').insert({
+    // Log error (non-blocking)
+    supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'command',
@@ -84,7 +83,7 @@ export async function POST(request) {
       success: false,
       error_message: error.message,
       response_time_ms: Date.now() - startTime,
-    })
+    }).catch(() => {})
     
     return Response.json({
       text: '❌ An error occurred. Please try again.',
@@ -117,13 +116,13 @@ async function handleListCommand(userId, platform) {
 }
 
 async function handleNewCommand(userId, integrationId, platform) {
-  // Create bot session
-  await supabase.from('bot_sessions').insert({
+  // Create bot session (non-blocking)
+  supabase.from('bot_sessions').insert({
     user_id: userId,
     integration_id: integrationId,
     state: 'creating_project',
     context: { step: 'platform' },
-  })
+  }).catch(() => {})
   
   return {
     text: '🎨 Choose Platform\n\nWhat type of app do you want to build?',
