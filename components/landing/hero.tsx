@@ -12,10 +12,10 @@ export function Hero() {
       <div className="absolute inset-0 -z-10">
         <DotGrid
           dotSize={16}
-          gap={32}
+          gap={25}
           baseColor="#271E37"
           activeColor="#5227FF"
-          proximity={150}
+          proximity={110}
           speedTrigger={100}
           shockRadius={250}
           shockStrength={5}
