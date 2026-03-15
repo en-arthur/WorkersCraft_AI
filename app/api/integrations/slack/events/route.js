@@ -72,12 +72,40 @@ async function updateSlackMessage(channel, messageTs, accessToken, message) {
 
 export async function POST(request) {
   try {
+    const contentType = request.headers.get('content-type') || ''
     const body = await request.text()
     const signature = request.headers.get('X-Slack-Signature')
     const timestamp = request.headers.get('X-Slack-Request-Timestamp')
-    
+
+    // Slash commands come as form-urlencoded
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const params = Object.fromEntries(new URLSearchParams(body))
+
+      // Verify signature
+      if (!verifySlackSignature(signature, timestamp, body)) {
+        return Response.json({ error: 'Invalid signature' }, { status: 401 })
+      }
+
+      // Handle interactive payloads (button clicks sent as form with payload field)
+      if (params.payload) {
+        const payload = JSON.parse(params.payload)
+        if (payload.type === 'block_actions') {
+          return handleInteraction(payload)
+        }
+        return Response.json({ ok: true })
+      }
+
+      // Handle slash commands
+      if (params.command) {
+        return handleSlashCommand(params)
+      }
+
+      return Response.json({ ok: true })
+    }
+
+    // JSON payloads (events API)
     const payload = JSON.parse(body)
-    
+
     // Handle URL verification first — no signature needed
     if (payload.type === 'url_verification') {
       return Response.json({ challenge: payload.challenge })
@@ -87,22 +115,12 @@ export async function POST(request) {
     if (!verifySlackSignature(signature, timestamp, body)) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 })
     }
-    
-    // Handle slash commands
-    if (payload.command) {
-      return handleSlashCommand(payload)
-    }
-    
-    // Handle interactive components (buttons)
-    if (payload.type === 'block_actions') {
-      return handleInteraction(payload)
-    }
-    
+
     return Response.json({ ok: true })
-    
+
   } catch (error) {
     console.error('Slack events error:', error)
-    return Response.json({ ok: true }) // Always return ok to Slack
+    return Response.json({ ok: true })
   }
 }
 
