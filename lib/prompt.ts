@@ -111,11 +111,23 @@ export function getBackendPrompt(backendEnabled: boolean, backendStatus: string)
     
     IMPLEMENTATION GUIDELINES:
     1. Import: import { backend } from '@/lib/backend'
-    2. Create login/register pages if user authentication is needed
-    3. Use backend.create/list/update/delete for data persistence
-    4. Check backend.isAuthenticated() to protect routes
-    5. Store data in logical collections (e.g., 'todos', 'posts', 'products')
-    6. Handle errors gracefully with try/catch
+    2. ALWAYS include a login/register form in every app — storage and file calls require authentication.
+    3. ALWAYS check backend.isAuthenticated() before any backend.list/create/update/delete/uploadFile call. If not authenticated, show the login form instead.
+    4. NEVER call storage or file methods without the user being logged in first.
+    5. Use backend.create/list/update/delete for data persistence
+    6. Store data in logical collections (e.g., 'todos', 'posts', 'products')
+    7. Handle errors gracefully with try/catch
+    8. After login/register, immediately load the user's data.
+    
+    REQUIRED APP STRUCTURE:
+    - If not authenticated → show Login/Register form
+    - If authenticated → show the main app with data loaded from backend
+    
+    Example pattern:
+    if (!backend.isAuthenticated()) {
+      return <LoginForm onSuccess={() => setAuthed(true)} />
+    }
+    return <MainApp />
     
     Example Todo App:
     import { backend } from '@/lib/backend'
