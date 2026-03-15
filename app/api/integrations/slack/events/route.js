@@ -76,16 +76,16 @@ export async function POST(request) {
     const signature = request.headers.get('X-Slack-Signature')
     const timestamp = request.headers.get('X-Slack-Request-Timestamp')
     
-    // Verify signature
-    if (!verifySlackSignature(signature, timestamp, body)) {
-      return Response.json({ error: 'Invalid signature' }, { status: 401 })
-    }
-    
     const payload = JSON.parse(body)
     
-    // Handle URL verification
+    // Handle URL verification first — no signature needed
     if (payload.type === 'url_verification') {
       return Response.json({ challenge: payload.challenge })
+    }
+
+    // Verify signature for all other requests
+    if (!verifySlackSignature(signature, timestamp, body)) {
+      return Response.json({ error: 'Invalid signature' }, { status: 401 })
     }
     
     // Handle slash commands
