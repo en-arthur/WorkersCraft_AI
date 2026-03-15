@@ -15,6 +15,7 @@ export function toPrompt(template: Templates) {
     2. Identify EVERY feature/requirement mentioned
     3. Generate code for ALL requirements
     4. List all requirements in your commentary
+    5. NEVER use alert(), confirm(), or prompt() — use toast notifications, inline error messages, or UI state instead.
 
     Example commentary:
     "Building auth page with password login. Features: 1) Hero section, 2) Tech specs, 3) Features showcase, 4) Interactive gallery, 5) Navigation"
