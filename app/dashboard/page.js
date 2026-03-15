@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -24,6 +25,7 @@ export default function DashboardPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
   const [newProject, setNewProject] = useState({ 
     name: '', 
     user_prompt: '',
@@ -169,6 +171,7 @@ export default function DashboardPage() {
 
   async function handleDeleteProject(projectId) {
     try {
+      setDeleting(true)
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
       const response = await fetch(`/api/projects/${projectId}`, {
@@ -185,6 +188,8 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error('Error deleting project:', error)
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -423,9 +428,11 @@ export default function DashboardPage() {
               </Button>
               <Button 
                 variant="destructive" 
+                disabled={deleting}
                 onClick={() => handleDeleteProject(projectToDelete?.id)}
               >
-                Delete
+                {deleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {deleting ? 'Deleting...' : 'Delete'}
               </Button>
             </DialogFooter>
           </DialogContent>
