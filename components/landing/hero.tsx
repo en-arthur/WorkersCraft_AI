@@ -1,12 +1,27 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Sparkles } from 'lucide-react'
+import dynamic from 'next/dynamic'
+
+const DotGrid = dynamic(() => import('./DotGrid'), { ssr: false })
 
 export function Hero() {
   return (
     <section className="relative flex flex-col items-center justify-center min-h-[85vh] px-4 text-center overflow-hidden">
-      {/* Background gradient */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-100/50 via-background to-background dark:from-blue-950/30 dark:via-background dark:to-background" />
+      {/* DotGrid background */}
+      <div className="absolute inset-0 -z-10">
+        <DotGrid
+          dotSize={6}
+          gap={15}
+          baseColor="#271E37"
+          activeColor="#5227FF"
+          proximity={120}
+          shockRadius={250}
+          shockStrength={5}
+          resistance={750}
+          returnDuration={1.5}
+        />
+      </div>
       
       <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 text-sm mb-8 border">
         <Sparkles className="w-4 h-4 text-primary" />
