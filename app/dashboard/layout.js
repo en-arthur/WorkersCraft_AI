@@ -22,9 +22,9 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="h-screen bg-background flex overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-36' : 'w-12'} transition-all duration-300 border-r bg-muted/10 flex flex-col`}>
+      <aside className={`${sidebarOpen ? 'w-36' : 'w-12'} transition-all duration-300 border-r bg-muted/10 flex flex-col flex-shrink-0`}>
         <div className="p-2">
           <div className="flex items-center gap-2 mb-4">
             <Logo width={20} height={20} />
@@ -81,9 +81,9 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Toggle Button */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -94,7 +94,7 @@ export default function DashboardLayout({ children }) {
         </div>
         
         {/* Page Content */}
-        <div className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           {children}
         </div>
       </div>
