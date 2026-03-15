@@ -1,5 +1,7 @@
 import crypto from 'crypto'
 import { getSupabaseAdmin } from '@/lib/supabase-admin'
+import { BUTTON_ACTIONS, getProjectButtons, getCreateProjectButtons } from '@/lib/bot/buttons'
+import { formatSlackBlocks, formatProjectListMessage, formatProjectStatusMessage } from '@/lib/bot/slack-formatter'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
@@ -15,58 +17,28 @@ function decrypt(text) {
 
 function verifySlackSignature(signature, timestamp, body) {
   const signingSecret = process.env.SLACK_SIGNING_SECRET
-  
-  // Check timestamp is within 5 minutes
   const time = Math.floor(Date.now() / 1000)
-  if (Math.abs(time - parseInt(timestamp)) > 300) {
-    return false
-  }
-  
-  // Compute signature
+  if (Math.abs(time - parseInt(timestamp)) > 300) return false
   const sigBasestring = `v0:${timestamp}:${body}`
-  const mySignature = 'v0=' + crypto
-    .createHmac('sha256', signingSecret)
-    .update(sigBasestring)
-    .digest('hex')
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(mySignature),
-    Buffer.from(signature)
-  )
+  const mySignature = 'v0=' + crypto.createHmac('sha256', signingSecret).update(sigBasestring).digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(mySignature), Buffer.from(signature))
 }
 
 async function sendSlackMessage(channel, accessToken, message) {
-  const slackFormatter = await import('@/lib/bot/slack-formatter')
-  const blocks = slackFormatter.formatSlackBlocks(message)
-  
+  const blocks = formatSlackBlocks(message)
   await fetch('https://slack.com/api/chat.postMessage', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      channel,
-      blocks
-    })
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channel, blocks, text: message.text || 'WorkersCraft' })
   })
 }
 
 async function updateSlackMessage(channel, messageTs, accessToken, message) {
-  const slackFormatter = await import('@/lib/bot/slack-formatter')
-  const blocks = slackFormatter.formatSlackBlocks(message)
-  
+  const blocks = formatSlackBlocks(message)
   await fetch('https://slack.com/api/chat.update', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${accessToken}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      channel,
-      ts: messageTs,
-      blocks
-    })
+    headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ channel, ts: messageTs, blocks, text: message.text || 'WorkersCraft' })
   })
 }
 
@@ -77,41 +49,30 @@ export async function POST(request) {
     const signature = request.headers.get('X-Slack-Signature')
     const timestamp = request.headers.get('X-Slack-Request-Timestamp')
 
-    // Slash commands come as form-urlencoded
     if (contentType.includes('application/x-www-form-urlencoded')) {
       const params = Object.fromEntries(new URLSearchParams(body))
 
-      // Verify signature
       if (!verifySlackSignature(signature, timestamp, body)) {
         return Response.json({ error: 'Invalid signature' }, { status: 401 })
       }
 
-      // Handle interactive payloads (button clicks sent as form with payload field)
       if (params.payload) {
         const payload = JSON.parse(params.payload)
-        if (payload.type === 'block_actions') {
-          return handleInteraction(payload)
-        }
+        if (payload.type === 'block_actions') return handleInteraction(payload)
         return Response.json({ ok: true })
       }
 
-      // Handle slash commands — run inline, return immediately
-      if (params.command) {
-        return handleSlashCommand(params)
-      }
+      if (params.command) return handleSlashCommand(params)
 
       return Response.json({ ok: true })
     }
 
-    // JSON payloads (events API)
     const payload = JSON.parse(body)
 
-    // Handle URL verification first — no signature needed
     if (payload.type === 'url_verification') {
       return Response.json({ challenge: payload.challenge })
     }
 
-    // Verify signature for all other requests
     if (!verifySlackSignature(signature, timestamp, body)) {
       return Response.json({ error: 'Invalid signature' }, { status: 401 })
     }
@@ -124,13 +85,11 @@ export async function POST(request) {
   }
 }
 
-async function handleSlashCommand(payload) {
-  const { command, text, user_id, team_id } = payload
-
+async function findIntegration(user_id, team_id) {
   const supabase = getSupabaseAdmin()
 
-  // 1. Exact match (fully linked row)
-  let { data: integration } = await supabase
+  // Fast path: exact match
+  let { data } = await supabase
     .from('user_integrations')
     .select('*')
     .eq('integration_type', 'slack')
@@ -139,105 +98,146 @@ async function handleSlashCommand(payload) {
     .eq('status', 'active')
     .single()
 
-  if (!integration) {
-    // 2. Legacy rows where platform columns are NULL — match by team_id only
-    const { data: legacyRows } = await supabase
+  if (data) return data
+
+  // Legacy path: rows with NULL platform columns (pre-migration)
+  const { data: rows } = await supabase
+    .from('user_integrations')
+    .select('*')
+    .eq('integration_type', 'slack')
+    .eq('status', 'active')
+    .is('platform_user_id', null)
+
+  const legacy = rows?.[0] ?? null
+
+  // Backfill so next request hits the fast path
+  if (legacy) {
+    await supabase
       .from('user_integrations')
-      .select('*')
-      .eq('integration_type', 'slack')
-      .eq('status', 'active')
-      .is('platform_user_id', null)
+      .update({ platform_user_id: user_id, platform_team_id: team_id })
+      .eq('id', legacy.id)
+  }
 
-    integration = legacyRows?.[0] ?? null
+  return legacy
+}
 
-    // Backfill the platform columns so future lookups use the fast path
-    if (integration) {
-      await supabase
-        .from('user_integrations')
-        .update({ platform_user_id: user_id, platform_team_id: team_id })
-        .eq('id', integration.id)
+async function runCommand(command, args, userId, integrationId) {
+  const supabase = getSupabaseAdmin()
+
+  switch (command) {
+    case '/list': {
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('updated_at', { ascending: false })
+
+      if (!projects || projects.length === 0) {
+        return {
+          text: '📁 You have no projects yet.\n\nCreate your first project:',
+          buttons: [{ type: 'action', text: '➕ Create New Project', action: BUTTON_ACTIONS.CREATE_PROJECT, data: {} }]
+        }
+      }
+      return { blocks: formatProjectListMessage(projects) }
+    }
+
+    case '/new': {
+      return {
+        text: '🎨 Choose Platform\n\nWhat type of app do you want to build?',
+        buttons: getCreateProjectButtons('platform')
+      }
+    }
+
+    case '/status': {
+      const projectName = args[0]
+      if (!projectName) return { text: '❌ Usage: /workerscraft status <project-name>' }
+      const { data: project } = await supabase
+        .from('projects').select('*').eq('user_id', userId).ilike('name', `%${projectName}%`).single()
+      if (!project) return { text: `❌ Project "${projectName}" not found.` }
+      return formatProjectStatusMessage(project)
+    }
+
+    case '/deploy': {
+      const projectName = args[0]
+      if (!projectName) return { text: '❌ Usage: /workerscraft deploy <project-name>' }
+      const { data: project } = await supabase
+        .from('projects').select('*').eq('user_id', userId).ilike('name', `%${projectName}%`).single()
+      if (!project) return { text: `❌ Project "${projectName}" not found.` }
+      return {
+        text: `⚠️ Deploy: ${project.name}`,
+        buttons: [
+          { type: 'action', text: '✅ Confirm Deploy', action: BUTTON_ACTIONS.CONFIRM_DEPLOY, data: { projectId: project.id }, style: 'primary' },
+          { type: 'action', text: '❌ Cancel', action: BUTTON_ACTIONS.CANCEL, data: {} }
+        ]
+      }
+    }
+
+    case '/help':
+    default: {
+      return {
+        text: `📚 *WorkersCraft Commands*\n\n/workerscraft list — your projects\n/workerscraft new — create a project\n/workerscraft status <name> — project status\n/workerscraft deploy <name> — deploy\n/workerscraft help — this message`
+      }
     }
   }
+}
+
+async function handleSlashCommand(payload) {
+  const { text, user_id, team_id } = payload
+
+  const integration = await findIntegration(user_id, team_id)
 
   if (!integration) {
     return Response.json({
       response_type: 'ephemeral',
-      text: '❌ Account not linked. Please link your account from the web dashboard.\n\n🌐 ' + process.env.NEXT_PUBLIC_SITE_URL + '/dashboard/integrations'
+      text: `❌ Account not linked. Connect at: ${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/integrations`
     })
   }
 
-  const [commandName, ...args] = (text || '').trim().split(' ')
+  const [commandName, ...args] = (text || '').trim().split(/\s+/)
   const fullCommand = commandName ? `/${commandName}` : '/list'
 
-  const cmdResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/bot/command`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      command: fullCommand,
-      args,
-      userId: integration.user_id,
-      integrationId: integration.id,
-      platform: 'slack',
-    })
-  })
+  try {
+    const data = await runCommand(fullCommand, args, integration.user_id, integration.id)
+    const blocks = formatSlackBlocks(data)
 
-  const data = await cmdResponse.json().catch(() => ({ text: '❌ Command failed. Please try again.' }))
+    if (!blocks || blocks.length === 0) {
+      return Response.json({ response_type: 'in_channel', text: data.text || '✅ Done' })
+    }
 
-  const slackFormatter = await import('@/lib/bot/slack-formatter')
-  const blocks = slackFormatter.formatSlackBlocks(data)
-
-  return Response.json({ response_type: 'in_channel', blocks })
+    return Response.json({ response_type: 'in_channel', text: data.text || 'WorkersCraft', blocks })
+  } catch (err) {
+    console.error('Slash command error:', err)
+    return Response.json({ response_type: 'ephemeral', text: '❌ Something went wrong. Please try again.' })
+  }
 }
 
 async function handleInteraction(payload) {
   const { user, team, actions, message, channel } = payload
-  
-  const supabase = getSupabaseAdmin()
-  
-  // Find user integration
-  const { data: integration } = await supabase
-    .from('user_integrations')
-    .select('*')
-    .eq('integration_type', 'slack')
-    .eq('platform_user_id', user.id)
-    .eq('platform_team_id', team.id)
-    .single()
-  
+
+  const integration = await findIntegration(user.id, team.id)
+
   if (!integration) {
-    return Response.json({
-      response_type: 'ephemeral',
-      text: '❌ Account not linked'
-    })
+    return Response.json({ response_type: 'ephemeral', text: '❌ Account not linked' })
   }
-  
+
   const action = actions[0]
   const [actionName, dataStr] = action.action_id.split(':')
   const data = JSON.parse(dataStr || '{}')
-  
-  // Call bot action handler
+
   const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/bot/action`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: actionName,
-      data,
-      userId: integration.user_id,
-      integrationId: integration.id,
-      platform: 'slack',
-    })
+    body: JSON.stringify({ action: actionName, data, userId: integration.user_id, integrationId: integration.id, platform: 'slack' })
   })
-  
-  const responseData = await response.json().catch(() => ({ text: '❌ Action failed. Please try again.' }))
-  
-  // Get access token
+
+  const responseData = await response.json().catch(() => ({ text: '❌ Action failed.' }))
   const accessToken = decrypt(integration.access_token)
-  
-  // Update or send new message
+
   if (responseData.update_message && message) {
     await updateSlackMessage(channel.id, message.ts, accessToken, responseData)
-    return Response.json({ ok: true })
   } else {
     await sendSlackMessage(channel.id, accessToken, responseData)
-    return Response.json({ ok: true })
   }
+
+  return Response.json({ ok: true })
 }
