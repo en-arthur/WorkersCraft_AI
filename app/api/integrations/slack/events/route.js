@@ -95,9 +95,10 @@ export async function POST(request) {
         return Response.json({ ok: true })
       }
 
-      // Handle slash commands
+      // Handle slash commands — respond immediately, process async to beat 3s timeout
       if (params.command) {
-        return handleSlashCommand(params)
+        handleSlashCommand(params).catch(console.error)
+        return new Response('', { status: 200 })
       }
 
       return Response.json({ ok: true })
@@ -125,10 +126,10 @@ export async function POST(request) {
 }
 
 async function handleSlashCommand(payload) {
-  const { command, text, user_id, team_id, channel_id } = payload
-  
+  const { command, text, user_id, team_id, response_url } = payload
+
   const supabase = getSupabaseAdmin()
-  
+
   // Find user integration
   const { data: integration } = await supabase
     .from('user_integrations')
@@ -137,18 +138,26 @@ async function handleSlashCommand(payload) {
     .eq('platform_user_id', user_id)
     .eq('platform_team_id', team_id)
     .single()
-  
+
+  const sendResponse = async (body) => {
+    await fetch(response_url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+  }
+
   if (!integration) {
-    return Response.json({
+    return sendResponse({
       response_type: 'ephemeral',
       text: '❌ Account not linked. Please link your account from the web dashboard.\n\n🌐 ' + process.env.NEXT_PUBLIC_SITE_URL + '/dashboard/integrations'
     })
   }
-  
+
   // Parse command
-  const [commandName, ...args] = text.trim().split(' ')
+  const [commandName, ...args] = (text || '').trim().split(' ')
   const fullCommand = commandName ? `/${commandName}` : '/list'
-  
+
   // Call bot command handler
   const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/bot/command`, {
     method: 'POST',
@@ -161,17 +170,14 @@ async function handleSlashCommand(payload) {
       platform: 'slack',
     })
   })
-  
+
   const data = await response.json().catch(() => ({ text: '❌ Command failed. Please try again.' }))
-  
+
   // Format for Slack
   const slackFormatter = await import('@/lib/bot/slack-formatter')
   const blocks = slackFormatter.formatSlackBlocks(data)
-  
-  return Response.json({
-    response_type: 'in_channel',
-    blocks
-  })
+
+  return sendResponse({ response_type: 'in_channel', blocks })
 }
 
 async function handleInteraction(payload) {
