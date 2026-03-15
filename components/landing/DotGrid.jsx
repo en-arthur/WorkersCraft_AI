@@ -4,138 +4,166 @@ import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 
 export default function DotGrid({
-  dotSize = 6,
-  gap = 15,
-  baseColor = '#271E37',
+  dotSize = 16,
+  gap = 32,
+  baseColor = '#5227FF',
   activeColor = '#5227FF',
-  proximity = 120,
+  proximity = 150,
+  speedTrigger = 100,
   shockRadius = 250,
   shockStrength = 5,
+  maxSpeed = 5000,
   resistance = 750,
   returnDuration = 1.5,
+  className = '',
+  style = {},
 }) {
-  const containerRef = useRef(null)
+  const canvasRef = useRef(null)
+  const mouse = useRef({ x: -9999, y: -9999, vx: 0, vy: 0, px: -9999, py: -9999 })
   const dotsRef = useRef([])
-  const mouseRef = useRef({ x: -9999, y: -9999 })
   const rafRef = useRef(null)
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
 
     const buildGrid = () => {
-      container.innerHTML = ''
+      const W = canvas.offsetWidth
+      const H = canvas.offsetHeight
+      canvas.width = W
+      canvas.height = H
+
       dotsRef.current = []
-
-      const W = container.offsetWidth
-      const H = container.offsetHeight
-      const cols = Math.floor(W / (dotSize + gap))
-      const rows = Math.floor(H / (dotSize + gap))
-      const padX = (W - cols * (dotSize + gap)) / 2
-      const padY = (H - rows * (dotSize + gap)) / 2
-
-      const fragment = document.createDocumentFragment()
+      const cols = Math.floor((W + gap) / (dotSize + gap))
+      const rows = Math.floor((H + gap) / (dotSize + gap))
+      const padX = (W - cols * (dotSize + gap) + gap) / 2
+      const padY = (H - rows * (dotSize + gap) + gap) / 2
 
       for (let r = 0; r < rows; r++) {
         for (let c = 0; c < cols; c++) {
-          const dot = document.createElement('div')
-          dot.style.cssText = `
-            position: absolute;
-            width: ${dotSize}px;
-            height: ${dotSize}px;
-            border-radius: 50%;
-            background: ${baseColor};
-            left: ${padX + c * (dotSize + gap)}px;
-            top: ${padY + r * (dotSize + gap)}px;
-            will-change: transform, background-color;
-          `
-          fragment.appendChild(dot)
-          dotsRef.current.push(dot)
+          dotsRef.current.push({
+            ox: padX + c * (dotSize + gap) + dotSize / 2,
+            oy: padY + r * (dotSize + gap) + dotSize / 2,
+            x: 0, y: 0,       // offset from origin
+            vx: 0, vy: 0,     // velocity
+            color: baseColor,
+            scale: 1,
+          })
         }
       }
-
-      container.appendChild(fragment)
     }
 
-    buildGrid()
+    const hexToRgb = (hex) => {
+      const r = parseInt(hex.slice(1, 3), 16)
+      const g = parseInt(hex.slice(3, 5), 16)
+      const b = parseInt(hex.slice(5, 7), 16)
+      return { r, g, b }
+    }
 
-    const eventTarget = container.parentElement || container
+    const lerpColor = (a, b, t) => {
+      const ca = hexToRgb(a), cb = hexToRgb(b)
+      return `rgb(${Math.round(ca.r + (cb.r - ca.r) * t)},${Math.round(ca.g + (cb.g - ca.g) * t)},${Math.round(ca.b + (cb.b - ca.b) * t)})`
+    }
+
+    const render = () => {
+      const { x: mx, y: my, vx, vy } = mouse.current
+      const speed = Math.sqrt(vx * vx + vy * vy)
+      const inertiaActive = speed > speedTrigger
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+      dotsRef.current.forEach((dot) => {
+        const dx = mx - (dot.ox + dot.x)
+        const dy = my - (dot.oy + dot.y)
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        const t = Math.max(0, 1 - dist / proximity)
+
+        if (inertiaActive && dist < proximity) {
+          const force = (speed / maxSpeed) * t
+          dot.vx += (vx / speed) * force * (resistance / 100)
+          dot.vy += (vy / speed) * force * (resistance / 100)
+        }
+
+        // Spring return
+        dot.vx += (-dot.x) * 0.1
+        dot.vy += (-dot.y) * 0.1
+        dot.vx *= 0.75
+        dot.vy *= 0.75
+        dot.x += dot.vx
+        dot.y += dot.vy
+
+        const scale = 1 + t * 0.5
+        const color = t > 0 ? lerpColor(baseColor, activeColor, t) : baseColor
+
+        ctx.beginPath()
+        ctx.arc(dot.ox + dot.x, dot.oy + dot.y, (dotSize / 2) * scale, 0, Math.PI * 2)
+        ctx.fillStyle = color
+        ctx.fill()
+      })
+
+      rafRef.current = requestAnimationFrame(render)
+    }
 
     const onMouseMove = (e) => {
-      const rect = container.getBoundingClientRect()
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
+      const rect = canvas.getBoundingClientRect()
+      const nx = e.clientX - rect.left
+      const ny = e.clientY - rect.top
+      mouse.current.vx = nx - mouse.current.px
+      mouse.current.vy = ny - mouse.current.py
+      mouse.current.px = mouse.current.x
+      mouse.current.py = mouse.current.y
+      mouse.current.x = nx
+      mouse.current.y = ny
+    }
+
+    const onMouseLeave = () => {
+      mouse.current = { x: -9999, y: -9999, vx: 0, vy: 0, px: -9999, py: -9999 }
     }
 
     const onClick = (e) => {
-      const rect = container.getBoundingClientRect()
+      const rect = canvas.getBoundingClientRect()
       const cx = e.clientX - rect.left
       const cy = e.clientY - rect.top
 
       dotsRef.current.forEach((dot) => {
-        const dx = parseFloat(dot.style.left) + dotSize / 2 - cx
-        const dy = parseFloat(dot.style.top) + dotSize / 2 - cy
+        const dx = (dot.ox + dot.x) - cx
+        const dy = (dot.oy + dot.y) - cy
         const dist = Math.sqrt(dx * dx + dy * dy)
         if (dist < shockRadius) {
           const force = ((shockRadius - dist) / shockRadius) * shockStrength
           const angle = Math.atan2(dy, dx)
-          gsap.to(dot, {
-            x: Math.cos(angle) * force * (resistance / 100),
-            y: Math.sin(angle) * force * (resistance / 100),
-            duration: 0.3,
-            ease: 'power2.out',
-            onComplete: () => {
-              gsap.to(dot, { x: 0, y: 0, duration: returnDuration, ease: 'elastic.out(1, 0.3)' })
-            }
-          })
+          dot.vx += Math.cos(angle) * force * (resistance / 100)
+          dot.vy += Math.sin(angle) * force * (resistance / 100)
         }
       })
     }
 
-    const animate = () => {
-      const { x: mx, y: my } = mouseRef.current
+    buildGrid()
+    render()
 
-      dotsRef.current.forEach((dot) => {
-        const cx = parseFloat(dot.style.left) + dotSize / 2
-        const cy = parseFloat(dot.style.top) + dotSize / 2
-        const dx = mx - cx
-        const dy = my - cy
-        const dist = Math.sqrt(dx * dx + dy * dy)
-
-        if (dist < proximity) {
-          const t = 1 - dist / proximity
-          gsap.to(dot, {
-            backgroundColor: activeColor,
-            scale: 1 + t * 0.6,
-            duration: 0.2,
-            overwrite: 'auto',
-          })
-        } else {
-          gsap.to(dot, {
-            backgroundColor: baseColor,
-            scale: 1,
-            duration: 0.4,
-            overwrite: 'auto',
-          })
-        }
-      })
-
-      rafRef.current = requestAnimationFrame(animate)
-    }
-
-    eventTarget.addEventListener('mousemove', onMouseMove)
-    eventTarget.addEventListener('click', onClick)
-    rafRef.current = requestAnimationFrame(animate)
+    // Attach to window so mouse works even when pointer-events:none on canvas
+    window.addEventListener('mousemove', onMouseMove)
+    canvas.addEventListener('mouseleave', onMouseLeave)
+    canvas.parentElement?.addEventListener('click', onClick)
 
     const ro = new ResizeObserver(buildGrid)
-    ro.observe(container)
+    ro.observe(canvas)
 
     return () => {
       cancelAnimationFrame(rafRef.current)
-      eventTarget.removeEventListener('mousemove', onMouseMove)
-      eventTarget.removeEventListener('click', onClick)
+      window.removeEventListener('mousemove', onMouseMove)
+      canvas.removeEventListener('mouseleave', onMouseLeave)
+      canvas.parentElement?.removeEventListener('click', onClick)
       ro.disconnect()
     }
-  }, [dotSize, gap, baseColor, activeColor, proximity, shockRadius, shockStrength, resistance, returnDuration])
+  }, [dotSize, gap, baseColor, activeColor, proximity, speedTrigger, shockRadius, shockStrength, maxSpeed, resistance, returnDuration])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, pointerEvents: 'none' }} />
+  return (
+    <canvas
+      ref={canvasRef}
+      className={className}
+      style={{ width: '100%', height: '100%', display: 'block', pointerEvents: 'none', ...style }}
+    />
+  )
 }

@@ -11,13 +11,15 @@ export function Hero() {
       {/* DotGrid background */}
       <div className="absolute inset-0 -z-10">
         <DotGrid
-          dotSize={5}
-          gap={15}
+          dotSize={16}
+          gap={32}
           baseColor="#271E37"
           activeColor="#5227FF"
-          proximity={120}
+          proximity={150}
+          speedTrigger={100}
           shockRadius={250}
           shockStrength={5}
+          maxSpeed={5000}
           resistance={750}
           returnDuration={1.5}
         />
