@@ -95,10 +95,9 @@ export async function POST(request) {
         return Response.json({ ok: true })
       }
 
-      // Handle slash commands — respond immediately, process async to beat 3s timeout
+      // Handle slash commands — run inline, return immediately
       if (params.command) {
-        handleSlashCommand(params).catch(console.error)
-        return new Response('', { status: 200 })
+        return handleSlashCommand(params)
       }
 
       return Response.json({ ok: true })
@@ -126,12 +125,12 @@ export async function POST(request) {
 }
 
 async function handleSlashCommand(payload) {
-  const { command, text, user_id, team_id, response_url } = payload
+  const { command, text, user_id, team_id } = payload
 
   const supabase = getSupabaseAdmin()
 
-  // Find user integration
-  const { data: integration } = await supabase
+  // Try exact match first (platform_user_id + team), fallback to team only
+  let { data: integration } = await supabase
     .from('user_integrations')
     .select('*')
     .eq('integration_type', 'slack')
@@ -139,27 +138,29 @@ async function handleSlashCommand(payload) {
     .eq('platform_team_id', team_id)
     .single()
 
-  const sendResponse = async (body) => {
-    await fetch(response_url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    })
+  if (!integration) {
+    // Fallback: match by team only (covers cases where platform_user_id wasn't stored)
+    const { data: fallback } = await supabase
+      .from('user_integrations')
+      .select('*')
+      .eq('integration_type', 'slack')
+      .eq('platform_team_id', team_id)
+      .eq('status', 'active')
+      .single()
+    integration = fallback
   }
 
   if (!integration) {
-    return sendResponse({
+    return Response.json({
       response_type: 'ephemeral',
       text: '❌ Account not linked. Please link your account from the web dashboard.\n\n🌐 ' + process.env.NEXT_PUBLIC_SITE_URL + '/dashboard/integrations'
     })
   }
 
-  // Parse command
   const [commandName, ...args] = (text || '').trim().split(' ')
   const fullCommand = commandName ? `/${commandName}` : '/list'
 
-  // Call bot command handler
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/bot/command`, {
+  const cmdResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/bot/command`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -171,13 +172,12 @@ async function handleSlashCommand(payload) {
     })
   })
 
-  const data = await response.json().catch(() => ({ text: '❌ Command failed. Please try again.' }))
+  const data = await cmdResponse.json().catch(() => ({ text: '❌ Command failed. Please try again.' }))
 
-  // Format for Slack
   const slackFormatter = await import('@/lib/bot/slack-formatter')
   const blocks = slackFormatter.formatSlackBlocks(data)
 
-  return sendResponse({ response_type: 'in_channel', blocks })
+  return Response.json({ response_type: 'in_channel', blocks })
 }
 
 async function handleInteraction(payload) {
