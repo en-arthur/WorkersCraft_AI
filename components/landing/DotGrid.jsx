@@ -59,6 +59,8 @@ export default function DotGrid({
 
     buildGrid()
 
+    const eventTarget = container.parentElement || container
+
     const onMouseMove = (e) => {
       const rect = container.getBoundingClientRect()
       mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top }
@@ -120,8 +122,8 @@ export default function DotGrid({
       rafRef.current = requestAnimationFrame(animate)
     }
 
-    container.addEventListener('mousemove', onMouseMove)
-    container.addEventListener('click', onClick)
+    eventTarget.addEventListener('mousemove', onMouseMove)
+    eventTarget.addEventListener('click', onClick)
     rafRef.current = requestAnimationFrame(animate)
 
     const ro = new ResizeObserver(buildGrid)
@@ -129,11 +131,11 @@ export default function DotGrid({
 
     return () => {
       cancelAnimationFrame(rafRef.current)
-      container.removeEventListener('mousemove', onMouseMove)
-      container.removeEventListener('click', onClick)
+      eventTarget.removeEventListener('mousemove', onMouseMove)
+      eventTarget.removeEventListener('click', onClick)
       ro.disconnect()
     }
   }, [dotSize, gap, baseColor, activeColor, proximity, shockRadius, shockStrength, resistance, returnDuration])
 
-  return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }} />
+  return <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'absolute', inset: 0, pointerEvents: 'none' }} />
 }

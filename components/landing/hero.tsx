@@ -7,11 +7,11 @@ const DotGrid = dynamic(() => import('./DotGrid'), { ssr: false })
 
 export function Hero() {
   return (
-    <section className="relative flex flex-col items-center justify-center min-h-[85vh] px-4 text-center overflow-hidden">
+    <section className="relative flex flex-col items-center justify-center min-h-[85vh] px-4 text-center">
       {/* DotGrid background */}
       <div className="absolute inset-0 -z-10">
         <DotGrid
-          dotSize={6}
+          dotSize={5}
           gap={15}
           baseColor="#271E37"
           activeColor="#5227FF"
