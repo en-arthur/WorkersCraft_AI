@@ -62,8 +62,17 @@ export async function POST(request, { params }) {
     await sandbox.git.configureUser('/home/user', name, email)
     await sandbox.git.remoteAdd('/home/user', 'origin', repoUrl)
     await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
+
+    // Ensure at least one file exists so the commit creates a real HEAD
+    const hasFiles = latestVersion?.fragment_data?.files?.length > 0
+    if (!hasFiles) {
+      await sandbox.files.write('/home/user/.gitkeep', '')
+    }
+
     await sandbox.git.add('/home/user', ['.'])
-    await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft', { allowEmpty: true })
+    await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft')
+    // Explicitly create and checkout the branch before pushing
+    await sandbox.commands.run(`cd /home/user && git checkout -b ${branch}`, { timeoutMs: 10000 })
     await sandbox.git.push('/home/user', { remote: 'origin', branch, setUpstream: true })
 
     const { error: updateError } = await supabase
