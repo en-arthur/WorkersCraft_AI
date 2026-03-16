@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
-import { TelegramIntegration } from '@/components/telegram-integration'
-import { SlackIntegration } from '@/components/slack-integration'
+// import { TelegramIntegration } from '@/components/telegram-integration'
+// import { SlackIntegration } from '@/components/slack-integration'
 
 export default function IntegrationsPage() {
   const { session } = useAuth()
@@ -211,11 +211,11 @@ export default function IntegrationsPage() {
             </CardFooter>
           </Card>
 
-          {/* Slack Integration */}
-          <SlackIntegration session={session} />
+          {/* Slack Integration - coming soon */}
+          {/* <SlackIntegration session={session} /> */}
 
-          {/* Telegram Integration */}
-          <TelegramIntegration session={session} />
+          {/* Telegram Integration - coming soon */}
+          {/* <TelegramIntegration session={session} /> */}
 
           {/* Coming Soon Integrations */}
           <Card className="opacity-60">
