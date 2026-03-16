@@ -72,15 +72,10 @@ export async function POST(request, { params }) {
       authorEmail: email,
       allowEmpty: true,
     })
-    // Create the branch explicitly then force push
     await sandbox.commands.run(`cd ${repoPath} && git branch -M ${branch}`, { timeoutMs: 10000 })
-    await sandbox.git.push(repoPath, {
-      username,
-      password: githubToken,
-      remote: 'origin',
-      branch,
-      setUpstream: true,
-    })
+    // Use runGit for force push to handle repos that already have commits (e.g. auto-init README)
+    const authRepoUrl = repoUrl.replace('https://', `https://${username}:${githubToken}@`)
+    await sandbox.git.runGit(repoPath, ['push', '--force', '-u', authRepoUrl, branch], { timeoutMs: 60000 })
 
     const { error: updateError } = await supabase
       .from('projects')
