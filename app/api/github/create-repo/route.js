@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { getGitHubToken } from '@/lib/github'
 
 export async function POST(request) {
   try {
@@ -9,15 +8,16 @@ export async function POST(request) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const githubToken = request.headers.get('x-github-token')
+    if (!githubToken) return Response.json({ error: 'No GitHub token. Please sign in with GitHub.' }, { status: 401 })
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     )
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const githubToken = getGitHubToken(session)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
     const res = await fetch('https://api.github.com/user/repos', {
       method: 'POST',

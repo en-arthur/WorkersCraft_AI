@@ -152,6 +152,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect }) {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token || '',
         },
         body: JSON.stringify({ name: newRepoName.trim(), isPrivate: true }),
       })
