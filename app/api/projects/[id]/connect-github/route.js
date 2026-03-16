@@ -63,10 +63,11 @@ export async function POST(request, { params }) {
 
     const repoPath = '/home/user'
 
-    await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
     await sandbox.git.init(repoPath)
     await sandbox.git.configureUser(name, email)
     await sandbox.git.remoteAdd(repoPath, 'origin', repoUrl, { overwrite: true })
+    // Add .gitignore to exclude .git-credentials before staging
+    await sandbox.commands.run(`echo '.git-credentials' >> ${repoPath}/.gitignore`, { timeoutMs: 5000 })
     await sandbox.git.add(repoPath)
     await sandbox.git.commit(repoPath, 'Initial commit from WorkersCraft', {
       authorName: name,
@@ -74,9 +75,10 @@ export async function POST(request, { params }) {
       allowEmpty: true,
     })
     await sandbox.commands.run(`cd ${repoPath} && git branch -M ${branch}`, { timeoutMs: 10000 })
-    const authUrl = repoUrl.replace('https://', `https://${username}:${githubToken}@`)
+    // Authenticate AFTER commit so credentials file is never staged
+    await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
     await sandbox.commands.run(
-      `cd ${repoPath} && git remote set-url origin "${authUrl}" && git push --force -u origin ${branch}`,
+      `cd ${repoPath} && git push --force -u origin ${branch}`,
       { timeoutMs: 60000 }
     )
 
