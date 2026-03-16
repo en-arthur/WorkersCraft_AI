@@ -65,6 +65,8 @@ function ChatContent() {
     name: string; 
     description?: string;
     platform?: string;
+    github_repo_url?: string;
+    github_branch?: string;
     backend_enabled?: boolean;
     backend_status?: string;
     backend_app_id?: string;
@@ -629,11 +631,12 @@ function ChatContent() {
             onUndo={handleUndo}
             projectId={currentProject?.id}
             platform={currentProject?.platform}
-            hasGitHubRepo={!!fragment?.github_repo_url}
-            githubRepoUrl={fragment?.github_repo_url}
-            githubBranch={fragment?.github_branch}
+            hasGitHubRepo={!!(fragment?.github_repo_url || currentProject?.github_repo_url)}
+            githubRepoUrl={fragment?.github_repo_url || currentProject?.github_repo_url}
+            githubBranch={fragment?.github_branch || currentProject?.github_branch}
             onGitHubConnect={(data?: { github_repo_url?: string; github_branch?: string }) => {
               if (data?.github_repo_url) {
+                setCurrentProject(prev => prev ? { ...prev, github_repo_url: data.github_repo_url, github_branch: data.github_branch } : prev)
                 setFragment(prev => prev ? { ...prev, github_repo_url: data.github_repo_url, github_branch: data.github_branch } : prev)
               }
               if (currentProject?.id) loadProject(currentProject.id)
