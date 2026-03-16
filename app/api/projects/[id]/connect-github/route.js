@@ -73,7 +73,7 @@ export async function POST(request, { params }) {
     await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft')
     // Explicitly create and checkout the branch before pushing
     await sandbox.commands.run(`cd /home/user && git checkout -b ${branch}`, { timeoutMs: 10000 })
-    await sandbox.git.push('/home/user', { remote: 'origin', branch, setUpstream: true })
+    await sandbox.git.push('/home/user', { remote: 'origin', branch, setUpstream: true, force: true })
 
     const { error: updateError } = await supabase
       .from('projects')
