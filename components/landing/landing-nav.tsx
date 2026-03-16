@@ -13,6 +13,9 @@ export function LandingNav() {
         </Link>
         
         <div className="flex items-center gap-4">
+          <Link href="/cloud" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            Cloud
+          </Link>
           <ThemeToggle />
           <Link href="/auth">
             <Button size="sm">Launch App</Button>
