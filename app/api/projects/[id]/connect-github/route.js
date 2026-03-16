@@ -63,9 +63,10 @@ export async function POST(request, { params }) {
 
     const repoPath = '/home/user'
 
+    await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
     await sandbox.git.init(repoPath)
     await sandbox.git.configureUser(name, email)
-    await sandbox.git.remoteAdd(repoPath, 'origin', repoUrl)
+    await sandbox.git.remoteAdd(repoPath, 'origin', repoUrl, { overwrite: true })
     await sandbox.git.add(repoPath)
     await sandbox.git.commit(repoPath, 'Initial commit from WorkersCraft', {
       authorName: name,
@@ -73,9 +74,7 @@ export async function POST(request, { params }) {
       allowEmpty: true,
     })
     await sandbox.commands.run(`cd ${repoPath} && git branch -M ${branch}`, { timeoutMs: 10000 })
-    // Use runGit for force push to handle repos that already have commits (e.g. auto-init README)
-    const authRepoUrl = repoUrl.replace('https://', `https://${username}:${githubToken}@`)
-    await sandbox.git.runGit(repoPath, ['push', '--force', '-u', authRepoUrl, branch], { timeoutMs: 60000 })
+    await sandbox.git.push(repoPath, { remote: 'origin', branch, setUpstream: true })
 
     const { error: updateError } = await supabase
       .from('projects')
