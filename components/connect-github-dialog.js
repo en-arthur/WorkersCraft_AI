@@ -177,9 +177,10 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create repository')
 
-      // Refresh repo list and auto-select the new repo
+      // Wait briefly for GitHub to register the new repo, then refresh list
       setShowCreateRepo(false)
       setNewRepoName('')
+      await new Promise(r => setTimeout(r, 1500))
       const updatedRepos = await fetchRepos()
       const created = updatedRepos.find(r => r.cloneUrl === data.repoUrl)
       if (created) handleRepoSelect(created)

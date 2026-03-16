@@ -56,24 +56,31 @@ export async function POST(request, { params }) {
       for (const file of latestVersion.fragment_data.files) {
         await sandbox.files.write(file.file_path, file.file_content || file.code || '')
       }
-    }
-
-    await sandbox.git.init('/home/user')
-    await sandbox.git.configureUser('/home/user', name, email)
-    await sandbox.git.remoteAdd('/home/user', 'origin', repoUrl)
-    await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
-
-    // Ensure at least one file exists so the commit creates a real HEAD
-    const hasFiles = latestVersion?.fragment_data?.files?.length > 0
-    if (!hasFiles) {
+    } else {
+      // Ensure at least one file so commit is not empty
       await sandbox.files.write('/home/user/.gitkeep', '')
     }
 
-    await sandbox.git.add('/home/user', ['.'])
-    await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft')
-    // Explicitly create and checkout the branch before pushing
-    await sandbox.commands.run(`cd /home/user && git checkout -b ${branch}`, { timeoutMs: 10000 })
-    await sandbox.git.push('/home/user', { username, password: githubToken, remote: 'origin', branch, setUpstream: true, force: true })
+    const repoPath = '/home/user'
+
+    await sandbox.git.init(repoPath)
+    await sandbox.git.configureUser(name, email)
+    await sandbox.git.remoteAdd(repoPath, 'origin', repoUrl)
+    await sandbox.git.add(repoPath)
+    await sandbox.git.commit(repoPath, 'Initial commit from WorkersCraft', {
+      authorName: name,
+      authorEmail: email,
+      allowEmpty: true,
+    })
+    // Create the branch explicitly then force push
+    await sandbox.commands.run(`cd ${repoPath} && git branch -M ${branch}`, { timeoutMs: 10000 })
+    await sandbox.git.push(repoPath, {
+      username,
+      password: githubToken,
+      remote: 'origin',
+      branch,
+      setUpstream: true,
+    })
 
     const { error: updateError } = await supabase
       .from('projects')
