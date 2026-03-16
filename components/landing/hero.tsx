@@ -1,13 +1,11 @@
 'use client'
-
-import React from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Sparkles } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 const DotGrid = dynamic(() => import('./DotGrid'), { ssr: false })
-const RotatingText = dynamic(() => import('./RotatingText'), { ssr: false }) as React.ComponentType<any>
+const RotatingText = dynamic(() => import('./RotatingText'), { ssr: false })
 
 export function Hero() {
   return (
