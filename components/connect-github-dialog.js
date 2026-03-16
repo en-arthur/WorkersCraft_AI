@@ -53,14 +53,22 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session?.provider_token || session?.user?.app_metadata?.provider !== 'github') {
-        setNeedsGitHubAuth(true)
-        return
+        // Check if we have a cached token
+        const cached = localStorage.getItem('gh_token')
+        if (!cached) { setNeedsGitHubAuth(true); return }
+      } else {
+        // Cache it while we have it
+        localStorage.setItem('gh_token', session.provider_token)
       }
       setNeedsGitHubAuth(false)
       fetchRepos()
     } catch (err) {
       setError(err.message)
     }
+  }
+
+  function getGitHubToken(session) {
+    return session?.provider_token || localStorage.getItem('gh_token') || ''
   }
 
   const handleGitHubSignIn = async () => {
@@ -78,7 +86,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const response = await fetch('/api/github/repos', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
-          'X-GitHub-Token': session.provider_token,
+          'X-GitHub-Token': getGitHubToken(session),
         },
       })
       if (!response.ok) throw new Error('Failed to fetch repositories')
@@ -98,7 +106,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const response = await fetch(`/api/github/branches?repo_url=${encodeURIComponent(repo.cloneUrl)}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
-          'X-GitHub-Token': session.provider_token,
+          'X-GitHub-Token': getGitHubToken(session),
         },
       })
       if (!response.ok) throw new Error('Failed to fetch branches')
@@ -159,7 +167,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
-          'X-GitHub-Token': session.provider_token || '',
+          'X-GitHub-Token': getGitHubToken(session),
         },
         body: JSON.stringify({ name: newRepoName.trim(), isPrivate: true }),
       })
