@@ -41,8 +41,8 @@ export function Hero() {
           splitBy="characters"
           staggerDuration={0.04}
           staggerFrom="first"
-          mainClassName="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
-          elementLevelClassName="inline-block"
+          mainClassName=""
+          elementLevelClassName="inline-block bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
         />{' '}
         with AI
       </h1>
