@@ -32,6 +32,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       pollRef.current = setInterval(() => pollStatus(buildState.buildId), 15000)
     }
     return () => clearInterval(pollRef.current)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [buildState?.buildId, buildState?.status])
 
   async function getSession() {
@@ -242,7 +243,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
                 setKeystoreData(null)
                 startBuild('android', 'release')
               }}>
-                I've saved it, continue
+                I&apos;ve saved it, continue
               </Button>
             )}
           </DialogFooter>
