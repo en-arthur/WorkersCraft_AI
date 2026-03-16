@@ -36,14 +36,10 @@ export function Hero() {
         Build{' '}
         <RotatingText
           texts={['Apps', 'Dashboards', 'APIs', 'Tools', 'Products']}
-          rotationInterval={2000}
+          rotationInterval={2500}
           splitBy="characters"
-          staggerDuration={0.03}
+          staggerDuration={0.04}
           staggerFrom="first"
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          initial={{ y: '100%', opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: '-120%', opacity: 0 }}
           mainClassName="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
           elementLevelClassName="inline-block"
         />{' '}
