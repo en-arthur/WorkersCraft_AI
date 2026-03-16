@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Sandbox } from '@e2b/code-interpreter'
+import { Sandbox } from 'e2b'
 
 function getSupabaseWithAuth(token) {
   return createClient(
@@ -38,11 +38,9 @@ export async function POST(request, { params }) {
 
     if (projectError || !project) return Response.json({ error: 'Project not found' }, { status: 404 })
 
-    const githubUser = {
-      username: user.user_metadata?.user_name || user.user_metadata?.preferred_username || 'user',
-      name: user.user_metadata?.full_name || user.user_metadata?.name || 'User',
-      email: user.email,
-    }
+    const username = user.user_metadata?.user_name || user.user_metadata?.preferred_username || 'user'
+    const name = user.user_metadata?.full_name || user.user_metadata?.name || 'User'
+    const email = user.email
 
     sandbox = await Sandbox.create()
 
@@ -60,23 +58,13 @@ export async function POST(request, { params }) {
       }
     }
 
-    await sandbox.commands.run('git init /home/user')
-    await sandbox.git.configureUser(githubUser.name, githubUser.email)
-    await sandbox.git.remoteAdd('/home/user', 'origin', repoUrl, { overwrite: true })
-    await sandbox.git.dangerouslyAuthenticate({ username: githubUser.username, password: githubToken })
-    await sandbox.git.add('/home/user')
-    await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft', {
-      authorName: githubUser.name,
-      authorEmail: githubUser.email,
-      allowEmpty: true,
-    })
-    await sandbox.git.push('/home/user', {
-      username: githubUser.username,
-      password: githubToken,
-      remote: 'origin',
-      branch,
-      setUpstream: true,
-    })
+    await sandbox.git.init('/home/user')
+    await sandbox.git.configureUser('/home/user', name, email)
+    await sandbox.git.remoteAdd('/home/user', 'origin', repoUrl)
+    await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
+    await sandbox.git.add('/home/user', ['.'])
+    await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft', { allowEmpty: true })
+    await sandbox.git.push('/home/user', 'origin', branch, { setUpstream: true })
 
     const { error: updateError } = await supabase
       .from('projects')

@@ -170,7 +170,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
           'Authorization': `Bearer ${session.access_token}`,
           'X-GitHub-Token': getGitHubToken(session),
         },
-        body: JSON.stringify({ name: newRepoName.trim(), isPrivate: true }),
+        body: JSON.stringify({ name: newRepoName.trim(), isPrivate: false }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create repository')

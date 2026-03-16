@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request) {
   try {
-    const { name, description, isPrivate = true } = await request.json()
+    const { name, description, isPrivate = false } = await request.json()
     if (!name) return Response.json({ error: 'name is required' }, { status: 400 })
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
