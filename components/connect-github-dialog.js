@@ -22,8 +22,15 @@ import { Label } from '@/components/ui/label'
 import { GitBranch, Loader2, Search, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function ConnectGitHubDialog({ projectId, platform, onConnect }) {
+export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen, onForceOpenHandled }) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    if (forceOpen) {
+      setOpen(true)
+      onForceOpenHandled?.()
+    }
+  }, [forceOpen])
   const [repos, setRepos] = useState([])
   const [branches, setBranches] = useState([])
   const [loading, setLoading] = useState(false)

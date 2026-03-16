@@ -11,6 +11,7 @@ import { MobileBuildButton } from './mobile-build-button'
 import { Session } from '@supabase/supabase-js'
 import { Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
+import { useState } from 'react'
 
 export function NavBar({
   session,
@@ -41,6 +42,8 @@ export function NavBar({
   onGitHubPush?: () => void
   onGitHubDisconnect?: () => void
 }) {
+  const [forceOpenConnect, setForceOpenConnect] = useState(false)
+
   return (
     <nav className="w-full flex bg-background py-4">
       <div className="flex flex-1 items-center">
@@ -74,6 +77,8 @@ export function NavBar({
             onConnect={onGitHubConnect}
             onPush={onGitHubPush}
             onDisconnect={onGitHubDisconnect}
+            forceOpenConnect={forceOpenConnect}
+            onForceOpenHandled={() => setForceOpenConnect(false)}
           />
         )}
         {projectId && platform === 'mobile' && (
@@ -81,7 +86,7 @@ export function NavBar({
             projectId={projectId}
             hasGitHubRepo={!!hasGitHubRepo}
             githubRepoUrl={githubRepoUrl}
-            onNeedRepo={onGitHubConnect}
+            onNeedRepo={() => setForceOpenConnect(true)}
           />
         )}
         <TooltipProvider>
