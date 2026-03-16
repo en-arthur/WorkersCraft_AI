@@ -64,7 +64,7 @@ export async function POST(request, { params }) {
     await sandbox.git.dangerouslyAuthenticate({ username, password: githubToken })
     await sandbox.git.add('/home/user', ['.'])
     await sandbox.git.commit('/home/user', 'Initial commit from WorkersCraft', { allowEmpty: true })
-    await sandbox.git.push('/home/user', 'origin', branch, { setUpstream: true })
+    await sandbox.git.push('/home/user', { remote: 'origin', branch, setUpstream: true })
 
     const { error: updateError } = await supabase
       .from('projects')

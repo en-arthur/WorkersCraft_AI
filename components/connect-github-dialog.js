@@ -92,8 +92,10 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       if (!response.ok) throw new Error('Failed to fetch repositories')
       const data = await response.json()
       setRepos(data.repos)
+      return data.repos
     } catch (err) {
       setError(err.message)
+      return []
     } finally {
       setLoading(false)
     }
@@ -178,15 +180,9 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       // Refresh repo list and auto-select the new repo
       setShowCreateRepo(false)
       setNewRepoName('')
-      await fetchRepos()
-      // Small delay to let repos load, then find and select the new one
-      setTimeout(() => {
-        setRepos(prev => {
-          const created = prev.find(r => r.cloneUrl === data.repoUrl)
-          if (created) handleRepoSelect(created)
-          return prev
-        })
-      }, 500)
+      const updatedRepos = await fetchRepos()
+      const created = updatedRepos.find(r => r.cloneUrl === data.repoUrl)
+      if (created) handleRepoSelect(created)
     } catch (err) {
       setError(err.message)
     } finally {
