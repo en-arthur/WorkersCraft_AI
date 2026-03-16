@@ -217,40 +217,7 @@ export default function IntegrationsPage() {
           {/* Telegram Integration - coming soon */}
           {/* <TelegramIntegration session={session} /> */}
 
-          {/* Coming Soon Integrations */}
-          <Card className="opacity-60">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gray-800 rounded flex items-center justify-center">
-                  <span className="text-white font-bold">GH</span>
-                </div>
-                <div>
-                  <CardTitle>GitHub</CardTitle>
-                  <CardDescription>Sync your repositories (Coming Soon)</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button disabled>Coming Soon</Button>
-            </CardContent>
-          </Card>
 
-          <Card className="opacity-60">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-orange-600 rounded flex items-center justify-center">
-                  <span className="text-white font-bold">GL</span>
-                </div>
-                <div>
-                  <CardTitle>GitLab</CardTitle>
-                  <CardDescription>Deploy to GitLab Pages (Coming Soon)</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button disabled>Coming Soon</Button>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Status Dialog */}
