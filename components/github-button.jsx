@@ -12,9 +12,9 @@ import {
 import { ChevronDown, Unlink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function GitHubButton({ projectId, hasGitHubRepo, githubRepoUrl, githubBranch, onConnect, onPush, onDisconnect }) {
+export function GitHubButton({ projectId, platform, hasGitHubRepo, githubRepoUrl, githubBranch, onConnect, onPush, onDisconnect }) {
   if (!hasGitHubRepo) {
-    return <ConnectGitHubDialog projectId={projectId} onConnect={onConnect} />
+    return <ConnectGitHubDialog projectId={projectId} platform={platform} onConnect={onConnect} />
   }
 
   const repoName = githubRepoUrl?.split('/').slice(-1)[0]?.replace('.git', '') ?? 'repo'

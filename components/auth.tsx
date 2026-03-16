@@ -150,7 +150,7 @@ function SocialAuth({
       provider,
       options: {
         redirectTo: callbackUrl,
-        scopes: provider === 'github' ? 'repo read:user user:email' : undefined,
+        scopes: provider === 'github' ? 'repo workflow read:user user:email' : undefined,
       },
     })
     if (error) setError(error.message)

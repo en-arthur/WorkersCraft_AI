@@ -3,6 +3,7 @@
   flex-wrap: wrap;
   white-space: pre-wrap;
   position: relative;
+  overflow: hidden;
 }
 
 .text-rotate-element {

@@ -63,7 +63,7 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
       provider: 'github',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
-        scopes: 'repo read:user user:email',
+        scopes: 'repo workflow read:user user:email',
       }
     })
   }

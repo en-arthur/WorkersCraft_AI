@@ -64,6 +64,7 @@ function ChatContent() {
     id: string; 
     name: string; 
     description?: string;
+    platform?: string;
     backend_enabled?: boolean;
     backend_status?: string;
     backend_app_id?: string;
@@ -627,6 +628,7 @@ function ChatContent() {
             canUndo={messages.length > 1 && !isLoading}
             onUndo={handleUndo}
             projectId={currentProject?.id}
+            platform={currentProject?.platform}
             hasGitHubRepo={!!fragment?.github_repo_url}
             githubRepoUrl={fragment?.github_repo_url}
             githubBranch={fragment?.github_branch}

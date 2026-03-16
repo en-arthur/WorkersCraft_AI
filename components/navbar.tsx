@@ -7,6 +7,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { GitHubButton } from './github-button'
+import { MobileBuildButton } from './mobile-build-button'
 import { Session } from '@supabase/supabase-js'
 import { Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
@@ -18,6 +19,7 @@ export function NavBar({
   onUndo,
   canUndo,
   projectId,
+  platform,
   hasGitHubRepo,
   githubRepoUrl,
   githubBranch,
@@ -31,6 +33,7 @@ export function NavBar({
   onUndo: () => void
   canUndo: boolean
   projectId?: string
+  platform?: string
   hasGitHubRepo?: boolean
   githubRepoUrl?: string
   githubBranch?: string
@@ -64,12 +67,21 @@ export function NavBar({
         {projectId && (
           <GitHubButton
             projectId={projectId}
+            platform={platform}
             hasGitHubRepo={!!hasGitHubRepo}
             githubRepoUrl={githubRepoUrl}
             githubBranch={githubBranch}
             onConnect={onGitHubConnect}
             onPush={onGitHubPush}
             onDisconnect={onGitHubDisconnect}
+          />
+        )}
+        {projectId && platform === 'mobile' && (
+          <MobileBuildButton
+            projectId={projectId}
+            hasGitHubRepo={!!hasGitHubRepo}
+            githubRepoUrl={githubRepoUrl}
+            onNeedRepo={onGitHubConnect}
           />
         )}
         <TooltipProvider>

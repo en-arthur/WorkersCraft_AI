@@ -19,10 +19,10 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { GitBranch, Loader2, Search } from 'lucide-react'
+import { GitBranch, Loader2, Search, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function ConnectGitHubDialog({ projectId, onConnect }) {
+export function ConnectGitHubDialog({ projectId, platform, onConnect }) {
   const [open, setOpen] = useState(false)
   const [repos, setRepos] = useState([])
   const [branches, setBranches] = useState([])
@@ -34,6 +34,9 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
   const [selectedBranch, setSelectedBranch] = useState('')
   const [error, setError] = useState(null)
   const [needsGitHubAuth, setNeedsGitHubAuth] = useState(false)
+  const [newRepoName, setNewRepoName] = useState('')
+  const [creatingRepo, setCreatingRepo] = useState(false)
+  const [showCreateRepo, setShowCreateRepo] = useState(false)
 
   useEffect(() => {
     if (open) checkGitHubAuth()
@@ -56,7 +59,7 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
   const handleGitHubSignIn = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'github',
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: `${window.location.origin}/dashboard`, scopes: 'repo workflow read:user user:email' },
     })
   }
 
@@ -138,6 +141,46 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
     }
   }
 
+  const handleCreateRepo = async () => {
+    if (!newRepoName.trim()) return
+    setCreatingRepo(true)
+    setError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/github/create-repo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ name: newRepoName.trim(), isPrivate: true }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to create repository')
+
+      // Auto-connect the new repo
+      const connectRes = await fetch(`/api/projects/${projectId}/connect-github`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ repoUrl: data.repoUrl, branch: 'main' }),
+      })
+      if (!connectRes.ok) {
+        const err = await connectRes.json()
+        throw new Error(err.error || 'Failed to connect new repository')
+      }
+      const connectData = await connectRes.json()
+      setOpen(false)
+      onConnect?.(connectData)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCreatingRepo(false)
+    }
+  }
+
   const filteredRepos = repos.filter(repo =>
     repo.name.toLowerCase().includes(search.toLowerCase()) ||
     repo.description?.toLowerCase().includes(search.toLowerCase())
@@ -179,6 +222,31 @@ export function ConnectGitHubDialog({ projectId, onConnect }) {
           <div className="space-y-4 mt-4">
             {error && (
               <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>
+            )}
+
+            {platform === 'mobile' && (
+              <div className="border rounded p-3 space-y-2">
+                <button
+                  className="flex items-center gap-2 text-sm font-medium w-full text-left"
+                  onClick={() => setShowCreateRepo(!showCreateRepo)}
+                >
+                  <Plus className="w-4 h-4" />
+                  Create new repository
+                </button>
+                {showCreateRepo && (
+                  <div className="flex gap-2 pt-1">
+                    <Input
+                      placeholder="my-expo-app"
+                      value={newRepoName}
+                      onChange={e => setNewRepoName(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleCreateRepo()}
+                    />
+                    <Button onClick={handleCreateRepo} disabled={creatingRepo || !newRepoName.trim()} size="sm">
+                      {creatingRepo ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create'}
+                    </Button>
+                  </div>
+                )}
+              </div>
             )}
 
             <div className="relative">

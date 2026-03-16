@@ -70,18 +70,24 @@ export async function POST(request) {
     const paths = files.map(f => f.file_path)
     const reqTxt = files.find(f => f.file_path === 'requirements.txt')?.file_content || ''
     const appPy = files.find(f => f.file_path === 'app.py')?.file_content || ''
+    const pkgJson = (() => { try { return JSON.parse(files.find(f => f.file_path === 'package.json')?.file_content || '{}') } catch { return {} } })()
+    const appJson = (() => { try { return JSON.parse(files.find(f => f.file_path === 'app.json')?.file_content || '{}') } catch { return {} } })()
+    const isExpo = !!(pkgJson.dependencies?.expo || pkgJson.devDependencies?.expo || appJson.expo)
 
     let template = 'code-interpreter-stateless'
     let port = null
-    if (paths.some(p => p.includes('next.config') || p.startsWith('app/') || p.startsWith('pages/'))) {
+    let platform = 'web'
+
+    if (isExpo) {
+      template = 'expo-developer'
+      port = 8081
+      platform = 'mobile'
+    } else if (paths.some(p => p.includes('next.config') || p.startsWith('pages/'))) {
       template = 'nextjs-developer'
       port = 3000
     } else if (paths.some(p => p.includes('nuxt.config') || p.includes('app.vue'))) {
       template = 'vue-developer'
       port = 3000
-    } else if (paths.some(p => p.includes('app.json') || p.includes('expo')) || paths.some(p => p.startsWith('app/') && p.endsWith('.tsx'))) {
-      template = 'expo-developer'
-      port = 8081
     } else if (appPy.includes('streamlit') || reqTxt.includes('streamlit')) {
       template = 'streamlit-developer'
       port = 8501
@@ -97,7 +103,7 @@ export async function POST(request) {
         user_id: user.id,
         name: repoName,
         description: description || `Imported from GitHub: ${repoUrl}`,
-        platform: 'web',
+        platform,
         tech_stack: template,
         github_repo_url: repoUrl,
         github_branch: branch,

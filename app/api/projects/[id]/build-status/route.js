@@ -1,0 +1,71 @@
+import { createClient } from '@supabase/supabase-js'
+import { getGitHubToken, parseGitHubUrl } from '@/lib/github'
+
+export async function GET(request, { params }) {
+  try {
+    const { id } = params
+    const { searchParams } = new URL(request.url)
+    const buildId = searchParams.get('build_id')
+    if (!buildId) return Response.json({ error: 'build_id is required' }, { status: 400 })
+
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      { global: { headers: { Authorization: `Bearer ${token}` } } }
+    )
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const { data: build } = await supabase.from('project_builds')
+      .select('*').eq('id', buildId).eq('user_id', session.user.id).single()
+    if (!build) return Response.json({ error: 'Build not found' }, { status: 404 })
+
+    // Already terminal — return as-is
+    if (['completed', 'failed'].includes(build.status)) {
+      return Response.json({ status: build.status, artifactId: build.artifact_id, error: build.error })
+    }
+
+    const { data: project } = await supabase.from('projects').select('github_repo_url').eq('id', id).single()
+    const githubToken = getGitHubToken(session)
+    const { owner, repo } = parseGitHubUrl(project.github_repo_url)
+
+    const runRes = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/actions/runs/${build.run_id}`,
+      { headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
+    )
+    const run = await runRes.json()
+
+    let newStatus = build.status
+    let artifactId = build.artifact_id
+    let errorMsg = build.error
+
+    if (run.status === 'in_progress' || run.status === 'queued') {
+      newStatus = run.status
+    } else if (run.status === 'completed') {
+      if (run.conclusion === 'success') {
+        newStatus = 'completed'
+        // Fetch artifact id
+        const artRes = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/actions/runs/${build.run_id}/artifacts`,
+          { headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
+        )
+        const artData = await artRes.json()
+        artifactId = artData.artifacts?.[0]?.id || null
+      } else {
+        newStatus = 'failed'
+        errorMsg = run.conclusion
+      }
+    }
+
+    await supabase.from('project_builds').update({
+      status: newStatus, artifact_id: artifactId, error: errorMsg, updated_at: new Date().toISOString(),
+    }).eq('id', buildId)
+
+    return Response.json({ status: newStatus, artifactId, error: errorMsg })
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 })
+  }
+}
