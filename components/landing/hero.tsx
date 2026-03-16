@@ -4,6 +4,7 @@ import { ArrowRight, Sparkles } from 'lucide-react'
 import dynamic from 'next/dynamic'
 
 const DotGrid = dynamic(() => import('./DotGrid'), { ssr: false })
+const RotatingText = dynamic(() => import('./RotatingText'), { ssr: false })
 
 export function Hero() {
   return (
@@ -31,7 +32,17 @@ export function Hero() {
       </div>
       
       <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
-        Build Apps with <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent animate-gradient">AI</span>
+        Build{' '}
+        <RotatingText
+          texts={['Apps', 'Dashboards', 'APIs', 'Tools', 'Products']}
+          rotationInterval={2000}
+          splitBy="characters"
+          staggerDuration={0.03}
+          staggerFrom="first"
+          mainClassName="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
+          elementLevelClassName="inline-block"
+        />{' '}
+        with AI
       </h1>
       
       <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl leading-relaxed">
