@@ -74,7 +74,11 @@ export async function POST(request, { params }) {
       allowEmpty: true,
     })
     await sandbox.commands.run(`cd ${repoPath} && git branch -M ${branch}`, { timeoutMs: 10000 })
-    await sandbox.git.push(repoPath, { remote: 'origin', branch, setUpstream: true })
+    const authUrl = repoUrl.replace('https://', `https://${username}:${githubToken}@`)
+    await sandbox.commands.run(
+      `cd ${repoPath} && git remote set-url origin "${authUrl}" && git push --force -u origin ${branch}`,
+      { timeoutMs: 60000 }
+    )
 
     const { error: updateError } = await supabase
       .from('projects')
