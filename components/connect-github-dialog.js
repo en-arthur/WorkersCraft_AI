@@ -193,10 +193,6 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       setCreatingRepo(false)
     }
   }
-    } finally {
-      setCreatingRepo(false)
-    }
-  }
 
   const filteredRepos = repos.filter(repo =>
     repo.name.toLowerCase().includes(search.toLowerCase()) ||
