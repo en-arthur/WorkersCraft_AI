@@ -30,7 +30,7 @@ export async function POST(request) {
         name: name.toLowerCase().replace(/\s+/g, '-'),
         description: description || '',
         private: isPrivate,
-        auto_init: true,
+        auto_init: false,
       }),
     })
 
