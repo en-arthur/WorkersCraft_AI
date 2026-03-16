@@ -38,7 +38,7 @@ export function NavBar({
   hasGitHubRepo?: boolean
   githubRepoUrl?: string
   githubBranch?: string
-  onGitHubConnect?: () => void
+  onGitHubConnect?: (data?: { github_repo_url?: string; github_branch?: string }) => void
   onGitHubPush?: () => void
   onGitHubDisconnect?: () => void
 }) {

@@ -632,10 +632,11 @@ function ChatContent() {
             hasGitHubRepo={!!fragment?.github_repo_url}
             githubRepoUrl={fragment?.github_repo_url}
             githubBranch={fragment?.github_branch}
-            onGitHubConnect={() => {
-              if (currentProject?.id) {
-                loadProject(currentProject.id)
+            onGitHubConnect={(data?: { github_repo_url?: string; github_branch?: string }) => {
+              if (data?.github_repo_url) {
+                setFragment(prev => prev ? { ...prev, github_repo_url: data.github_repo_url, github_branch: data.github_branch } : prev)
               }
+              if (currentProject?.id) loadProject(currentProject.id)
             }}
             onGitHubPush={() => {
               if (currentProject?.id) {

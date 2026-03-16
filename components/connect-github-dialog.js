@@ -139,6 +139,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': getGitHubToken(session),
         },
         body: JSON.stringify({ repoUrl: selectedRepo.cloneUrl, branch: selectedBranch }),
       })
@@ -174,24 +175,24 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create repository')
 
-      // Auto-connect the new repo
-      const connectRes = await fetch(`/api/projects/${projectId}/connect-github`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ repoUrl: data.repoUrl, branch: 'main' }),
-      })
-      if (!connectRes.ok) {
-        const err = await connectRes.json()
-        throw new Error(err.error || 'Failed to connect new repository')
-      }
-      const connectData = await connectRes.json()
-      setOpen(false)
-      onConnect?.(connectData)
+      // Refresh repo list and auto-select the new repo
+      setShowCreateRepo(false)
+      setNewRepoName('')
+      await fetchRepos()
+      // Small delay to let repos load, then find and select the new one
+      setTimeout(() => {
+        setRepos(prev => {
+          const created = prev.find(r => r.cloneUrl === data.repoUrl)
+          if (created) handleRepoSelect(created)
+          return prev
+        })
+      }, 500)
     } catch (err) {
       setError(err.message)
+    } finally {
+      setCreatingRepo(false)
+    }
+  }
     } finally {
       setCreatingRepo(false)
     }
