@@ -57,8 +57,11 @@ export async function POST(request, { params }) {
     const repoPath = '/home/user/project'
     await sandbox.commands.run(`mkdir -p ${repoPath}`, { timeoutMs: 5000 })
 
-    // Copy full Expo scaffold from sandbox home into project dir
-    await sandbox.commands.run(`cp -r /home/user/. ${repoPath}/`, { timeoutMs: 30000 })
+    // Copy full Expo scaffold from sandbox home into project dir (exclude project dir itself)
+    await sandbox.commands.run(
+      `find /home/user -maxdepth 1 ! -name 'project' ! -path '/home/user' -exec cp -r {} ${repoPath}/ \\;`,
+      { timeoutMs: 30000 }
+    )
 
     // Append sandbox dotfile exclusions to .gitignore
     const dotfileExclusions = '\n# Sandbox dotfiles\n.bash*\n.profile\n.gitconfig\n.git-credentials\n.git/\n'
