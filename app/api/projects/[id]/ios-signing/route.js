@@ -32,17 +32,17 @@ export async function POST(request, { params }) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     )
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: project } = await supabase.from('projects').select('id').eq('id', id).eq('user_id', session.user.id).single()
+    const { data: project } = await supabase.from('projects').select('id').eq('id', id).eq('user_id', user.id).single()
     if (!project) return Response.json({ error: 'Project not found' }, { status: 404 })
 
     const p12Base64 = Buffer.from(await p12File.arrayBuffer()).toString('base64')
     const provisionBase64 = Buffer.from(await provisionFile.arrayBuffer()).toString('base64')
 
     await supabase.from('user_integrations').upsert({
-      user_id: session.user.id,
+      user_id: user.id,
       integration_type: 'ios_signing',
       metadata: { project_id: id },
       access_token: encrypt(JSON.stringify({ p12Base64, p12Password, provisionBase64, scheme })),

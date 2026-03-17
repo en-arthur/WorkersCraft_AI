@@ -37,6 +37,7 @@ export function PushGitHubDialog({ projectId, repoUrl, branch, onPush, triggerLa
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token || localStorage.getItem('gh_token') || '',
         },
         body: JSON.stringify({
           commitMessage: commitMessage.trim(),

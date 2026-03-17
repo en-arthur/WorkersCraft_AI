@@ -146,26 +146,26 @@ export async function POST(request, { params }) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     )
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const githubToken = request.headers.get('x-github-token') || session.provider_token
+    const githubToken = request.headers.get('x-github-token')
     if (!githubToken) return Response.json({ error: 'No GitHub token. Please sign in with GitHub.' }, { status: 401 })
 
-    const { data: project } = await supabase.from('projects').select('*').eq('id', id).eq('user_id', session.user.id).single()
+    const { data: project } = await supabase.from('projects').select('*').eq('id', id).eq('user_id', user.id).single()
     if (!project) return Response.json({ error: 'Project not found' }, { status: 404 })
     if (!project.github_repo_url || !project.github_branch) {
       return Response.json({ error: 'Project is not connected to GitHub' }, { status: 400 })
     }
 
-    const githubUser = getGitHubUser(session)
+    const githubUser = { username: user.user_metadata?.user_name || user.user_metadata?.preferred_username || 'user', name: user.user_metadata?.full_name || 'User', email: user.email }
     const { owner, repo } = parseGitHubUrl(project.github_repo_url)
 
     // Inject signing secrets for release builds
     if (buildType === 'release') {
       if (platform === 'android') {
         const { data: signing } = await supabase.from('user_integrations')
-          .select('access_token').eq('user_id', session.user.id).eq('integration_type', 'android_signing').single()
+          .select('access_token').eq('user_id', user.id).eq('integration_type', 'android_signing').single()
         if (!signing) return Response.json({ error: 'Android signing not configured. Generate a keystore first.' }, { status: 400 })
         const { keystoreBase64, keystorePassword, keyAlias, keyPassword } = JSON.parse(decrypt(signing.access_token))
         await injectGitHubSecret(githubToken, owner, repo, 'KEYSTORE_BASE64', keystoreBase64)
@@ -174,7 +174,7 @@ export async function POST(request, { params }) {
         await injectGitHubSecret(githubToken, owner, repo, 'KEY_PASSWORD', keyPassword)
       } else {
         const { data: signing } = await supabase.from('user_integrations')
-          .select('access_token').eq('user_id', session.user.id).eq('integration_type', 'ios_signing').single()
+          .select('access_token').eq('user_id', user.id).eq('integration_type', 'ios_signing').single()
         if (!signing) return Response.json({ error: 'iOS signing not configured. Upload your certificates first.' }, { status: 400 })
         const { p12Base64, p12Password, provisionBase64, scheme } = JSON.parse(decrypt(signing.access_token))
         await injectGitHubSecret(githubToken, owner, repo, 'IOS_P12_BASE64', p12Base64)
@@ -233,7 +233,7 @@ export async function POST(request, { params }) {
     // Save build record
     const { data: build } = await supabase.from('project_builds').insert({
       project_id: id,
-      user_id: session.user.id,
+      user_id: user.id,
       platform,
       build_type: buildType,
       status: 'queued',

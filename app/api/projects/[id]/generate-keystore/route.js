@@ -28,11 +28,11 @@ export async function POST(request, { params }) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     )
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
     // Verify project ownership
-    const { data: project } = await supabase.from('projects').select('id').eq('id', id).eq('user_id', session.user.id).single()
+    const { data: project } = await supabase.from('projects').select('id').eq('id', id).eq('user_id', user.id).single()
     if (!project) return Response.json({ error: 'Project not found' }, { status: 404 })
 
     const keystorePassword = randomPassword()
@@ -53,7 +53,7 @@ export async function POST(request, { params }) {
 
     // Store encrypted in user_integrations
     await supabase.from('user_integrations').upsert({
-      user_id: session.user.id,
+      user_id: user.id,
       integration_type: 'android_signing',
       metadata: { project_id: id },
       access_token: encrypt(JSON.stringify({

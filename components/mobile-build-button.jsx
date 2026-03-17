@@ -40,10 +40,17 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
     return session
   }
 
+  function getGhToken(session) {
+    return session?.provider_token || localStorage.getItem('gh_token') || ''
+  }
+
   async function pollStatus(buildId) {
     const session = await getSession()
     const res = await fetch(`/api/projects/${projectId}/build-status?build_id=${buildId}`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'X-GitHub-Token': getGhToken(session),
+      },
     })
     const data = await res.json()
     setBuildState(prev => ({ ...prev, status: data.status, artifactId: data.artifactId, error: data.error }))
@@ -143,8 +150,9 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
 
   async function downloadArtifact() {
     const session = await getSession()
+    const ghToken = getGhToken(session)
     const filename = `${buildState.platform}-${buildState.buildType}.zip`
-    window.location.href = `/api/projects/${projectId}/build-artifact?artifact_id=${buildState.artifactId}&filename=${filename}&token=${session.access_token}`
+    window.location.href = `/api/projects/${projectId}/build-artifact?artifact_id=${buildState.artifactId}&filename=${filename}&token=${session.access_token}&gh_token=${encodeURIComponent(ghToken)}`
   }
 
   const isBuilding = buildState && !['completed', 'failed'].includes(buildState.status)

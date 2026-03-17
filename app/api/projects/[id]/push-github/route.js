@@ -30,7 +30,7 @@ export async function POST(request, { params }) {
     }
 
     const supabase = getSupabaseWithAuth(token)
-    const { data: { session } } = await supabase.auth.getSession()
+    const { data: { user } } = await supabase.auth.getUser()
     
     if (!session) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
@@ -41,7 +41,7 @@ export async function POST(request, { params }) {
       .from('projects')
       .select('*')
       .eq('id', id)
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .single()
 
     if (projectError || !project) {
@@ -56,8 +56,8 @@ export async function POST(request, { params }) {
     }
 
     // Get GitHub credentials
-    const githubToken = getGitHubToken(session)
-    const githubUser = getGitHubUser(session)
+    const githubToken = request.headers.get('x-github-token')
+    const githubUser = { username: user.user_metadata?.user_name || user.user_metadata?.preferred_username || 'user', name: user.user_metadata?.full_name || 'User', email: user.email }
 
     console.log('Pushing to GitHub:', { projectId: id, repo: project.github_repo_url })
 

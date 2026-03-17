@@ -16,11 +16,11 @@ export async function GET(request, { params }) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       { global: { headers: { Authorization: `Bearer ${token}` } } }
     )
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { data: build } = await supabase.from('project_builds')
-      .select('*').eq('id', buildId).eq('user_id', session.user.id).single()
+      .select('*').eq('id', buildId).eq('user_id', user.id).single()
     if (!build) return Response.json({ error: 'Build not found' }, { status: 404 })
 
     // Already terminal — return as-is
@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
     }
 
     const { data: project } = await supabase.from('projects').select('github_repo_url').eq('id', id).single()
-    const githubToken = getGitHubToken(session)
+    const githubToken = request.headers.get('x-github-token')
     const { owner, repo } = parseGitHubUrl(project.github_repo_url)
 
     const runRes = await fetch(
