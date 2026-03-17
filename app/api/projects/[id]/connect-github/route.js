@@ -52,16 +52,17 @@ export async function POST(request, { params }) {
       .limit(1)
       .single()
 
+    const repoPath = '/home/user/project'
+    await sandbox.commands.run(`mkdir -p ${repoPath}`, { timeoutMs: 5000 })
+
     if (latestVersion?.fragment_data?.files) {
       for (const file of latestVersion.fragment_data.files) {
-        await sandbox.files.write(file.file_path, file.file_content || file.code || '')
+        const relPath = (file.file_path || '').replace(/^\//, '')
+        await sandbox.files.write(`${repoPath}/${relPath}`, file.file_content || file.code || '')
       }
     } else {
-      // Ensure at least one file so commit is not empty
-      await sandbox.files.write('/home/user/.gitkeep', '')
+      await sandbox.files.write(`${repoPath}/.gitkeep`, '')
     }
-
-    const repoPath = '/home/user'
 
     await sandbox.git.init(repoPath)
     await sandbox.git.configureUser(name, email)
