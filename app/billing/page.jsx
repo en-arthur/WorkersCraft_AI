@@ -104,7 +104,7 @@ export default function BillingPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b px-6 py-4 flex items-center justify-between">
-        <Logo />
+        <Logo className="w-8 h-8" />
         <Button variant="ghost" onClick={() => router.push('/dashboard')}>← Dashboard</Button>
       </header>
 
