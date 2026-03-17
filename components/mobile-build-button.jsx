@@ -23,6 +23,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
   const [keystoreData, setKeystoreData] = useState(null) // after generation
   const [keystoreAcknowledged, setKeystoreAcknowledged] = useState(false)
   const [iosFiles, setIosFiles] = useState({ p12: null, provision: null, password: '', scheme: '' })
+  const [loading, setLoading] = useState(false)
   const [failedDialog, setFailedDialog] = useState(false)
   const [error, setError] = useState(null)
   const pollRef = useRef(null)
