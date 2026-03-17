@@ -55,7 +55,10 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
     })
     const data = await res.json()
     setBuildState(prev => ({ ...prev, status: data.status, artifactId: data.artifactId, error: data.error, runUrl: data.runUrl }))
-    if (['completed', 'failed'].includes(data.status)) clearInterval(pollRef.current)
+    if (['completed', 'failed'].includes(data.status)) {
+      clearInterval(pollRef.current)
+      if (data.status === 'completed') localStorage.setItem(`built_${projectId}`, '1')
+    }
   }
 
   async function triggerBuild(platform, buildType) {
@@ -176,6 +179,9 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
             >
               {STATUS_LABELS[buildState.status] || buildState.status}
             </span>
+            {isBuilding && !localStorage.getItem(`built_${projectId}`) && (
+              <span className="text-xs text-muted-foreground italic">First build takes time while dependencies are cached. Subsequent builds will be faster.</span>
+            )}
             {buildState.status === 'completed' && buildState.artifactId && (
               <Button size="sm" variant="outline" onClick={downloadArtifact} className="gap-1 h-7">
                 <Download className="w-3 h-3" />
