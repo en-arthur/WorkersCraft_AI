@@ -149,13 +149,15 @@ export async function POST(request, { params }) {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
+    const githubToken = request.headers.get('x-github-token') || session.provider_token
+    if (!githubToken) return Response.json({ error: 'No GitHub token. Please sign in with GitHub.' }, { status: 401 })
+
     const { data: project } = await supabase.from('projects').select('*').eq('id', id).eq('user_id', session.user.id).single()
     if (!project) return Response.json({ error: 'Project not found' }, { status: 404 })
     if (!project.github_repo_url || !project.github_branch) {
       return Response.json({ error: 'Project is not connected to GitHub' }, { status: 400 })
     }
 
-    const githubToken = getGitHubToken(session)
     const githubUser = getGitHubUser(session)
     const { owner, repo } = parseGitHubUrl(project.github_repo_url)
 

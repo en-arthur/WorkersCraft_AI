@@ -70,7 +70,11 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       const session = await getSession()
       const res = await fetch(`/api/projects/${projectId}/build-mobile`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+          'X-GitHub-Token': session.provider_token || localStorage.getItem('gh_token') || '',
+        },
         body: JSON.stringify({ platform, buildType }),
       })
       const data = await res.json()
