@@ -79,7 +79,8 @@ export default function DashboardBillingPage() {
   async function handleCheckout(productId, planId) {
     setCheckoutLoading(planId)
     const params = new URLSearchParams({ productId })
-    if (session?.user?.id) params.set('customerId', session.user.id)
+    if (session?.user?.id) params.set('externalCustomerId', session.user.id)
+    if (session?.user?.email) params.set('customerEmail', session.user.email)
     window.location.href = `/api/checkout?${params}`
   }
 

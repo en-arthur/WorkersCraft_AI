@@ -16,8 +16,7 @@ export async function GET(request) {
     const checkout = await polar.checkouts.create({
       products: productList,
       successUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/billing?checkout_id={CHECKOUT_ID}`,
-      customerId: searchParams.get('customerId') ?? undefined,
-      externalCustomerId: searchParams.get('customerExternalId') ?? undefined,
+      externalCustomerId: searchParams.get('externalCustomerId') ?? undefined,
       customerEmail: searchParams.get('customerEmail') ?? undefined,
     })
 
