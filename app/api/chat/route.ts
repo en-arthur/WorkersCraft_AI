@@ -6,6 +6,7 @@ import ratelimit from '@/lib/ratelimit'
 import { fragmentSchema as schema } from '@/lib/schema'
 import { Templates } from '@/lib/templates'
 import { streamObject, LanguageModel, CoreMessage } from 'ai'
+import { ingestEvent } from '@/lib/usage'
 
 export const maxDuration = 300
 
@@ -116,6 +117,7 @@ IMPORTANT:
       ...modelParams,
     })
 
+    if (userID) ingestEvent(userID, 'ai_generation', { model: model.id })
     return stream.toTextStreamResponse()
   } catch (error: any) {
     return handleAPIError(error, { hasOwnApiKey: !!config.apiKey })

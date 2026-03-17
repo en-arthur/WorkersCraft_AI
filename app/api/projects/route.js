@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
+import { getUserPlan } from '@/lib/entitlements'
 
 function getSupabaseWithAuth(token) {
   if (!token) return null
@@ -73,6 +74,12 @@ export async function POST(req) {
 
     if (!user_id || !name) {
       return Response.json({ error: 'User ID and name required' }, { status: 400 })
+    }
+
+    // Subscription gate
+    const plan = await getUserPlan(user_id)
+    if (!plan) {
+      return Response.json({ error: 'subscription_required' }, { status: 402 })
     }
 
     const { data: project, error } = await supabaseAuth

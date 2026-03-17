@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Sandbox } from 'e2b'
 import { getGitHubToken, getGitHubUser, parseGitHubUrl } from '@/lib/github'
 import { injectGitHubSecret } from '@/lib/github-secrets'
+import { ingestEvent } from '@/lib/usage'
 import crypto from 'crypto'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
@@ -252,6 +253,7 @@ export async function POST(request, { params }) {
       workflow_file: workflowFile,
     }).select().single()
 
+    ingestEvent(user.id, 'mobile_build', { platform, build_type: buildType })
     return Response.json({ buildId: build.id, runId })
   } catch (error) {
     console.error('[build-mobile]', error)

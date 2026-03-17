@@ -135,6 +135,10 @@ export default function DashboardPage() {
       })
 
       const data = await response.json()
+      if (response.status === 402 || data.error === 'subscription_required') {
+        router.push('/billing')
+        return
+      }
       if (data.project) {
         // If backend enabled, register app with CloudService
         if (newProject.backend_enabled) {
@@ -230,6 +234,7 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => router.push('/billing')}>Billing</Button>
             <ImportGitHubDialog disabled={saving} onImport={(project) => {
               router.push(`/chat?project=${project.id}`)
             }} />
