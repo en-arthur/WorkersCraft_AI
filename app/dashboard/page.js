@@ -238,7 +238,6 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => router.push('/billing')}>Billing</Button>
             <ImportGitHubDialog disabled={saving} onImport={(project) => {
               router.push(`/chat?project=${project.id}`)
             }} />
