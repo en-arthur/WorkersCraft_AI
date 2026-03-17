@@ -57,22 +57,17 @@ export async function POST(request, { params }) {
     const repoPath = '/home/user/project'
     await sandbox.commands.run(`mkdir -p ${repoPath}`, { timeoutMs: 5000 })
 
-    // Copy Expo scaffold files from sandbox (package.json, app.json, etc.)
-    const scaffoldFiles = ['package.json', 'app.json', 'tsconfig.json', 'babel.config.js', 'metro.config.js', '.gitignore']
-    for (const f of scaffoldFiles) {
-      try {
-        const content = await sandbox.files.read(`/home/user/${f}`)
-        await sandbox.files.write(`${repoPath}/${f}`, content)
-      } catch { /* skip if not present */ }
-    }
-    // Copy scaffold app/ directory
+    // Copy full Expo scaffold from sandbox home into project dir
+    await sandbox.commands.run(`cp -r /home/user/. ${repoPath}/`, { timeoutMs: 30000 })
+
+    // Append sandbox dotfile exclusions to .gitignore
+    const dotfileExclusions = '\n# Sandbox dotfiles\n.bash*\n.profile\n.gitconfig\n.git-credentials\n.git/\n'
     try {
-      const entries = await sandbox.files.list('/home/user/app')
-      for (const entry of entries) {
-        const content = await sandbox.files.read(`/home/user/app/${entry.name}`)
-        await sandbox.files.write(`${repoPath}/app/${entry.name}`, content)
-      }
-    } catch { /* skip */ }
+      const existing = await sandbox.files.read(`${repoPath}/.gitignore`)
+      await sandbox.files.write(`${repoPath}/.gitignore`, existing + dotfileExclusions)
+    } catch {
+      await sandbox.files.write(`${repoPath}/.gitignore`, dotfileExclusions)
+    }
 
     // Overlay AI-generated fragment files (always win over scaffold)
     if (latestVersion?.fragment_data?.files) {
@@ -80,15 +75,11 @@ export async function POST(request, { params }) {
         const relPath = (file.file_path || '').replace(/^\//, '')
         await sandbox.files.write(`${repoPath}/${relPath}`, file.file_content || file.code || '')
       }
-    } else {
-      await sandbox.files.write(`${repoPath}/.gitkeep`, '')
     }
 
     await sandbox.git.init(repoPath)
     await sandbox.git.configureUser(name, email)
     await sandbox.git.remoteAdd(repoPath, 'origin', repoUrl, { overwrite: true })
-    // Add .gitignore to exclude .git-credentials before staging
-    await sandbox.commands.run(`echo '.git-credentials' >> ${repoPath}/.gitignore`, { timeoutMs: 5000 })
     await sandbox.git.add(repoPath)
     await sandbox.git.commit(repoPath, 'Initial commit from WorkersCraft', {
       authorName: name,
