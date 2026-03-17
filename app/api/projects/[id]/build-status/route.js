@@ -25,7 +25,17 @@ export async function GET(request, { params }) {
 
     // Already terminal — return as-is
     if (['completed', 'failed'].includes(build.status)) {
-      return Response.json({ status: build.status, artifactId: build.artifact_id, error: build.error })
+      const runUrl = build.run_id ? `https://github.com/${build.project_id}/actions/runs/${build.run_id}` : null
+      // Get repo URL for proper run link
+      const { data: proj } = await supabase.from('projects').select('github_repo_url').eq('id', id).single()
+      const repoMatch = proj?.github_repo_url?.match(/github\.com[/:]([^/]+\/[^/.]+)/)
+      const repoPath = repoMatch?.[1] || ''
+      return Response.json({
+        status: build.status,
+        artifactId: build.artifact_id,
+        error: build.error,
+        runUrl: build.run_id ? `https://github.com/${repoPath}/actions/runs/${build.run_id}` : null,
+      })
     }
 
     const { data: project } = await supabase.from('projects').select('github_repo_url').eq('id', id).single()
@@ -56,7 +66,18 @@ export async function GET(request, { params }) {
         artifactId = artData.artifacts?.[0]?.id || null
       } else {
         newStatus = 'failed'
-        errorMsg = run.conclusion
+        // Fetch failed step message from jobs
+        try {
+          const jobsRes = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/actions/runs/${build.run_id}/jobs`,
+            { headers: { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github.v3+json' } }
+          )
+          const jobsData = await jobsRes.json()
+          const failedStep = jobsData.jobs?.flatMap(j => j.steps || []).find(s => s.conclusion === 'failure')
+          errorMsg = failedStep ? `Step "${failedStep.name}" failed` : (run.conclusion || 'Build failed')
+        } catch {
+          errorMsg = run.conclusion || 'Build failed'
+        }
       }
     }
 
@@ -64,7 +85,14 @@ export async function GET(request, { params }) {
       status: newStatus, artifact_id: artifactId, error: errorMsg, updated_at: new Date().toISOString(),
     }).eq('id', buildId)
 
-    return Response.json({ status: newStatus, artifactId, error: errorMsg })
+    const repoMatch = project.github_repo_url?.match(/github\.com[/:]([^/]+\/[^/.]+)/)
+    const repoPath = repoMatch?.[1] || ''
+    return Response.json({
+      status: newStatus,
+      artifactId,
+      error: errorMsg,
+      runUrl: build.run_id ? `https://github.com/${repoPath}/actions/runs/${build.run_id}` : null,
+    })
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 })
   }

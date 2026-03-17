@@ -23,7 +23,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
   const [keystoreData, setKeystoreData] = useState(null) // after generation
   const [keystoreAcknowledged, setKeystoreAcknowledged] = useState(false)
   const [iosFiles, setIosFiles] = useState({ p12: null, provision: null, password: '', scheme: '' })
-  const [loading, setLoading] = useState(false)
+  const [failedDialog, setFailedDialog] = useState(false)
   const [error, setError] = useState(null)
   const pollRef = useRef(null)
 
@@ -53,7 +53,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       },
     })
     const data = await res.json()
-    setBuildState(prev => ({ ...prev, status: data.status, artifactId: data.artifactId, error: data.error }))
+    setBuildState(prev => ({ ...prev, status: data.status, artifactId: data.artifactId, error: data.error, runUrl: data.runUrl }))
     if (['completed', 'failed'].includes(data.status)) clearInterval(pollRef.current)
   }
 
@@ -163,9 +163,18 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
         {buildState ? (
           <div className="flex items-center gap-2 text-sm">
             {buildState.status === 'completed' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
-            {buildState.status === 'failed' && <XCircle className="w-4 h-4 text-red-500" />}
+            {buildState.status === 'failed' && (
+              <button onClick={() => setFailedDialog(true)} className="flex items-center gap-1 text-red-500 hover:underline">
+                <XCircle className="w-4 h-4" />
+              </button>
+            )}
             {isBuilding && <Loader2 className="w-4 h-4 animate-spin" />}
-            <span className="text-muted-foreground">{STATUS_LABELS[buildState.status] || buildState.status}</span>
+            <span
+              className={buildState.status === 'failed' ? 'text-red-500 cursor-pointer hover:underline' : 'text-muted-foreground'}
+              onClick={buildState.status === 'failed' ? () => setFailedDialog(true) : undefined}
+            >
+              {STATUS_LABELS[buildState.status] || buildState.status}
+            </span>
             {buildState.status === 'completed' && buildState.artifactId && (
               <Button size="sm" variant="outline" onClick={downloadArtifact} className="gap-1 h-7">
                 <Download className="w-3 h-3" />
@@ -302,6 +311,34 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
               {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Save & Build
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* Build Failed Dialog */}
+      <Dialog open={failedDialog} onOpenChange={setFailedDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-500">
+              <XCircle className="w-5 h-5" /> Build Failed
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded p-3 text-sm text-red-700 dark:text-red-300">
+              {buildState?.error || 'Build failed. Check the logs for details.'}
+            </div>
+            {buildState?.runUrl && (
+              <a
+                href={buildState.runUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-blue-600 hover:underline"
+              >
+                View full logs on GitHub →
+              </a>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFailedDialog(false)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
