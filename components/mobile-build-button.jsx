@@ -189,7 +189,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
         ) : (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" disabled={loading} className="gap-1">
+              <Button variant="outline" size="sm" disabled={loading || ['queued', 'in_progress'].includes(buildState?.status)} className="gap-1">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Smartphone className="w-4 h-4" />}
                 Build
                 <ChevronDown className="w-3 h-3" />
