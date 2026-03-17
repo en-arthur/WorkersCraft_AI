@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Sandbox } from '@e2b/code-interpreter'
+import { Sandbox } from 'e2b'
 import { getGitHubToken, getGitHubUser, parseGitHubUrl } from '@/lib/github'
 import { injectGitHubSecret } from '@/lib/github-secrets'
 import crypto from 'crypto'

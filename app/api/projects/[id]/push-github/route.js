@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { Sandbox } from '@e2b/code-interpreter'
+import { Sandbox } from 'e2b'
 import { getGitHubToken, getGitHubUser } from '@/lib/github'
 
 function getSupabaseWithAuth(token) {
@@ -32,7 +32,7 @@ export async function POST(request, { params }) {
     const supabase = getSupabaseWithAuth(token)
     const { data: { user } } = await supabase.auth.getUser()
     
-    if (!session) {
+    if (!user) {
       return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
