@@ -81,6 +81,8 @@ export async function POST(request, { params }) {
     }
 
     await sandbox.git.init(repoPath)
+    // Generate package-lock.json for npm ci and caching in CI
+    await sandbox.commands.run(`cd ${repoPath} && npm install --package-lock-only --ignore-scripts`, { timeoutMs: 60000 })
     await sandbox.git.configureUser(name, email)
     await sandbox.git.remoteAdd(repoPath, 'origin', repoUrl, { overwrite: true })
     await sandbox.git.add(repoPath)

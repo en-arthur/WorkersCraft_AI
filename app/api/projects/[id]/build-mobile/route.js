@@ -32,11 +32,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - run: npm install
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-\${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+      - run: npm ci
       - run: npx expo prebuild --platform android --non-interactive
 ${isRelease ? `      - name: Decode keystore
         run: |
@@ -75,7 +83,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: npm install
+          cache: 'npm'
+      - run: npm ci
       - run: npx expo prebuild --platform ios --non-interactive
       - uses: actions/cache@v3
         with:
@@ -195,6 +204,7 @@ export async function POST(request, { params }) {
     await sandbox.git.add('/home/user/repo')
 
     const status = await sandbox.git.status('/home/user/repo')
+    const isNewWorkflow = status.fileStatus.some(f => f.path?.includes(workflowFile))
     if (status.fileStatus.length > 0) {
       await sandbox.git.commit('/home/user/repo', `ci: update ${workflowFile}`, {
         authorName: githubUser.name, authorEmail: githubUser.email,
@@ -205,8 +215,8 @@ export async function POST(request, { params }) {
       })
     }
 
-    // Wait for GitHub to index the workflow before dispatching
-    await new Promise(r => setTimeout(r, 6000))
+    // Only wait for GitHub to index if this is a newly added workflow file
+    if (isNewWorkflow) await new Promise(r => setTimeout(r, 6000))
 
     // Trigger workflow_dispatch
     const dispatchRes = await fetch(
