@@ -188,7 +188,7 @@ export async function POST(request, { params }) {
     // Use E2B to write and push the workflow file
     sandbox = await Sandbox.create()
     await sandbox.git.dangerouslyAuthenticate({ username: githubUser.username, password: githubToken })
-    await sandbox.git.clone(project.github_repo_url, { path: '/home/user/repo', branch: project.github_branch })
+    await sandbox.git.clone(project.github_repo_url, { path: '/home/user/repo', branch: project.github_branch, timeoutMs: 0 })
     await sandbox.git.configureUser(githubUser.name, githubUser.email)
     await sandbox.commands.run('mkdir -p /home/user/repo/.github/workflows')
     await sandbox.files.write(`/home/user/repo/.github/workflows/${workflowFile}`, workflowContent)
@@ -201,7 +201,7 @@ export async function POST(request, { params }) {
       })
       await sandbox.git.push('/home/user/repo', {
         username: githubUser.username, password: githubToken,
-        remote: 'origin', branch: project.github_branch,
+        remote: 'origin', branch: project.github_branch, timeoutMs: 0,
       })
     }
 

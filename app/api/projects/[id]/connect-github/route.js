@@ -64,7 +64,7 @@ export async function POST(request, { params }) {
     )
 
     // Append sandbox dotfile exclusions to .gitignore
-    const dotfileExclusions = '\n# Sandbox dotfiles\n.bash*\n.profile\n.gitconfig\n.git-credentials\n.git/\n'
+    const dotfileExclusions = '\n# Sandbox dotfiles\n.bash*\n.profile\n.gitconfig\n.git-credentials\n.git/\n\n# Dependencies\nnode_modules/\n'
     try {
       const existing = await sandbox.files.read(`${repoPath}/.gitignore`)
       await sandbox.files.write(`${repoPath}/.gitignore`, existing + dotfileExclusions)
