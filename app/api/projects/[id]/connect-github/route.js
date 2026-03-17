@@ -42,7 +42,9 @@ export async function POST(request, { params }) {
     const name = user.user_metadata?.full_name || user.user_metadata?.name || 'User'
     const email = user.email
 
-    sandbox = await Sandbox.create()
+    const isDev = process.env.NODE_ENV === 'development'
+    const templateId = isDev ? 'expo-developer-dev' : 'expo-developer'
+    sandbox = await Sandbox.create(templateId)
 
     const { data: latestVersion } = await supabase
       .from('project_versions')
@@ -55,6 +57,24 @@ export async function POST(request, { params }) {
     const repoPath = '/home/user/project'
     await sandbox.commands.run(`mkdir -p ${repoPath}`, { timeoutMs: 5000 })
 
+    // Copy Expo scaffold files from sandbox (package.json, app.json, etc.)
+    const scaffoldFiles = ['package.json', 'app.json', 'tsconfig.json', 'babel.config.js', 'metro.config.js', '.gitignore']
+    for (const f of scaffoldFiles) {
+      try {
+        const content = await sandbox.files.read(`/home/user/${f}`)
+        await sandbox.files.write(`${repoPath}/${f}`, content)
+      } catch { /* skip if not present */ }
+    }
+    // Copy scaffold app/ directory
+    try {
+      const entries = await sandbox.files.list('/home/user/app')
+      for (const entry of entries) {
+        const content = await sandbox.files.read(`/home/user/app/${entry.name}`)
+        await sandbox.files.write(`${repoPath}/app/${entry.name}`, content)
+      }
+    } catch { /* skip */ }
+
+    // Overlay AI-generated fragment files (always win over scaffold)
     if (latestVersion?.fragment_data?.files) {
       for (const file of latestVersion.fragment_data.files) {
         const relPath = (file.file_path || '').replace(/^\//, '')
