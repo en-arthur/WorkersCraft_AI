@@ -205,6 +205,9 @@ export async function POST(request, { params }) {
       })
     }
 
+    // Wait for GitHub to index the workflow before dispatching
+    await new Promise(r => setTimeout(r, 6000))
+
     // Trigger workflow_dispatch
     const dispatchRes = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowFile}/dispatches`,
