@@ -89,6 +89,10 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
         body: JSON.stringify({ platform, buildType }),
       })
       const data = await res.json()
+      if (res.status === 403 && data.error === 'upgrade_required') {
+        setError('iOS builds require a Pro plan or higher. Please upgrade.')
+        return
+      }
       if (!res.ok) throw new Error(data.error)
       setBuildState({ buildId: data.buildId, platform, buildType, status: 'queued', artifactId: null })
     } catch (e) {

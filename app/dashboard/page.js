@@ -139,6 +139,10 @@ export default function DashboardPage() {
         router.push('/billing')
         return
       }
+      if (response.status === 429 || data.error === 'daily_limit_reached') {
+        alert('You have reached your daily project limit. Upgrade your plan for more.')
+        return
+      }
       if (data.project) {
         // If backend enabled, register app with CloudService
         if (newProject.backend_enabled) {

@@ -3,6 +3,7 @@ import { Sandbox } from 'e2b'
 import { getGitHubToken, getGitHubUser, parseGitHubUrl } from '@/lib/github'
 import { injectGitHubSecret } from '@/lib/github-secrets'
 import { ingestEvent } from '@/lib/usage'
+import { getUserPlan, PLAN_LIMITS } from '@/lib/entitlements'
 import crypto from 'crypto'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
@@ -148,7 +149,6 @@ export async function POST(request, { params }) {
 
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
-
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -156,6 +156,15 @@ export async function POST(request, { params }) {
     )
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // iOS build plan gate
+    if (platform === 'ios') {
+      const plan = await getUserPlan(user.id)
+      const limits = PLAN_LIMITS[plan?.plan] || PLAN_LIMITS.starter
+      if (!limits.iosBuilds) {
+        return Response.json({ error: 'upgrade_required' }, { status: 403 })
+      }
+    }
 
     const githubToken = request.headers.get('x-github-token')
     if (!githubToken) return Response.json({ error: 'No GitHub token. Please sign in with GitHub.' }, { status: 401 })

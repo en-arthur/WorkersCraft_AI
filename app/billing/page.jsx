@@ -14,21 +14,39 @@ const PLANS = [
     name: 'Starter',
     price: '$30',
     productId: process.env.NEXT_PUBLIC_POLAR_STARTER_PRODUCT_ID,
-    features: ['AI app generation', 'Mobile builds', 'GitHub integration', 'Community support'],
+    features: [
+      'AI app generation',
+      'Full-stack web & Android app builds',
+      'GitHub integration',
+      'Backend cloud access',
+      'Source code export',
+      '10 projects per day',
+      'Community support',
+    ],
   },
   {
     id: 'pro',
     name: 'Pro',
     price: '$50',
     productId: process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID,
-    features: ['Everything in Starter', 'Higher usage limits', 'Priority support', 'Advanced templates'],
+    features: [
+      'Everything in Starter',
+      'iOS app builds',
+      '30 projects per day',
+      'Priority support',
+    ],
   },
   {
     id: 'max',
     name: 'Max',
     price: '$100',
     productId: process.env.NEXT_PUBLIC_POLAR_MAX_PRODUCT_ID,
-    features: ['Everything in Pro', 'Unlimited usage', 'Dedicated support', 'Early access to features'],
+    features: [
+      'Everything in Pro',
+      'Unlimited projects per day',
+      'Dedicated support',
+      'Early access to new features',
+    ],
   },
 ]
 

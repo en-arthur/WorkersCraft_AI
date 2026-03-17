@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
-import { getUserPlan } from '@/lib/entitlements'
+import { getUserPlan, getDailyProjectCount, PLAN_LIMITS } from '@/lib/entitlements'
+import { ingestEvent } from '@/lib/usage'
 
 function getSupabaseWithAuth(token) {
   if (!token) return null
@@ -82,6 +83,15 @@ export async function POST(req) {
       return Response.json({ error: 'subscription_required' }, { status: 402 })
     }
 
+    // Daily project limit
+    const limits = PLAN_LIMITS[plan.plan] || PLAN_LIMITS.starter
+    if (limits.projectsPerDay !== Infinity) {
+      const count = await getDailyProjectCount(user_id)
+      if (count >= limits.projectsPerDay) {
+        return Response.json({ error: 'daily_limit_reached' }, { status: 429 })
+      }
+    }
+
     const { data: project, error } = await supabaseAuth
       .from('projects')
       .insert({
@@ -104,6 +114,11 @@ export async function POST(req) {
     }
 
     console.log('Project created:', project)
+
+    // Ingest backend usage charge if backend is enabled
+    if (backend_enabled) {
+      ingestEvent(user_id, 'backend_enabled', { project_id: project.id })
+    }
 
     // Save initial version
     if (fragment_data) {
