@@ -1,4 +1,5 @@
-import { Webhooks } from '@polar-sh/nextjs'
+import { validateEvent } from '@polar-sh/sdk/webhooks'
+import { handleWebhookPayload } from '@polar-sh/adapter-utils'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -27,9 +28,23 @@ async function upsertSubscription(sub, status) {
   }, { onConflict: 'user_id' })
 }
 
-export const POST = Webhooks({
-  webhookSecret: process.env.POLAR_WEBHOOK_SECRET,
-  onSubscriptionCreated: async (sub) => upsertSubscription(sub, 'active'),
-  onSubscriptionUpdated: async (sub) => upsertSubscription(sub, sub.status === 'active' ? 'active' : sub.status),
-  onSubscriptionRevoked: async (sub) => upsertSubscription(sub, 'inactive'),
-})
+export async function POST(request) {
+  const body = await request.text()
+  const signature = request.headers.get('webhook-signature') ?? ''
+
+  let event
+  try {
+    event = validateEvent(body, request.headers, process.env.POLAR_WEBHOOK_SECRET)
+  } catch {
+    return new Response('Invalid signature', { status: 403 })
+  }
+
+  await handleWebhookPayload(event, {
+    webhookSecret: process.env.POLAR_WEBHOOK_SECRET,
+    onSubscriptionCreated: async (payload) => upsertSubscription(payload.data, 'active'),
+    onSubscriptionUpdated: async (payload) => upsertSubscription(payload.data, payload.data.status === 'active' ? 'active' : payload.data.status),
+    onSubscriptionRevoked: async (payload) => upsertSubscription(payload.data, 'inactive'),
+  })
+
+  return new Response(null, { status: 200 })
+}
