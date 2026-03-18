@@ -84,6 +84,8 @@ export default function BillingPage() {
 
   async function handleCheckout(priceId, planId) {
     setCheckoutLoading(planId)
+    console.log('[Paddle] opening checkout with priceId:', priceId)
+    console.log('[Paddle] window.Paddle:', typeof window !== 'undefined' ? window.Paddle : 'N/A')
     // @ts-ignore
     window.Paddle?.Checkout.open({
       items: [{ priceId, quantity: 1 }],
