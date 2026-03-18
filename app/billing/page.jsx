@@ -13,7 +13,7 @@ const PLANS = [
     name: 'Starter',
     price: '$30',
     description: 'Perfect for indie developers getting started',
-    productId: process.env.NEXT_PUBLIC_POLAR_STARTER_PRODUCT_ID,
+    priceId: process.env.NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID,
     popular: false,
     features: [
       { text: 'AI app generation', icon: Zap },
@@ -30,7 +30,7 @@ const PLANS = [
     name: 'Pro',
     price: '$50',
     description: 'For teams shipping production apps',
-    productId: process.env.NEXT_PUBLIC_POLAR_PRO_PRODUCT_ID,
+    priceId: process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID,
     popular: true,
     features: [
       { text: 'Everything in Starter', icon: CheckCircle2 },
@@ -44,7 +44,7 @@ const PLANS = [
     name: 'Max',
     price: '$100',
     description: 'Unlimited power for serious builders',
-    productId: process.env.NEXT_PUBLIC_POLAR_MAX_PRODUCT_ID,
+    priceId: process.env.NEXT_PUBLIC_PADDLE_MAX_PRICE_ID,
     popular: false,
     features: [
       { text: 'Everything in Pro', icon: CheckCircle2 },
@@ -82,12 +82,16 @@ export default function BillingPage() {
     setLoading(false)
   }
 
-  async function handleCheckout(productId, planId) {
+  async function handleCheckout(priceId, planId) {
     setCheckoutLoading(planId)
-    const params = new URLSearchParams({ productId })
-    if (session?.user?.id) params.set('externalCustomerId', session.user.id)
-    if (session?.user?.email) params.set('customerEmail', session.user.email)
-    window.location.href = `/api/checkout?${params}`
+    // @ts-ignore
+    window.Paddle?.Checkout.open({
+      items: [{ priceId, quantity: 1 }],
+      customer: session?.user?.email ? { email: session.user.email } : undefined,
+      customData: { user_id: session?.user?.id },
+      successUrl: `${window.location.origin}/billing?success=true`,
+    })
+    setCheckoutLoading(null)
   }
 
   async function handleDevSkip() {
@@ -207,7 +211,7 @@ export default function BillingPage() {
                   className="w-full"
                   variant={isCurrent ? 'outline' : plan.popular ? 'default' : 'outline'}
                   disabled={isCurrent || checkoutLoading === plan.id}
-                  onClick={() => !isCurrent && handleCheckout(plan.productId, plan.id)}
+                  onClick={() => !isCurrent && handleCheckout(plan.priceId, plan.id)}
                 >
                   {checkoutLoading === plan.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                   {isCurrent ? 'Current Plan' : 'Get Started'}
