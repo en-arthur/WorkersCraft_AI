@@ -83,6 +83,7 @@ export default function BillingPage() {
   }
 
   async function handleCheckout(priceId, planId) {
+    console.log('handleCheckout called:', priceId, planId)
     setCheckoutLoading(planId)
     console.log('[Paddle] opening checkout with priceId:', priceId)
     console.log('[Paddle] window.Paddle:', typeof window !== 'undefined' ? window.Paddle : 'N/A')
@@ -213,7 +214,7 @@ export default function BillingPage() {
                   className="w-full"
                   variant={isCurrent ? 'outline' : plan.popular ? 'default' : 'outline'}
                   disabled={isCurrent || checkoutLoading === plan.id}
-                  onClick={() => !isCurrent && handleCheckout(plan.priceId, plan.id)}
+                  onClick={() => handleCheckout(plan.priceId, plan.id)}
                 >
                   {checkoutLoading === plan.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                   {isCurrent ? 'Current Plan' : 'Get Started'}
