@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 import { getCustomerPortalUrl } from '@/lib/paddle'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET(request) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')

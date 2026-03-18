@@ -2,7 +2,7 @@ import './globals.css'
 import { PostHogProvider, ThemeProvider } from './providers'
 import { Toaster } from '@/components/ui/toaster'
 import { Analytics } from '@vercel/analytics/next'
-import Script from 'next/script'
+import PaddleInit from '@/components/paddle-init'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
@@ -32,16 +32,7 @@ export default function RootLayout({
           </ThemeProvider>
           <Toaster />
           <Analytics />
-          <Script
-            src="https://cdn.paddle.com/paddle/v2/paddle.js"
-            onLoad={() => {
-              // @ts-ignore
-              window.Paddle?.Setup({
-                token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
-                environment: process.env.NEXT_PUBLIC_PADDLE_ENV || 'sandbox',
-              })
-            }}
-          />
+          <PaddleInit />
         </body>
       </PostHogProvider>
     </html>
