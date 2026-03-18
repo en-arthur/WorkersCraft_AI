@@ -88,6 +88,17 @@ export default function DashboardBillingPage() {
     window.location.href = `/api/checkout?${params}`
   }
 
+  async function handleDevSkip() {
+    await supabase.from('user_subscriptions').upsert({
+      user_id: session.user.id,
+      plan: 'pro',
+      status: 'active',
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' })
+    await fetchSubscription(session)
+  }
+
   async function handlePortal() {
     setPortalLoading(true)
     const res = await fetch('/api/customer-portal', {
@@ -193,6 +204,14 @@ export default function DashboardBillingPage() {
       <p className="text-center text-sm text-muted-foreground mt-10">
         All plans billed monthly. No hidden fees. Cancel anytime.
       </p>
+
+      {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
+        <div className="mt-6 text-center">
+          <Button variant="outline" size="sm" className="text-yellow-600 border-yellow-400" onClick={handleDevSkip}>
+            ⚡ Skip (Dev Only) — Activate Pro
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
