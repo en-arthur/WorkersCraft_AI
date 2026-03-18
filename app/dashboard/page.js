@@ -274,7 +274,7 @@ export default function DashboardPage() {
                     rows={5}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Describe your project in detail. The AI will use this to generate your code.
+                    Describe your project in detail.
                   </p>
                 </div>
                 <div className="space-y-2">
