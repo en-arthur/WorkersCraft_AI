@@ -99,21 +99,16 @@ export default function BillingPage() {
   const [inlineCheckout, setInlineCheckout] = useState(null) // { priceId, planId }
 
   async function handleCheckout(priceId, planId) {
-    setInlineCheckout({ priceId, planId })
-  }
-
-  function openInlineCheckout(priceId, containerId) {
-    // @ts-ignore
-    window.Paddle?.Checkout.open({
-      items: [{ priceId, quantity: 1 }],
-      customer: session?.user?.email ? { email: session.user.email } : undefined,
-      customData: { user_id: session?.user?.id },
-      successUrl: `${window.location.origin}/billing?success=true`,
-      displayMode: 'inline',
-      frameTarget: containerId,
-      frameInitialHeight: 450,
-      frameStyle: 'width:100%; background:transparent; border:none;',
-    })
+    setCheckoutLoading(planId)
+    try {
+      const res = await fetch(`/api/checkout?priceId=${priceId}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } finally {
+      setCheckoutLoading(null)
+    }
   }
 
   async function handleDevSkip() {
@@ -126,13 +121,6 @@ export default function BillingPage() {
     }, { onConflict: 'user_id' })
     await fetchSubscription(session)
   }
-
-  useEffect(() => {
-    if (!inlineCheckout) return
-    const containerId = 'paddle-inline-checkout'
-    // wait for container to mount
-    setTimeout(() => openInlineCheckout(inlineCheckout.priceId, containerId), 100)
-  }, [inlineCheckout])
 
   async function handlePortal() {
     setPortalLoading(true)
@@ -261,17 +249,6 @@ export default function BillingPage() {
         <p className="text-center text-sm text-muted-foreground mt-10">
           All plans billed monthly. No hidden fees. Cancel anytime.
         </p>
-
-        {/* Inline checkout container */}
-        {inlineCheckout && (
-          <div className="mt-10 border rounded-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <p className="font-semibold">Complete your purchase</p>
-              <Button variant="ghost" size="sm" onClick={() => setInlineCheckout(null)}>✕ Cancel</Button>
-            </div>
-            <div id="paddle-inline-checkout" className="min-h-[450px]" />
-          </div>
-        )}
 
         {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
           <div className="mt-6 text-center">

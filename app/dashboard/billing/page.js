@@ -95,27 +95,17 @@ export default function DashboardBillingPage() {
   const [inlineCheckout, setInlineCheckout] = useState(null)
 
   async function handleCheckout(priceId, planId) {
-    setInlineCheckout({ priceId, planId })
+    setCheckoutLoading(planId)
+    try {
+      const res = await fetch(`/api/checkout?priceId=${priceId}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } finally {
+      setCheckoutLoading(null)
+    }
   }
-
-  function openInlineCheckout(priceId, containerId) {
-    // @ts-ignore
-    window.Paddle?.Checkout.open({
-      items: [{ priceId, quantity: 1 }],
-      customer: session?.user?.email ? { email: session.user.email } : undefined,
-      customData: { user_id: session?.user?.id },
-      successUrl: `${window.location.origin}/dashboard/billing?success=true`,
-      displayMode: 'inline',
-      frameTarget: containerId,
-      frameInitialHeight: 450,
-      frameStyle: 'width:100%; background:transparent; border:none;',
-    })
-  }
-
-  useEffect(() => {
-    if (!inlineCheckout) return
-    setTimeout(() => openInlineCheckout(inlineCheckout.priceId, 'paddle-inline-checkout'), 100)
-  }, [inlineCheckout])
 
   async function handleDevSkip() {
     await supabase.from('user_subscriptions').upsert({
@@ -241,16 +231,6 @@ export default function DashboardBillingPage() {
       <p className="text-center text-sm text-muted-foreground mt-10">
         All plans billed monthly. No hidden fees. Cancel anytime.
       </p>
-
-      {inlineCheckout && (
-        <div className="mt-10 border rounded-2xl overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <p className="font-semibold">Complete your purchase</p>
-            <Button variant="ghost" size="sm" onClick={() => setInlineCheckout(null)}>✕ Cancel</Button>
-          </div>
-          <div id="paddle-inline-checkout" className="min-h-[450px]" />
-        </div>
-      )}
 
       {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
         <div className="mt-6 text-center">
