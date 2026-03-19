@@ -8,7 +8,7 @@ const supabaseClient = createClient(
 )
 
 export default function UsageCard() {
-  const [usage, setUsage] = useState(null)
+  const [usage, setUsage] = useState<{ count: number; limit: number | null; plan: string } | null>(null)
 
   useEffect(() => {
     supabaseClient.auth.getSession().then(({ data: { session } }) => {
