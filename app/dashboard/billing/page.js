@@ -60,6 +60,7 @@ export default function DashboardBillingPage() {
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -67,6 +68,16 @@ export default function DashboardBillingPage() {
       setSession(session)
       fetchSubscription(session)
     })
+    if (typeof window !== 'undefined' && window.location.search.includes('success=true')) {
+      setSuccessMsg(true)
+      let attempts = 0
+      const interval = setInterval(async () => {
+        attempts++
+        const { data: sess } = await supabase.auth.getSession()
+        if (sess?.session) await fetchSubscription(sess.session)
+        if (attempts >= 5) clearInterval(interval)
+      }, 2000)
+    }
   }, [])
 
   async function fetchSubscription(sess) {
@@ -80,17 +91,30 @@ export default function DashboardBillingPage() {
     setLoading(false)
   }
 
+  const [inlineCheckout, setInlineCheckout] = useState(null)
+
   async function handleCheckout(priceId, planId) {
-    setCheckoutLoading(planId)
+    setInlineCheckout({ priceId, planId })
+  }
+
+  function openInlineCheckout(priceId, containerId) {
     // @ts-ignore
     window.Paddle?.Checkout.open({
       items: [{ priceId, quantity: 1 }],
       customer: session?.user?.email ? { email: session.user.email } : undefined,
       customData: { user_id: session?.user?.id },
       successUrl: `${window.location.origin}/dashboard/billing?success=true`,
+      displayMode: 'inline',
+      frameTarget: containerId,
+      frameInitialHeight: 450,
+      frameStyle: 'width:100%; background:transparent; border:none;',
     })
-    setCheckoutLoading(null)
   }
+
+  useEffect(() => {
+    if (!inlineCheckout) return
+    setTimeout(() => openInlineCheckout(inlineCheckout.priceId, 'paddle-inline-checkout'), 100)
+  }, [inlineCheckout])
 
   async function handleDevSkip() {
     await supabase.from('user_subscriptions').upsert({
@@ -125,6 +149,12 @@ export default function DashboardBillingPage() {
         <h1 className="text-3xl font-bold tracking-tight mb-1">Billing & Subscription</h1>
         <p className="text-muted-foreground">Manage your plan. Cancel anytime.</p>
       </div>
+
+      {successMsg && (
+        <div className="mb-8 p-4 rounded-xl bg-green-500/10 border border-green-500 text-green-600 text-sm text-center">
+          🎉 Payment successful! Your plan is being activated — this may take a few seconds.
+        </div>
+      )}
 
       {subscription && (
         <div className="mb-10 p-5 rounded-xl border bg-muted/40 flex items-center justify-between">
@@ -208,6 +238,16 @@ export default function DashboardBillingPage() {
       <p className="text-center text-sm text-muted-foreground mt-10">
         All plans billed monthly. No hidden fees. Cancel anytime.
       </p>
+
+      {inlineCheckout && (
+        <div className="mt-10 border rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b">
+            <p className="font-semibold">Complete your purchase</p>
+            <Button variant="ghost" size="sm" onClick={() => setInlineCheckout(null)}>✕ Cancel</Button>
+          </div>
+          <div id="paddle-inline-checkout" className="min-h-[450px]" />
+        </div>
+      )}
 
       {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
         <div className="mt-6 text-center">

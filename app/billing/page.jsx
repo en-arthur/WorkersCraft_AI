@@ -62,6 +62,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
   const [portalLoading, setPortalLoading] = useState(false)
+  const [successMsg, setSuccessMsg] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -69,6 +70,18 @@ export default function BillingPage() {
       setSession(session)
       fetchSubscription(session)
     })
+    // detect post-checkout success
+    if (typeof window !== 'undefined' && window.location.search.includes('success=true')) {
+      setSuccessMsg(true)
+      // poll for subscription up to 10s (webhook may take a moment)
+      let attempts = 0
+      const interval = setInterval(async () => {
+        attempts++
+        const { data: sess } = await supabase.auth.getSession()
+        if (sess?.session) await fetchSubscription(sess.session)
+        if (attempts >= 5) clearInterval(interval)
+      }, 2000)
+    }
   }, [])
 
   async function fetchSubscription(sess) {
@@ -82,19 +95,24 @@ export default function BillingPage() {
     setLoading(false)
   }
 
+  const [inlineCheckout, setInlineCheckout] = useState(null) // { priceId, planId }
+
   async function handleCheckout(priceId, planId) {
-    console.log('handleCheckout called:', priceId, planId)
-    setCheckoutLoading(planId)
-    console.log('[Paddle] opening checkout with priceId:', priceId)
-    console.log('[Paddle] window.Paddle:', typeof window !== 'undefined' ? window.Paddle : 'N/A')
+    setInlineCheckout({ priceId, planId })
+  }
+
+  function openInlineCheckout(priceId, containerId) {
     // @ts-ignore
     window.Paddle?.Checkout.open({
       items: [{ priceId, quantity: 1 }],
       customer: session?.user?.email ? { email: session.user.email } : undefined,
       customData: { user_id: session?.user?.id },
       successUrl: `${window.location.origin}/billing?success=true`,
+      displayMode: 'inline',
+      frameTarget: containerId,
+      frameInitialHeight: 450,
+      frameStyle: 'width:100%; background:transparent; border:none;',
     })
-    setCheckoutLoading(null)
   }
 
   async function handleDevSkip() {
@@ -107,6 +125,13 @@ export default function BillingPage() {
     }, { onConflict: 'user_id' })
     await fetchSubscription(session)
   }
+
+  useEffect(() => {
+    if (!inlineCheckout) return
+    const containerId = 'paddle-inline-checkout'
+    // wait for container to mount
+    setTimeout(() => openInlineCheckout(inlineCheckout.priceId, containerId), 100)
+  }, [inlineCheckout])
 
   async function handlePortal() {
     setPortalLoading(true)
@@ -132,6 +157,11 @@ export default function BillingPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-16">
+        {successMsg && (
+          <div className="mb-8 p-4 rounded-xl bg-green-500/10 border border-green-500 text-green-600 text-sm text-center">
+            🎉 Payment successful! Your plan is being activated — this may take a few seconds.
+          </div>
+        )}
         {/* Hero */}
         <div className="text-center mb-14">
           <h1 className="text-4xl font-bold tracking-tight mb-3">Simple, transparent pricing</h1>
@@ -228,6 +258,17 @@ export default function BillingPage() {
         <p className="text-center text-sm text-muted-foreground mt-10">
           All plans billed monthly. No hidden fees. Cancel anytime.
         </p>
+
+        {/* Inline checkout container */}
+        {inlineCheckout && (
+          <div className="mt-10 border rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <p className="font-semibold">Complete your purchase</p>
+              <Button variant="ghost" size="sm" onClick={() => setInlineCheckout(null)}>✕ Cancel</Button>
+            </div>
+            <div id="paddle-inline-checkout" className="min-h-[450px]" />
+          </div>
+        )}
 
         {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
           <div className="mt-6 text-center">
