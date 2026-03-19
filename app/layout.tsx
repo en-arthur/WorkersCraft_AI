@@ -2,7 +2,6 @@ import './globals.css'
 import { PostHogProvider, ThemeProvider } from './providers'
 import { Toaster } from '@/components/ui/toaster'
 import { Analytics } from '@vercel/analytics/next'
-import PaddleInit from '@/components/paddle-init'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 
@@ -32,7 +31,6 @@ export default function RootLayout({
           </ThemeProvider>
           <Toaster />
           <Analytics />
-          <PaddleInit />
         </body>
       </PostHogProvider>
     </html>
