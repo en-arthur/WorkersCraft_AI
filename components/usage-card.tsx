@@ -1,12 +1,17 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
+
+const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 
 export default function UsageCard() {
   const [usage, setUsage] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabaseClient.auth.getSession().then(({ data: { session } }) => {
       if (!session) return
       fetch('/api/usage', {
         headers: { Authorization: `Bearer ${session.access_token}` },
