@@ -79,9 +79,12 @@ export default function BillingPage() {
       const interval = setInterval(async () => {
         attempts++
         const { data: sess } = await supabase.auth.getSession()
-        if (sess?.session) await fetchSubscription(sess.session)
-        if (attempts >= 5) clearInterval(interval)
-      }, 2000)
+        if (sess?.session) {
+          const sub = await fetchSubscription(sess.session)
+          if (sub) clearInterval(interval)
+        }
+        if (attempts >= 10) clearInterval(interval)
+      }, 3000)
     }
   }, [])
 
@@ -94,6 +97,7 @@ export default function BillingPage() {
       .single()
     setSubscription(data)
     setLoading(false)
+    return data
   }
 
   const [inlineCheckout, setInlineCheckout] = useState(null) // { priceId, planId }

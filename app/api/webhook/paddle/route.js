@@ -44,6 +44,25 @@ async function upsertSubscription(sub, status) {
   if (error) console.error('[paddle-webhook] Supabase upsert error:', error)
 }
 
+async function handleTransactionCompleted(txn) {
+  const userId = txn.custom_data?.user_id
+  if (!userId || !txn.subscription_id) return
+
+  const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'production'
+    ? 'https://api.paddle.com'
+    : 'https://sandbox-api.paddle.com'
+
+  const res = await fetch(`${PADDLE_API_BASE}/subscriptions/${txn.subscription_id}`, {
+    headers: { Authorization: `Bearer ${process.env.PADDLE_API_KEY}` },
+  })
+  if (!res.ok) {
+    console.error('[paddle-webhook] Failed to fetch subscription:', txn.subscription_id)
+    return
+  }
+  const { data: sub } = await res.json()
+  await upsertSubscription({ ...sub, custom_data: txn.custom_data }, 'active')
+}
+
 export async function POST(request) {
   const rawBody = await request.text()
   const signature = request.headers.get('paddle-signature') ?? ''
@@ -68,6 +87,9 @@ export async function POST(request) {
       break
     case 'subscription.canceled':
       await upsertSubscription(data, 'inactive')
+      break
+    case 'transaction.completed':
+      await handleTransactionCompleted(data)
       break
   }
 
