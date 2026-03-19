@@ -20,12 +20,10 @@ export async function GET(request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const successUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/billing?success=true`
     const url = await createCheckoutUrl({
       priceId,
       userId: user.id,
       userEmail: user.email,
-      successUrl,
     })
 
     if (!url) return Response.json({ error: 'Failed to create checkout' }, { status: 500 })
