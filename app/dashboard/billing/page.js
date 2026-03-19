@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, Zap, Smartphone, Github, Server, Download, FolderOpen, Apple, Headphones, Rocket, Star } from 'lucide-react'
+import UsageCard from '@/components/usage-card'
 
 const PLANS = [
   {
@@ -155,6 +156,8 @@ export default function DashboardBillingPage() {
           🎉 Payment successful! Your plan is being activated — this may take a few seconds.
         </div>
       )}
+
+      <UsageCard />
 
       {subscription && (
         <div className="mb-10 p-5 rounded-xl border bg-muted/40 flex items-center justify-between">

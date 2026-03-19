@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, CheckCircle2, Zap, Smartphone, Github, Server, Download, FolderOpen, Apple, Headphones, Rocket, Star } from 'lucide-react'
 import Logo from '@/components/logo'
+import UsageCard from '@/components/usage-card'
 
 const PLANS = [
   {
@@ -162,6 +163,8 @@ export default function BillingPage() {
             🎉 Payment successful! Your plan is being activated — this may take a few seconds.
           </div>
         )}
+
+        <UsageCard />
         {/* Hero */}
         <div className="text-center mb-14">
           <h1 className="text-4xl font-bold tracking-tight mb-3">Simple, transparent pricing</h1>
