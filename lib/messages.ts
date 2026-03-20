@@ -25,12 +25,13 @@ export type Message = {
 }
 
 export function toAISDKMessages(messages: Message[]) {
-  return messages.map((message) => ({
-    role: message.role,
-    content: message.content
-      .filter((c) => c.type !== 'code') // strip code — latest code sent via currentFragment
-      .map((content) => content),
-  })).filter((m) => m.content.length > 0)
+  return messages.map((message) => {
+    if (message.role === 'assistant') return null // strip assistant history — prevents commentary echo, code sent via currentFragment
+    return {
+      role: message.role,
+      content: message.content.filter((c) => c.type !== 'code'),
+    }
+  }).filter((m): m is NonNullable<typeof m> => m !== null && m.content.length > 0)
 }
 
 export async function toMessageImage(files: File[]) {

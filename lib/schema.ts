@@ -4,9 +4,7 @@ export const fragmentSchema = z.object({
   commentary: z
     .string()
     .describe(
-      `List ALL user requirements and mark each as implemented.
-       Example: "1) Auth page with password - done, 2) Dashboard - done, 3) Customer section - done, 4) Utility functions - done"
-       If any requirement is missing, describe what still needs to be added.`,
+      'For the initial build: briefly list what was built (e.g. "Built a Kanban board with drag-and-drop, task modal, and priority labels"). For follow-up edits: describe only what changed (e.g. "Added dark mode toggle to the navbar"). Keep it short — 1 to 2 sentences max.',
     ),
   template: z
     .string()
