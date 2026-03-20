@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, ExternalLink, ChevronDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function DeployVercel({ fragment, sandboxId }) {
+export function DeployVercel({ fragment, sandboxId, isPreviewLoading }) {
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployUrl, setDeployUrl] = useState(null)
   const [error, setError] = useState(null)
@@ -112,7 +112,7 @@ export function DeployVercel({ fragment, sandboxId }) {
               <Button
                 variant="default"
                 size="sm"
-                disabled={!fragment || isDeploying}
+                disabled={!fragment || isDeploying || isPreviewLoading}
                 className="gap-2"
               >
                 {isDeploying ? (
@@ -138,7 +138,7 @@ export function DeployVercel({ fragment, sandboxId }) {
             variant="default"
             size="sm"
             onClick={handleDirectDeploy}
-            disabled={!fragment || isDeploying}
+            disabled={!fragment || isDeploying || isPreviewLoading}
             className="gap-2"
           >
             {isDeploying ? (
