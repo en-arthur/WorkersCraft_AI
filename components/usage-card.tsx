@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { BarChart2 } from 'lucide-react'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -60,7 +61,7 @@ export default function UsageCard() {
   return (
     <div className="p-5 rounded-xl border bg-muted/40 mb-6">
       <div className="flex items-center justify-between mb-3">
-        <p className="font-semibold text-sm">📊 Usage — <span className="capitalize">{plan}</span> Plan</p>
+        <p className="font-semibold text-sm flex items-center gap-1.5"><BarChart2 className="w-4 h-4" /> Usage — <span className="capitalize">{plan}</span> Plan</p>
         <p className="text-xs text-muted-foreground">Resets daily</p>
       </div>
       <div className="space-y-2">
