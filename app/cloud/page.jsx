@@ -1,159 +1,221 @@
 'use client'
 
+import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { LandingNav } from '@/components/landing/landing-nav'
 import { Footer } from '@/components/landing/footer'
 import { Database, Users, FileUp, Shield, Zap, Code2, ArrowRight, CheckCircle } from 'lucide-react'
 
+function useScrollReveal() {
+  const ref = useRef(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { el.classList.add('revealed'); observer.disconnect() } },
+      { threshold: 0.15 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return ref
+}
+
+function Reveal({ children, className = '', delay = 0 }) {
+  const ref = useScrollReveal()
+  return (
+    <div
+      ref={ref}
+      className={`scroll-reveal ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {children}
+    </div>
+  )
+}
+
 const features = [
-  {
-    icon: Users,
-    title: 'User Authentication',
-    description: 'Built-in user management with secure sign up, login, and session handling out of the box.',
-  },
-  {
-    icon: Database,
-    title: 'Storage & Collections',
-    description: 'Flexible NoSQL-style storage for your app data. Create collections, store records, query instantly.',
-  },
-  {
-    icon: FileUp,
-    title: 'File Uploads',
-    description: 'Upload and serve files via a global CDN. Images, documents, and any binary data supported.',
-  },
-  {
-    icon: Shield,
-    title: 'Secure by Default',
-    description: 'Every app gets isolated storage. Auth-gated endpoints and row-level access built in.',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Provisioning',
-    description: 'Your backend is created automatically when you build an app. Zero configuration needed.',
-  },
-  {
-    icon: Code2,
-    title: 'Auto-generated SDK',
-    description: 'A typed SDK is injected into your generated app so it can talk to its backend immediately.',
-  },
+  { icon: Users,    title: 'User Authentication',    description: 'Built-in user management with secure sign up, login, and session handling out of the box.' },
+  { icon: Database, title: 'Storage & Collections',  description: 'Flexible NoSQL-style storage for your app data. Create collections, store records, query instantly.' },
+  { icon: FileUp,   title: 'File Uploads',           description: 'Upload and serve files via a global CDN. Images, documents, and any binary data supported.' },
+  { icon: Shield,   title: 'Secure by Default',      description: 'Every app gets isolated storage. Auth-gated endpoints and row-level access built in.' },
+  { icon: Zap,      title: 'Instant Provisioning',   description: 'Your backend is created automatically when you build an app. Zero configuration needed.' },
+  { icon: Code2,    title: 'Auto-generated SDK',     description: 'A typed SDK is injected into your generated app so it can talk to its backend immediately.' },
 ]
 
 const steps = [
-  { step: '01', title: 'Build with AI', description: 'Describe your app in natural language. WorkersCraft AI generates the full frontend.' },
-  { step: '02', title: 'Backend auto-provisioned', description: 'A dedicated backend app is created on WorkersCraft Cloud — users, storage, files, all ready.' },
-  { step: '03', title: 'Manage from dashboard', description: 'Inspect users, browse storage records, manage files — all from your project dashboard.' },
+  { step: '01', title: 'Build with AI',              description: 'Describe your app in natural language. WorkersCraft AI generates the full frontend.' },
+  { step: '02', title: 'Backend auto-provisioned',   description: 'A dedicated backend is created on WorkersCraft Cloud — users, storage, files, all ready.' },
+  { step: '03', title: 'Manage from dashboard',      description: 'Inspect users, browse storage records, manage files — all from your project dashboard.' },
+]
+
+const included = [
+  'Dedicated backend per app', 'User authentication & sessions',
+  'Unlimited storage collections', 'File uploads & CDN delivery',
+  'Auto-generated typed SDK', 'Admin panel in your dashboard',
+  'Secure isolated environment', 'REST API access',
 ]
 
 export default function CloudPage() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
+      <style>{`
+        .scroll-reveal {
+          opacity: 0;
+          transform: translateY(32px);
+          transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+        .scroll-reveal.revealed {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .glass-card {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(12px);
+        }
+        .gradient-border {
+          position: relative;
+        }
+        .gradient-border::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border-radius: inherit;
+          padding: 1px;
+          background: linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6);
+          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          -webkit-mask-composite: xor;
+          mask-composite: exclude;
+          pointer-events: none;
+        }
+      `}</style>
+
       <LandingNav />
       <main className="pt-16">
 
         {/* Hero */}
-        <section className="flex flex-col items-center justify-center text-center px-4 py-24 max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 text-sm mb-8 border">
-            <Zap className="w-4 h-4 text-primary" />
-            <span>Backend as a Service</span>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-            The backend that powers<br />
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-              every WorkersCraft app
-            </span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
-            WorkersCraft Cloud is the backend infrastructure automatically provisioned for every app you build.
-            Auth, storage, file uploads — all managed, all instant.
-          </p>
-          <Link href="/auth">
-            <Button size="lg" className="gap-2 px-8 h-12 text-lg">
-              Start Building <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
+        <section className="relative flex flex-col items-center justify-center text-center px-4 py-32 max-w-5xl mx-auto overflow-hidden">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(99,102,241,0.15),transparent)]" />
+          <Reveal>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/50 text-sm mb-8 border">
+              <Zap className="w-4 h-4 text-primary" />
+              <span>Backend as a Service</span>
+            </div>
+          </Reveal>
+          <Reveal delay={100}>
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight">
+              The backend that powers<br />
+              <span className="bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                every WorkersCraft app
+              </span>
+            </h1>
+          </Reveal>
+          <Reveal delay={200}>
+            <p className="text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
+              WorkersCraft Cloud is the backend infrastructure automatically provisioned for every app you build.
+              Auth, storage, file uploads — all managed, all instant.
+            </p>
+          </Reveal>
+          <Reveal delay={300}>
+            <Link href="/auth">
+              <Button size="lg" className="gap-2 px-8 h-12 text-lg">
+                Start Building <ArrowRight className="w-5 h-5" />
+              </Button>
+            </Link>
+          </Reveal>
         </section>
 
         {/* Features */}
-        <section className="px-4 py-20 bg-muted/20">
+        <section className="px-4 py-24 relative">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,rgba(139,92,246,0.07),transparent)]" />
           <div className="max-w-6xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">Everything your app needs</h2>
-            <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
-              No setup, no config files, no DevOps. Your backend is ready the moment your app is generated.
-            </p>
+            <Reveal>
+              <h2 className="text-4xl font-bold text-center mb-4">Everything your app needs</h2>
+              <p className="text-muted-foreground text-center mb-16 max-w-xl mx-auto">
+                No setup, no config files, no DevOps. Your backend is ready the moment your app is generated.
+              </p>
+            </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map(({ icon: Icon, title, description }) => (
-                <div key={title} className="rounded-xl border bg-background p-6 flex flex-col gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Icon className="w-5 h-5 text-primary" />
+              {features.map(({ icon: Icon, title, description }, i) => (
+                <Reveal key={title} delay={i * 80}>
+                  <div className="glass-card gradient-border rounded-2xl p-6 flex flex-col gap-4 h-full hover:bg-white/5 transition-colors">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center border border-white/10">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-lg">{title}</h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
                   </div>
-                  <h3 className="font-semibold text-lg">{title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
         {/* How it works */}
-        <section className="px-4 py-20">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">How it works</h2>
-            <p className="text-muted-foreground text-center mb-12 max-w-xl mx-auto">
-              From idea to full-stack app in seconds.
-            </p>
-            <div className="flex flex-col gap-8">
-              {steps.map(({ step, title, description }) => (
-                <div key={step} className="flex gap-6 items-start">
-                  <div className="text-4xl font-bold text-primary/20 w-12 shrink-0">{step}</div>
-                  <div>
-                    <h3 className="font-semibold text-lg mb-1">{title}</h3>
-                    <p className="text-muted-foreground">{description}</p>
+        <section className="px-4 py-24">
+          <div className="max-w-3xl mx-auto">
+            <Reveal>
+              <h2 className="text-4xl font-bold text-center mb-4">How it works</h2>
+              <p className="text-muted-foreground text-center mb-16 max-w-xl mx-auto">From idea to full-stack app in seconds.</p>
+            </Reveal>
+            <div className="flex flex-col gap-6 relative">
+              <div className="absolute left-6 top-8 bottom-8 w-px bg-gradient-to-b from-blue-600/50 via-purple-600/50 to-transparent" />
+              {steps.map(({ step, title, description }, i) => (
+                <Reveal key={step} delay={i * 120}>
+                  <div className="flex gap-6 items-start pl-2">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-sm font-bold shrink-0 z-10">
+                      {step}
+                    </div>
+                    <div className="glass-card rounded-2xl p-5 flex-1">
+                      <h3 className="font-semibold text-lg mb-1">{title}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+                    </div>
                   </div>
-                </div>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
-        {/* What's included */}
-        <section className="px-4 py-20 bg-muted/20">
+        {/* Included */}
+        <section className="px-4 py-24 relative">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_40%_at_50%_50%,rgba(59,130,246,0.07),transparent)]" />
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Included with every app</h2>
-            <p className="text-muted-foreground mb-10">No extra plans. No hidden limits during early access.</p>
+            <Reveal>
+              <h2 className="text-4xl font-bold mb-4">Included with every app</h2>
+              <p className="text-muted-foreground mb-12">No extra plans. No hidden limits during early access.</p>
+            </Reveal>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left">
-              {[
-                'Dedicated backend per app',
-                'User authentication & sessions',
-                'Unlimited storage collections',
-                'File uploads & CDN delivery',
-                'Auto-generated typed SDK',
-                'Admin panel in your dashboard',
-                'Secure isolated environment',
-                'REST API access',
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-primary shrink-0" />
-                  <span className="text-sm">{item}</span>
-                </div>
+              {included.map((item, i) => (
+                <Reveal key={item} delay={i * 60}>
+                  <div className="glass-card rounded-xl px-5 py-4 flex items-center gap-3 hover:bg-white/5 transition-colors">
+                    <CheckCircle className="w-5 h-5 text-primary shrink-0" />
+                    <span className="text-sm font-medium">{item}</span>
+                  </div>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
 
         {/* CTA */}
-        <section className="px-4 py-24 text-center">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-4xl font-bold mb-4">Ready to build?</h2>
-            <p className="text-muted-foreground mb-8 text-lg">
-              Create your first AI-powered app and get a full backend automatically.
-            </p>
-            <Link href="/auth">
-              <Button size="lg" className="gap-2 px-8 h-12 text-lg">
-                Get Started Free <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-          </div>
+        <section className="px-4 py-32 text-center relative">
+          <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(99,102,241,0.12),transparent)]" />
+          <Reveal>
+            <div className="max-w-2xl mx-auto glass-card gradient-border rounded-3xl px-10 py-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">Ready to build?</h2>
+              <p className="text-muted-foreground mb-8 text-lg">
+                Create your first AI-powered app and get a full backend automatically.
+              </p>
+              <Link href="/auth">
+                <Button size="lg" className="gap-2 px-8 h-12 text-lg">
+                  Get Started Free <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
+          </Reveal>
         </section>
 
       </main>
