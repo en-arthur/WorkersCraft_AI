@@ -5,6 +5,7 @@ import { applyPatch } from '@/lib/morph'
 import ratelimit from '@/lib/ratelimit'
 import { FragmentSchema, morphEditSchema } from '@/lib/schema'
 import { generateObject, LanguageModel, CoreMessage } from 'ai'
+import { z } from 'zod'
 
 export const maxDuration = 300
 
@@ -55,15 +56,45 @@ export async function POST(req: Request) {
 
     // Handle multi-file format
     if (currentFragment.files && currentFragment.files.length > 0) {
-      const updatedFiles = []
+      // Step 1: identify relevant files using the selected model
+      let relevantPaths: Set<string>
+      try {
+        const { object: relevanceResult } = await generateObject({
+          model: modelClient as LanguageModel,
+          schema: z.object({
+            relevant_files: z.array(z.string()).describe('File paths that need changes'),
+          }),
+          system: `You are a code editor assistant. Given a user request and a list of files, return only the file paths that need to be modified. Be conservative — only include files that directly need changes.`,
+          messages: [
+            {
+              role: 'user',
+              content: `User request: ${userRequest}\n\nFiles:\n${currentFragment.files.map(f => `- ${f.file_path}`).join('\n')}`,
+            },
+          ],
+          maxRetries: 0,
+        })
+        // Fallback to all files if model returns empty
+        relevantPaths = relevanceResult.relevant_files.length > 0
+          ? new Set(relevanceResult.relevant_files)
+          : new Set(currentFragment.files.map(f => f.file_path))
+      } catch {
+        // If relevance detection fails, process all files
+        relevantPaths = new Set(currentFragment.files.map(f => f.file_path))
+      }
 
-      // Loop through each file and apply Morph edits
-      for (const file of currentFragment.files) {
-        const contextualSystemPrompt = `You are a code editor. Generate a JSON response with exactly these fields:
+      // Step 2: parallel morph edits on relevant files only
+      let updatedFiles: typeof currentFragment.files
+      try {
+        updatedFiles = await Promise.all(
+          currentFragment.files.map(async (file) => {
+            if (!relevantPaths.has(file.file_path)) return file // untouched
 
+            const result = await generateObject({
+              model: modelClient as LanguageModel,
+              system: `You are a code editor. Generate a JSON response with exactly these fields:
 {
   "commentary": "Explain what changes you are making to ${file.file_path}",
-  "instruction": "One line description of the change", 
+  "instruction": "One line description of the change",
   "edit": "The code changes with // ... existing code ... for unchanged parts",
   "file_path": "${file.file_path}"
 }
@@ -74,38 +105,46 @@ Current code:
 ${file.file_content}
 \`\`\`
 
-User request: ${userRequest}
-`
+User request: ${userRequest}`,
+              messages,
+              schema: morphEditSchema,
+              maxRetries: 0,
+              ...modelParams,
+            })
 
-        const result = await generateObject({
-          model: modelClient as LanguageModel,
-          system: contextualSystemPrompt,
-          messages,
-          schema: morphEditSchema,
-          maxRetries: 0,
-          ...modelParams,
-        })
-
-        const editInstructions = result.object
-
-        // Apply edits using Morph
-        const morphResult = await applyPatch({
-          targetFile: file.file_path,
-          instructions: editInstructions.instruction,
-          initialCode: file.file_content,
-          codeEdit: editInstructions.edit,
-        })
-
-        updatedFiles.push({
-          ...file,
-          file_content: morphResult.code,
-        })
+            try {
+              const morphResult = await applyPatch({
+                targetFile: file.file_path,
+                instructions: result.object.instruction,
+                initialCode: file.file_content,
+                codeEdit: result.object.edit,
+              })
+              return { ...file, file_content: morphResult.code }
+            } catch {
+              // Per-file fallback: ask model to rewrite just this file
+              const { object: rewrite } = await generateObject({
+                model: modelClient as LanguageModel,
+                schema: z.object({ file_content: z.string() }),
+                system: `Rewrite the following file completely applying the user's request. Return only the complete file content.`,
+                messages: [
+                  { role: 'user', content: `File: ${file.file_path}\n\nCurrent code:\n${file.file_content}\n\nRequest: ${userRequest}` },
+                ],
+                maxRetries: 0,
+                maxTokens: (model as any).maxOutputTokens ?? 32000,
+                ...modelParams,
+              })
+              return { ...file, file_content: rewrite.file_content }
+            }
+          })
+        )
+      } catch (err) {
+        return handleAPIError(err)
       }
 
       updatedFragment = {
         ...currentFragment,
         files: updatedFiles,
-        commentary: `Updated ${updatedFiles.length} file(s)`,
+        commentary: `Updated ${relevantPaths.size} file(s)`,
       }
     } 
     // Handle single-file format
