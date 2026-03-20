@@ -113,7 +113,8 @@ IMPORTANT:
       schema,
       system: toPrompt(template) + existingCodeContext + backendPrompt,
       messages,
-      maxRetries: 0, // do not retry on errors
+      maxTokens: 32000,
+      maxRetries: 0,
       ...modelParams,
     })
 

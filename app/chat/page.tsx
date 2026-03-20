@@ -153,24 +153,30 @@ function ChatContent() {
       setErrorMessage(error.message)
     },
     onFinish: async ({ object: fragment, error }) => {
-      if (!error) {
-        // send it to /api/sandbox
-        console.log('fragment', fragment)
-        setIsPreviewLoading(true)
-        posthog.capture('fragment_generated', {
-          template: fragment?.template,
-        })
+      if (!fragment) return
 
-        // Add backend info to fragment
-        const fragmentWithBackend = {
-          ...fragment,
-          backend_enabled: currentProject?.backend_enabled || false,
-          backend_status: currentProject?.backend_status || 'inactive',
-          backend_app_id: currentProject?.backend_app_id || undefined,
-        }
+      // Always set fragment so code tab shows content even if sandbox fails
+      const fragmentWithBackend = {
+        ...fragment,
+        backend_enabled: currentProject?.backend_enabled || false,
+        backend_status: currentProject?.backend_status || 'inactive',
+        backend_app_id: currentProject?.backend_app_id || undefined,
+      }
+      setFragment(fragmentWithBackend)
 
+      if (error) {
+        console.error('Fragment generation error:', error)
+        setCurrentTab('code')
+        return
+      }
+
+      setIsPreviewLoading(true)
+      posthog.capture('fragment_generated', { template: fragment?.template })
+
+      try {
         const response = await fetch('/api/sandbox', {
           method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             fragment: fragmentWithBackend,
             userID: session?.user?.id,
@@ -180,13 +186,15 @@ function ChatContent() {
         })
 
         const result = await response.json()
-        console.log('result', result)
         posthog.capture('sandbox_created', { url: result.url })
-
         setResult(result)
         setCurrentPreview({ fragment: fragmentWithBackend, result })
         setMessage({ result })
         setCurrentTab('fragment')
+      } catch (err) {
+        console.error('Sandbox error:', err)
+        setCurrentTab('code')
+      } finally {
         setIsPreviewLoading(false)
       }
     },
@@ -430,6 +438,7 @@ function ChatContent() {
         try {
           const sandboxResponse = await fetch('/api/sandbox', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               fragment: normalizedFragment,
               userID: session?.user?.id,
@@ -445,6 +454,7 @@ function ChatContent() {
           setCurrentTab('fragment')
         } catch (error) {
           console.error('Error running sandbox:', error)
+          setCurrentTab('code')
         } finally {
           setIsPreviewLoading(false)
         }
