@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label'
 import { Loader2, ExternalLink, ChevronDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-export function DeployVercel({ fragment }) {
+export function DeployVercel({ fragment, sandboxId }) {
   const [isDeploying, setIsDeploying] = useState(false)
   const [deployUrl, setDeployUrl] = useState(null)
   const [error, setError] = useState(null)
@@ -43,7 +43,8 @@ export function DeployVercel({ fragment }) {
           'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          fragment: fragment,
+          fragment,
+          sandboxId,
         }),
       })
 

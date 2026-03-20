@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Sandbox } from '@e2b/code-interpreter'
 import crypto from 'crypto'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
@@ -24,7 +25,7 @@ function getSupabaseWithAuth(token) {
 
 export async function POST(request) {
   try {
-    const { fragment, projectId, userId } = await request.json()
+    const { fragment, projectId, userId, sandboxId } = await request.json()
 
     if (!fragment && !projectId) {
       return NextResponse.json(
@@ -84,40 +85,45 @@ export async function POST(request) {
       })
     }
 
-    // Extract files from fragment
+    // Extract files — prefer reading directly from sandbox (source of truth)
     let files = {}
-    
-    if (fragment.files && Array.isArray(fragment.files)) {
-      // Multi-file format - use all files from sandbox
-      fragment.files.forEach(file => {
-        const fullPath = file.file_path || file.name
-        if (fullPath) {
-          // Remove /home/user/ prefix if present
-          const relativePath = fullPath.replace(/^\/home\/user\//, '')
-          files[relativePath] = file.code || file.content || file.file_content || ''
+
+    if (sandboxId) {
+      try {
+        const sbx = await Sandbox.connect(sandboxId)
+        const allFiles = await sbx.files.list('/home/user', { depth: 10 })
+        for (const file of allFiles) {
+          if (file.type === 'file') {
+            const relativePath = file.path.replace(/^\/home\/user\//, '')
+            // skip node_modules and hidden dirs
+            if (relativePath.startsWith('node_modules/') || relativePath.startsWith('.')) continue
+            const content = await sbx.files.read(file.path)
+            files[relativePath] = content
+          }
         }
-      })
-    } else if (fragment.code && fragment.file_path) {
-      // Single file format
-      const relativePath = fragment.file_path.replace(/^\/home\/user\//, '')
-      files[relativePath] = fragment.code
-    } else if (projectData) {
-      // Get files from project
-      const { data: projectFiles } = await supabase
-        .from('project_files')
-        .select('*')
-        .eq('project_id', projectId)
-      
-      if (projectFiles) {
-        projectFiles.forEach(file => {
-          files[file.path] = file.content
-        })
+        console.log('Read files from sandbox:', Object.keys(files))
+      } catch (err) {
+        console.error('Failed to read from sandbox, falling back to fragment:', err)
       }
-    } else {
-      return NextResponse.json(
-        { error: 'No files found in fragment' },
-        { status: 400 }
-      )
+    }
+
+    // Fallback: extract from fragment schema if sandbox read failed or no sandboxId
+    if (Object.keys(files).length === 0) {
+      if (fragment?.files && Array.isArray(fragment.files)) {
+        fragment.files.forEach(file => {
+          const relativePath = (file.file_path || file.name || '').replace(/^\/home\/user\//, '')
+          if (relativePath) files[relativePath] = file.code || file.content || file.file_content || ''
+        })
+      } else if (fragment?.code && fragment?.file_path) {
+        files[fragment.file_path.replace(/^\/home\/user\//, '')] = fragment.code
+      } else if (projectId) {
+        const { data: projectFiles } = await supabase.from('project_files').select('*').eq('project_id', projectId)
+        if (projectFiles) projectFiles.forEach(f => { files[f.path] = f.content })
+      }
+    }
+
+    if (Object.keys(files).length === 0) {
+      return NextResponse.json({ error: 'No files found' }, { status: 400 })
     }
 
     // Get user's Vercel token from database
@@ -139,51 +145,10 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
-    const template = projectData.template || fragment.template
-
-    // Add required config files for Next.js if not present
-    if (template?.includes('nextjs') || template === 'nextjs-developer') {
-      // Check if any TypeScript files exist
-      const hasTypeScript = Object.keys(files).some(path => 
-        path.endsWith('.ts') || path.endsWith('.tsx')
-      )
-
-      if (!files['package.json']) {
-        const dependencies = {
-          next: '14.2.5',
-          react: '^18',
-          'react-dom': '^18',
-        }
-
-        const devDependencies = hasTypeScript ? {
-          typescript: '^5',
-          '@types/react': '^18',
-          '@types/node': '^20',
-          '@types/react-dom': '^18',
-        } : {}
-
-        files['package.json'] = JSON.stringify({
-          name: 'workerscraft-app',
-          version: '0.1.0',
-          private: true,
-          scripts: {
-            dev: 'next dev',
-            build: 'next build',
-            start: 'next start',
-          },
-          dependencies,
-          ...(hasTypeScript && { devDependencies }),
-        }, null, 2)
-      }
-      
-      if (!files['next.config.js'] && !files['next.config.mjs']) {
-        files['next.config.js'] = `/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: true,
-}
-
-module.exports = nextConfig`
-      }
+    // Only add next.config if missing (sandbox may not have it)
+    const template = projectData?.template || fragment?.template
+    if ((template?.includes('nextjs') || template === 'nextjs-developer') && !files['next.config.js'] && !files['next.config.mjs']) {
+      files['next.config.js'] = `/** @type {import('next').NextConfig} */\nconst nextConfig = { reactStrictMode: true }\nmodule.exports = nextConfig`
     }
 
     console.log('Deploying files:', Object.keys(files))

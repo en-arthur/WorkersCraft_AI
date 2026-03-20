@@ -3,17 +3,7 @@
   flex-wrap: wrap;
   white-space: pre-wrap;
   position: relative;
-  overflow: hidden;
-}
-
-.text-rotate-vertical {
-  display: flex;
-  flex-direction: column;
   overflow: visible;
-}
-
-.text-rotate-block {
-  display: block !important;
 }
 
 .text-rotate-element {

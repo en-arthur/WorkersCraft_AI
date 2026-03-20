@@ -632,6 +632,7 @@ function ChatContent() {
             projectId={currentProject?.id}
             platform={currentProject?.platform}
             fragment={fragment}
+            sandboxId={result?.sbxId}
             hasGitHubRepo={!!(fragment?.github_repo_url || currentProject?.github_repo_url)}
             githubRepoUrl={fragment?.github_repo_url || currentProject?.github_repo_url}
             githubBranch={fragment?.github_branch || currentProject?.github_branch}
