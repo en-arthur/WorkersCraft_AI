@@ -121,11 +121,11 @@ User request: ${userRequest}`,
               })
               return { ...file, file_content: morphResult.code }
             } catch {
-              // Per-file fallback: ask model to rewrite just this file
-              const { object: rewrite } = await generateObject({
+              // Per-file fallback: generate a full-file edit and apply via Morph
+              const { object: fullEdit } = await generateObject({
                 model: modelClient as LanguageModel,
-                schema: z.object({ file_content: z.string() }),
-                system: `Rewrite the following file completely applying the user's request. Return only the complete file content.`,
+                schema: morphEditSchema,
+                system: `You are a code editor. The previous edit failed to apply. Generate a complete rewrite of the file as a single edit block with no // ... existing code ... markers.`,
                 messages: [
                   { role: 'user', content: `File: ${file.file_path}\n\nCurrent code:\n${file.file_content}\n\nRequest: ${userRequest}` },
                 ],
@@ -133,7 +133,13 @@ User request: ${userRequest}`,
                 maxTokens: (model as any).maxOutputTokens ?? 32000,
                 ...modelParams,
               })
-              return { ...file, file_content: rewrite.file_content }
+              const fallbackResult = await applyPatch({
+                targetFile: file.file_path,
+                instructions: fullEdit.instruction,
+                initialCode: file.file_content,
+                codeEdit: fullEdit.edit,
+              })
+              return { ...file, file_content: fallbackResult.code }
             }
           })
         )
