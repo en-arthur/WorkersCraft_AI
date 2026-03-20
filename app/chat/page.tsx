@@ -222,34 +222,27 @@ function ChatContent() {
   })
 
   useEffect(() => {
-    if (object) {
-      setFragment(object)
-      
-      // Get code content from either format
-      const codeContent = (object.files && object.files.length > 0 && object.files[0]
-        ? object.files[0].file_content
-        : object.code) || ''
-      
-      const content: Message['content'] = [
-        { type: 'text', text: object.commentary || '' },
-        { type: 'code', text: codeContent },
-      ]
+    if (!object) return
+    setFragment(object)
 
-      if (!lastMessage || lastMessage.role !== 'assistant') {
-        addMessage({
-          role: 'assistant',
-          content,
-          object,
-        })
-      }
+    const codeContent = (object.files && object.files.length > 0 && object.files[0]
+      ? object.files[0].file_content
+      : object.code) || ''
 
-      if (lastMessage && lastMessage.role === 'assistant') {
-        setMessage({
-          content,
-          object,
-        })
+    const content: Message['content'] = [
+      { type: 'text', text: object.commentary || '' },
+      { type: 'code', text: codeContent },
+    ]
+
+    setMessages((prev) => {
+      const last = prev[prev.length - 1]
+      if (!last || last.role !== 'assistant') {
+        return [...prev, { role: 'assistant', content, object }]
       }
-    }
+      const updated = [...prev]
+      updated[updated.length - 1] = { ...last, content, object }
+      return updated
+    })
   }, [object])
 
   useEffect(() => {
