@@ -12,6 +12,7 @@ export default function RotatingText({
   rotationInterval = 2000,
   mainClassName,
   elementLevelClassName,
+  vertical = false,
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState('visible'); // 'visible' | 'exit' | 'enter'
@@ -40,11 +41,11 @@ export default function RotatingText({
   }, [phase]);
 
   return (
-    <span className={cn('text-rotate', mainClassName)}>
+    <span className={cn('text-rotate', vertical && 'text-rotate-vertical', mainClassName)}>
       {texts[currentIndex].split('').map((char, i) => (
         <span
           key={`${currentIndex}-${i}`}
-          className={cn('text-rotate-element', elementLevelClassName, `text-rotate-${phase}`)}
+          className={cn('text-rotate-element', vertical && 'text-rotate-block', elementLevelClassName, `text-rotate-${phase}`)}
           style={{ animationDelay: `${i * 0.04}s` }}
         >
           {char}

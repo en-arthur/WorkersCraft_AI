@@ -34,15 +34,15 @@ export function Hero() {
       </div>
       
       <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
-        The fastest way to build{' '}
+        <span className="block">The fastest way to build</span>
         <RotatingText
           texts={['Apps', 'Dashboards', 'APIs', 'Tools', 'Products']}
           rotationInterval={2500}
-          splitBy="characters"
           staggerDuration={0.04}
           staggerFrom="first"
-          mainClassName=""
-          elementLevelClassName="inline-block bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
+          vertical={true}
+          mainClassName="mt-2"
+          elementLevelClassName="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
         />
       </h1>
       
