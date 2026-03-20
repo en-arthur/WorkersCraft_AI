@@ -95,12 +95,50 @@ export async function POST(request) {
         for (const file of allFiles) {
           if (file.type === 'file') {
             const relativePath = file.path.replace(/^\/home\/user\//, '')
-            // skip node_modules and hidden dirs
             if (relativePath.startsWith('node_modules/') || relativePath.startsWith('.')) continue
             const content = await sbx.files.read(file.path)
             files[relativePath] = content
           }
         }
+
+        // The sandbox template package.json is a builder script, not an app package.json.
+        // Read the actual installed packages from node_modules to build a real one.
+        let installedPkg = {}
+        try {
+          const lockRaw = await sbx.files.read('/home/user/node_modules/.package-lock.json')
+          const lock = JSON.parse(lockRaw)
+          // top-level packages only (no path separators = direct dep)
+          Object.entries(lock.packages || {}).forEach(([k, v]) => {
+            const name = k.replace(/^node_modules\//, '')
+            if (!name.includes('/node_modules/') && name && !name.startsWith('.')) {
+              installedPkg[name] = v.version
+            }
+          })
+        } catch {}
+
+        // Always override with a proper app package.json
+        const hasTypeScript = Object.keys(files).some(p => p.endsWith('.ts') || p.endsWith('.tsx'))
+        const deps = {}
+        const devDeps = {}
+        const devNames = ['typescript', '@types/react', '@types/node', '@types/react-dom', 'autoprefixer', 'postcss', 'tailwindcss']
+        Object.entries(installedPkg).forEach(([name, version]) => {
+          if (devNames.includes(name)) devDeps[name] = version
+          else deps[name] = version
+        })
+        // Ensure next is always present
+        if (!deps['next']) deps['next'] = '14.2.5'
+        if (!deps['react']) deps['react'] = '^18'
+        if (!deps['react-dom']) deps['react-dom'] = '^18'
+
+        files['package.json'] = JSON.stringify({
+          name: 'workerscraft-app',
+          version: '0.1.0',
+          private: true,
+          scripts: { dev: 'next dev', build: 'next build', start: 'next start' },
+          dependencies: deps,
+          ...(Object.keys(devDeps).length > 0 && { devDependencies: devDeps }),
+        }, null, 2)
+
         console.log('Read files from sandbox:', Object.keys(files))
       } catch (err) {
         console.error('Failed to read from sandbox, falling back to fragment:', err)
