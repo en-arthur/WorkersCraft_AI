@@ -120,9 +120,10 @@ ${isRelease ? `      - name: Import certificate
           SCHEME: \${{ secrets.IOS_SCHEME }}` : `      - name: Build unsigned IPA
         run: |
           cd ios
-          SCHEME=$(node -e "try{const a=require('../app.json');console.log(a.expo&&a.expo.slug||a.expo&&a.expo.name||a.name||'')}catch(e){console.log('')}")
-          if [ -z "$SCHEME" ]; then SCHEME=$(ls *.xcworkspace | head -1 | sed 's/.xcworkspace//'); fi
-          xcodebuild -workspace *.xcworkspace -scheme "$SCHEME" \\
+          WORKSPACE=$(ls *.xcworkspace | head -1)
+          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/,0' | grep -v 'Schemes:' | grep -v '^$' | head -1 | xargs)
+          echo "Using workspace: $WORKSPACE, scheme: $SCHEME"
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" \\
             -configuration Debug -sdk iphonesimulator \\
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \\
             -derivedDataPath build
