@@ -127,15 +127,15 @@ ${isRelease ? `      - name: Import certificate
             -configuration Debug -sdk iphonesimulator \\
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \\
             -derivedDataPath build
-          cd build/Build/Products/Debug-iphonesimulator
-          mkdir Payload && cp -r *.app Payload/
+          APP=$(find build/Build/Products/Debug-iphonesimulator -maxdepth 2 -name "*.app" -type d | head -1)
+          mkdir Payload && cp -r "$APP" Payload/
           zip -r app-debug.ipa Payload`}
       - uses: actions/upload-artifact@v4
         with:
           name: ios-${buildType}
           path: |
             ios/output/*.ipa
-            ios/build/Build/Products/**/*.ipa
+            ios/app-debug.ipa
           retention-days: 30
 `
 }
