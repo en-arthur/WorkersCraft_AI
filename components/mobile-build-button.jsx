@@ -95,6 +95,9 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       }
       if (!res.ok) throw new Error(data.error)
       setBuildState({ buildId: data.buildId, platform, buildType, status: 'queued', artifactId: null })
+      if (!localStorage.getItem(`built_${projectId}`)) {
+        toast({ title: 'Build started', description: 'First build takes time while dependencies are cached. Subsequent builds will be faster.' })
+      }
     } catch (e) {
       toast({ variant: 'destructive', title: 'Build failed', description: e.message })
     } finally {
@@ -181,9 +184,6 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
             >
               {STATUS_LABELS[buildState.status] || buildState.status}
             </span>
-            {isBuilding && !localStorage.getItem(`built_${projectId}`) && (
-              <span className="text-xs text-muted-foreground italic">First build takes time while dependencies are cached. Subsequent builds will be faster.</span>
-            )}
             {buildState.status === 'completed' && buildState.artifactId && (
               <Button size="sm" variant="outline" onClick={downloadArtifact} className="gap-1 h-7">
                 <Download className="w-3 h-3" />
