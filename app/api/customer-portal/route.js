@@ -18,13 +18,13 @@ export async function GET(request) {
 
     const { data: sub } = await supabase
       .from('user_subscriptions')
-      .select('paddle_customer_id')
+      .select('paddle_customer_id, paddle_subscription_id')
       .eq('user_id', user.id)
       .single()
 
     if (!sub?.paddle_customer_id) return Response.json({ error: 'No subscription found' }, { status: 404 })
 
-    const url = await getCustomerPortalUrl(sub.paddle_customer_id)
+    const url = await getCustomerPortalUrl(sub.paddle_customer_id, sub.paddle_subscription_id)
     return Response.json({ url })
   } catch (err) {
     console.error('[customer-portal]', err)
