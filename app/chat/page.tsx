@@ -75,6 +75,7 @@ function ChatContent() {
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -114,6 +115,26 @@ function ChatContent() {
       router.push('/auth')
     }
   }, [session, router])
+
+  // Fire generation when project + prompt are ready (replaces setTimeout+click hack)
+  useEffect(() => {
+    if (!pendingPrompt || !currentProject || !session) return
+    setPendingPrompt(null)
+    const content: Message['content'] = [{ type: 'text', text: pendingPrompt }]
+    const updatedMessages = addMessage({ role: 'user', content })
+    submit({
+      userID: session.user.id,
+      teamID: userTeam?.id,
+      messages: toAISDKMessages(updatedMessages),
+      template: currentTemplate,
+      model: currentModel,
+      config: languageModel,
+      currentFragment: fragment || undefined,
+      backendEnabled: currentProject.backend_enabled || false,
+      backendStatus: currentProject.backend_status || 'inactive',
+    })
+    setCurrentTab('code')
+  }, [pendingPrompt, currentProject, session])
 
   const currentTemplate =
     selectedTemplate === 'auto'
@@ -281,7 +302,7 @@ function ChatContent() {
       template: currentTemplate,
       model: currentModel,
       config: languageModel,
-      ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
+      currentFragment: fragment || undefined,
       backendEnabled: currentProject?.backend_enabled || false,
       backendStatus: currentProject?.backend_status || 'inactive',
     })
@@ -304,7 +325,7 @@ function ChatContent() {
       template: currentTemplate,
       model: currentModel,
       config: languageModel,
-      ...(shouldUseMorph && fragment ? { currentFragment: fragment } : {}),
+      currentFragment: fragment || undefined,
       backendEnabled: currentProject?.backend_enabled || false,
       backendStatus: currentProject?.backend_status || 'inactive',
     })
@@ -398,14 +419,8 @@ function ChatContent() {
         
         // Auto-start generation with user prompt if available and no messages yet
         if (data.project.user_prompt && messages.length === 0 && !data.conversation) {
-          console.log('Auto-starting with prompt:', data.project.user_prompt)
-          setChatInput(data.project.user_prompt)
-          // Trigger generation after a short delay
-          setTimeout(() => {
-            const submitButton = document.querySelector('[type="submit"]') as HTMLButtonElement
-            if (submitButton) submitButton.click()
-          }, 500)
-          return // Don't load old data if we're starting fresh
+          setPendingPrompt(data.project.user_prompt)
+          return
         }
       }
       

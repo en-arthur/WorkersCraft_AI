@@ -113,7 +113,7 @@ IMPORTANT:
       schema,
       system: toPrompt(template) + existingCodeContext + backendPrompt,
       messages,
-      maxTokens: 32000,
+      maxTokens: (model as any).maxOutputTokens ?? 32000,
       maxRetries: 0,
       ...modelParams,
     })

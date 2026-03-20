@@ -27,17 +27,10 @@ export type Message = {
 export function toAISDKMessages(messages: Message[]) {
   return messages.map((message) => ({
     role: message.role,
-    content: message.content.map((content) => {
-      if (content.type === 'code') {
-        return {
-          type: 'text',
-          text: content.text,
-        }
-      }
-
-      return content
-    }),
-  }))
+    content: message.content
+      .filter((c) => c.type !== 'code') // strip code — latest code sent via currentFragment
+      .map((content) => content),
+  })).filter((m) => m.content.length > 0)
 }
 
 export async function toMessageImage(files: File[]) {
