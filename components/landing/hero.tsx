@@ -38,11 +38,10 @@ export function Hero() {
         <RotatingText
           texts={['Apps', 'Dashboards', 'APIs', 'Tools', 'Products']}
           rotationInterval={2500}
-          staggerDuration={0.04}
+          staggerDuration={0}
           staggerFrom="first"
-          vertical={true}
-          mainClassName="mt-2"
-          elementLevelClassName="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
+          mainClassName=""
+          elementLevelClassName="inline-block bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
         />
       </h1>
       
