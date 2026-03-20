@@ -91,15 +91,22 @@ export async function POST(request) {
     if (sandboxId) {
       try {
         const sbx = await Sandbox.connect(sandboxId)
-        const allFiles = await sbx.files.list('/home/user', { depth: 10 })
-        for (const file of allFiles) {
-          if (file.type === 'file') {
-            const relativePath = file.path.replace(/^\/home\/user\//, '')
+
+        // Recursively list all files since E2B list() may not support depth
+        async function readDir(dir) {
+          const entries = await sbx.files.list(dir)
+          for (const entry of entries) {
+            const relativePath = entry.path.replace(/^\/home\/user\//, '')
             if (relativePath.startsWith('node_modules/') || relativePath.startsWith('.')) continue
-            const content = await sbx.files.read(file.path)
-            files[relativePath] = content
+            if (entry.type === 'dir') {
+              await readDir(entry.path)
+            } else {
+              const content = await sbx.files.read(entry.path)
+              files[relativePath] = content
+            }
           }
         }
+        await readDir('/home/user')
 
         // The sandbox template package.json is a builder script, not an app package.json.
         // Read the actual installed packages from node_modules to build a real one.
