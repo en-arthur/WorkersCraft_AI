@@ -120,7 +120,7 @@ ${isRelease ? `      - name: Import certificate
           SCHEME: \${{ secrets.IOS_SCHEME }}` : `      - name: Build unsigned IPA
         run: |
           cd ios
-          WORKSPACE=$(ls *.xcworkspace | head -1)
+          WORKSPACE=$(find . -maxdepth 1 -name "*.xcworkspace" -type d | head -1 | xargs basename)
           SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" | awk '/Schemes:/,0' | grep -v 'Schemes:' | grep -v '^$' | head -1 | xargs)
           echo "Using workspace: $WORKSPACE, scheme: $SCHEME"
           xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" \\
