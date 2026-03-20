@@ -85,12 +85,28 @@ export async function POST(request) {
     case 'subscription.updated':
       await upsertSubscription(data, data.status === 'active' ? 'active' : data.status)
       break
+    case 'subscription.paused':
+      await upsertSubscription(data, 'paused')
+      break
+    case 'subscription.resumed':
+      await upsertSubscription(data, 'active')
+      break
     case 'subscription.canceled':
       await upsertSubscription(data, 'inactive')
       break
     case 'transaction.completed':
       await handleTransactionCompleted(data)
       break
+    case 'transaction.payment_failed': {
+      const userId = data.custom_data?.user_id
+      if (userId) {
+        await supabase.from('user_subscriptions')
+          .update({ payment_failed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq('user_id', userId)
+        console.log('[paddle-webhook] payment failed for user:', userId)
+      }
+      break
+    }
   }
 
   return new Response(null, { status: 200 })

@@ -23,7 +23,6 @@ const PLANS = [
       { text: 'Backend cloud access', icon: Server },
       { text: 'Source code export', icon: Download },
       { text: '10 projects per day', icon: FolderOpen },
-      { text: 'Community support', icon: Headphones },
     ],
   },
   {
@@ -63,7 +62,9 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(null)
   const [portalLoading, setPortalLoading] = useState(false)
-  const [successMsg, setSuccessMsg] = useState(false)
+  const [checkoutError, setCheckoutError] = useState(null)
+  const [portalError, setPortalError] = useState(null)
+  const [processingPayment, setProcessingPayment] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,17 +74,16 @@ export default function BillingPage() {
     })
     // detect post-checkout success
     if (typeof window !== 'undefined' && window.location.search.includes('success=true')) {
-      setSuccessMsg(true)
-      // poll for subscription up to 10s (webhook may take a moment)
+      setProcessingPayment(true)
       let attempts = 0
       const interval = setInterval(async () => {
         attempts++
         const { data: sess } = await supabase.auth.getSession()
         if (sess?.session) {
           const sub = await fetchSubscription(sess.session)
-          if (sub) clearInterval(interval)
+          if (sub) { clearInterval(interval); setProcessingPayment(false) }
         }
-        if (attempts >= 10) clearInterval(interval)
+        if (attempts >= 10) { clearInterval(interval); setProcessingPayment(false) }
       }, 3000)
     }
   }, [])
@@ -103,6 +103,7 @@ export default function BillingPage() {
   const [inlineCheckout, setInlineCheckout] = useState(null) // { priceId, planId }
 
   async function handleCheckout(priceId, planId) {
+    setCheckoutError(null)
     setCheckoutLoading(planId)
     try {
       const res = await fetch(`/api/checkout?priceId=${priceId}`, {
@@ -110,6 +111,9 @@ export default function BillingPage() {
       })
       const data = await res.json()
       if (data.url) window.location.href = data.url
+      else setCheckoutError('Failed to start checkout. Please try again.')
+    } catch {
+      setCheckoutError('Failed to start checkout. Please try again.')
     } finally {
       setCheckoutLoading(null)
     }
@@ -127,13 +131,20 @@ export default function BillingPage() {
   }
 
   async function handlePortal() {
+    setPortalError(null)
     setPortalLoading(true)
-    const res = await fetch('/api/customer-portal', {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
-    const data = await res.json()
-    if (data.url) window.location.href = data.url
-    else setPortalLoading(false)
+    try {
+      const res = await fetch('/api/customer-portal', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else setPortalError('Failed to open portal. Please try again.')
+    } catch {
+      setPortalError('Failed to open portal. Please try again.')
+    } finally {
+      setPortalLoading(false)
+    }
   }
 
   if (loading) return (
@@ -150,9 +161,19 @@ export default function BillingPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-16">
-        {successMsg && (
-          <div className="mb-8 p-4 rounded-xl bg-green-500/10 border border-green-500 text-green-600 text-sm text-center">
-            🎉 Payment successful! Your plan is being activated — this may take a few seconds.
+        {processingPayment && (
+          <div className="mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500 text-blue-600 text-sm text-center flex items-center justify-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" /> Processing your subscription… this may take a few seconds.
+          </div>
+        )}
+        {checkoutError && (
+          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500 text-red-600 text-sm text-center">
+            {checkoutError}
+          </div>
+        )}
+        {portalError && (
+          <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500 text-red-600 text-sm text-center">
+            {portalError}
           </div>
         )}
 
