@@ -152,7 +152,7 @@ export default function DashboardBillingPage() {
   )
 
   return (
-    <div className="p-8 max-w-5xl mx-auto">
+    <div className="p-8 max-w-6xl mx-auto">
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight mb-1">Billing & Subscription</h1>
         <p className="text-muted-foreground">Manage your plan. Cancel anytime.</p>
@@ -196,7 +196,7 @@ export default function DashboardBillingPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-6">
         {PLANS.map((plan) => {
           const isCurrent = subscription?.plan === plan.id
           return (

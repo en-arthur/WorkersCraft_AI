@@ -160,7 +160,7 @@ export default function BillingPage() {
         <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard')}>← Dashboard</Button>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-16">
+      <main className="max-w-6xl mx-auto px-6 py-16">
         {processingPayment && (
           <div className="mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500 text-blue-600 text-sm text-center flex items-center justify-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin" /> Processing your subscription… this may take a few seconds.
@@ -206,7 +206,7 @@ export default function BillingPage() {
         )}
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-3 gap-6">
           {PLANS.map((plan) => {
             const isCurrent = subscription?.plan === plan.id
             return (
