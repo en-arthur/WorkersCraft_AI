@@ -34,6 +34,7 @@ export default function DashboardPage() {
     backend_enabled: false
   })
   const [saving, setSaving] = useState(false)
+  const [isLimitDialogOpen, setIsLimitDialogOpen] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
 
   const techStacks = {
@@ -140,7 +141,7 @@ export default function DashboardPage() {
         return
       }
       if (response.status === 429 || data.error === 'daily_limit_reached') {
-        alert('You have reached your daily project limit. Upgrade your plan for more.')
+        setIsLimitDialogOpen(true)
         return
       }
       if (data.project) {
@@ -441,6 +442,25 @@ export default function DashboardPage() {
               >
                 {deleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 {deleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isLimitDialogOpen} onOpenChange={setIsLimitDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Daily project limit reached</DialogTitle>
+              <DialogDescription>
+                You&apos;ve used all your project slots for today. Upgrade your plan to create more projects.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsLimitDialogOpen(false)}>
+                Close
+              </Button>
+              <Button onClick={() => router.push('/billing')}>
+                Upgrade plan
               </Button>
             </DialogFooter>
           </DialogContent>
