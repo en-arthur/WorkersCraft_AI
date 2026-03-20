@@ -74,7 +74,13 @@ export function NavBar({
   }
 
   return (
-    <nav className="w-full flex bg-background py-4">
+    <>
+      {isDownloading && (
+        <div className="fixed top-0 left-0 w-full h-0.5 bg-muted overflow-hidden z-50 pointer-events-none">
+          <div className="h-full bg-primary w-1/2 progress-bar-indeterminate" />
+        </div>
+      )}
+      <nav className="w-full flex bg-background py-4">
       <div className="flex flex-1 items-center">
         <Link href="/" className="flex items-center gap-2">
           <Logo width={24} height={24} />
@@ -154,6 +160,7 @@ export function NavBar({
           </Tooltip>
         </TooltipProvider>
       </div>
-    </nav>
+      </nav>
+    </>
   )
 }
