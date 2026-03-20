@@ -99,6 +99,7 @@ export async function POST(request) {
     .single()
 
   if (error) {
+    console.error('[integrations POST] Supabase error:', error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 
