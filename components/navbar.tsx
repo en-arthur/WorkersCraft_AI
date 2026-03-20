@@ -10,7 +10,7 @@ import { GitHubButton } from './github-button'
 import { MobileBuildButton } from './mobile-build-button'
 import { DeployVercel } from './deploy-vercel'
 import { Session } from '@supabase/supabase-js'
-import { Undo, FolderOpen } from 'lucide-react'
+import { Undo, FolderOpen, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -50,6 +50,28 @@ export function NavBar({
   onGitHubDisconnect?: () => void
 }) {
   const [forceOpenConnect, setForceOpenConnect] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  async function handleDownload() {
+    if (!sandboxId) return
+    setIsDownloading(true)
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sandboxId }),
+      })
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'project.zip'
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   return (
     <nav className="w-full flex bg-background py-4">
@@ -95,6 +117,23 @@ export function NavBar({
             githubRepoUrl={githubRepoUrl}
             onNeedRepo={() => setForceOpenConnect(true)}
           />
+        )}
+        {fragment && (
+          <TooltipProvider>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleDownload}
+                  disabled={!sandboxId || isPreviewLoading || isDownloading}
+                >
+                  <Download className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Download project</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
         {fragment && platform !== 'mobile' && (
           <DeployVercel fragment={fragment} sandboxId={sandboxId} isPreviewLoading={isPreviewLoading} />
