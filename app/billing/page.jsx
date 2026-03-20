@@ -275,13 +275,7 @@ export default function BillingPage() {
           All plans billed monthly. No hidden fees. Cancel anytime.
         </p>
 
-        {process.env.NEXT_PUBLIC_DEV_MODE === 'true' && (
-          <div className="mt-6 text-center">
-            <Button variant="outline" size="sm" className="text-yellow-600 border-yellow-400" onClick={handleDevSkip}>
-              ⚡ Skip (Dev Only) — Activate Pro
-            </Button>
-          </div>
-        )}
+
       </main>
     </div>
   )
