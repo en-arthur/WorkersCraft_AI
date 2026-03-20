@@ -631,6 +631,7 @@ function ChatContent() {
             onUndo={handleUndo}
             projectId={currentProject?.id}
             platform={currentProject?.platform}
+            fragment={fragment}
             hasGitHubRepo={!!(fragment?.github_repo_url || currentProject?.github_repo_url)}
             githubRepoUrl={fragment?.github_repo_url || currentProject?.github_repo_url}
             githubBranch={fragment?.github_branch || currentProject?.github_branch}

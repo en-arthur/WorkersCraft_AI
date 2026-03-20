@@ -192,7 +192,6 @@ export function Preview({
               )}
 
               {/* Deploy - Always visible */}
-              <DeployVercel fragment={fragment} />
 
               {/* Desktop: Show all actions */}
               <div className="hidden lg:flex items-center gap-2">

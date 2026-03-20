@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/tooltip'
 import { GitHubButton } from './github-button'
 import { MobileBuildButton } from './mobile-build-button'
+import { DeployVercel } from './deploy-vercel'
 import { Session } from '@supabase/supabase-js'
 import { Undo, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
@@ -21,6 +22,7 @@ export function NavBar({
   canUndo,
   projectId,
   platform,
+  fragment,
   hasGitHubRepo,
   githubRepoUrl,
   githubBranch,
@@ -35,6 +37,7 @@ export function NavBar({
   canUndo: boolean
   projectId?: string
   platform?: string
+  fragment?: any
   hasGitHubRepo?: boolean
   githubRepoUrl?: string
   githubBranch?: string
@@ -88,6 +91,9 @@ export function NavBar({
             githubRepoUrl={githubRepoUrl}
             onNeedRepo={() => setForceOpenConnect(true)}
           />
+        )}
+        {fragment && platform !== 'mobile' && (
+          <DeployVercel fragment={fragment} />
         )}
         <TooltipProvider>
           <Tooltip delayDuration={0}>
