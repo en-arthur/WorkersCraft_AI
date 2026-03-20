@@ -34,7 +34,7 @@ export function Hero() {
       </div>
       
       <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
-        Build{' '}
+        The fastest way to build{' '}
         <RotatingText
           texts={['Apps', 'Dashboards', 'APIs', 'Tools', 'Products']}
           rotationInterval={2500}
@@ -43,8 +43,7 @@ export function Hero() {
           staggerFrom="first"
           mainClassName=""
           elementLevelClassName="inline-block bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text text-transparent"
-        />{' '}
-        with AI
+        />
       </h1>
       
       <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl leading-relaxed">
