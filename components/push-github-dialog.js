@@ -14,22 +14,21 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GitBranch, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/components/ui/use-toast'
 
 export function PushGitHubDialog({ projectId, repoUrl, branch, onPush, triggerLabel = 'Push to GitHub' }) {
   const [open, setOpen] = useState(false)
   const [pushing, setPushing] = useState(false)
   const [commitMessage, setCommitMessage] = useState('Update from WorkersCraft')
   const [error, setError] = useState(null)
+  const { toast } = useToast()
 
   const handlePush = async () => {
     if (!commitMessage.trim()) {
-      setError('Commit message is required')
+      toast({ variant: 'destructive', title: 'Error', description: 'Commit message is required' })
       return
     }
-
     setPushing(true)
-    setError(null)
-
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/projects/${projectId}/push-github`, {
@@ -39,22 +38,18 @@ export function PushGitHubDialog({ projectId, repoUrl, branch, onPush, triggerLa
           'Authorization': `Bearer ${session.access_token}`,
           'X-GitHub-Token': session.provider_token || localStorage.getItem('gh_token') || '',
         },
-        body: JSON.stringify({
-          commitMessage: commitMessage.trim(),
-        }),
+        body: JSON.stringify({ commitMessage: commitMessage.trim() }),
       })
-
       if (!response.ok) {
         const data = await response.json()
         throw new Error(data.error || 'Failed to push to GitHub')
       }
-
       const data = await response.json()
       setOpen(false)
       setCommitMessage('Update from WorkersCraft')
       onPush?.(data)
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Push failed', description: err.message })
     } finally {
       setPushing(false)
     }
@@ -75,12 +70,6 @@ export function PushGitHubDialog({ projectId, repoUrl, branch, onPush, triggerLa
             Push your changes to {repoUrl} ({branch})
           </DialogDescription>
         </DialogHeader>
-
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded text-sm">
-            {error}
-          </div>
-        )}
 
         <div className="space-y-4">
           <div className="space-y-2">

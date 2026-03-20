@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GitBranch, Loader2, Search, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/components/ui/use-toast'
 
 export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen, onForceOpenHandled }) {
   const [open, setOpen] = useState(false)
@@ -40,6 +41,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
   const [selectedRepo, setSelectedRepo] = useState(null)
   const [selectedBranch, setSelectedBranch] = useState('')
   const [error, setError] = useState(null)
+  const { toast } = useToast()
   const [needsGitHubAuth, setNeedsGitHubAuth] = useState(false)
   const [newRepoName, setNewRepoName] = useState('')
   const [creatingRepo, setCreatingRepo] = useState(false)
@@ -63,7 +65,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       setNeedsGitHubAuth(false)
       fetchRepos()
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     }
   }
 
@@ -80,7 +82,6 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
 
   const fetchRepos = async () => {
     setLoading(true)
-    setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch('/api/github/repos', {
@@ -94,7 +95,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       setRepos(data.repos)
       return data.repos
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
       return []
     } finally {
       setLoading(false)
@@ -117,7 +118,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const def = data.branches.find(b => b.name === repo.defaultBranch)
       setSelectedBranch(def ? def.name : data.branches[0]?.name ?? '')
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setLoadingBranches(false)
     }
@@ -133,7 +134,6 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
   const handleConnect = async () => {
     if (!selectedRepo || !selectedBranch) return
     setConnecting(true)
-    setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const response = await fetch(`/api/projects/${projectId}/connect-github`, {
@@ -153,7 +153,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       setOpen(false)
       onConnect?.(data)
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setConnecting(false)
     }
@@ -162,7 +162,6 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
   const handleCreateRepo = async () => {
     if (!newRepoName.trim()) return
     setCreatingRepo(true)
-    setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch('/api/github/create-repo', {
@@ -185,7 +184,7 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const created = updatedRepos.find(r => r.cloneUrl === data.repoUrl)
       if (created) handleRepoSelect(created)
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setCreatingRepo(false)
     }
@@ -230,9 +229,6 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
           </div>
         ) : (
           <div className="space-y-4 mt-4">
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded text-sm">{error}</div>
-            )}
 
             {platform === 'mobile' && (
               <div className="border rounded p-3 space-y-2">

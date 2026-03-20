@@ -13,6 +13,7 @@ import { Session } from '@supabase/supabase-js'
 import { Undo, FolderOpen, Download } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
+import { useToast } from '@/components/ui/use-toast'
 
 export function NavBar({
   session,
@@ -51,6 +52,7 @@ export function NavBar({
 }) {
   const [forceOpenConnect, setForceOpenConnect] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const { toast } = useToast()
 
   async function handleDownload() {
     if (!sandboxId) return
@@ -68,6 +70,8 @@ export function NavBar({
       a.download = 'project.zip'
       a.click()
       URL.revokeObjectURL(url)
+    } catch (err: any) {
+      toast({ variant: 'destructive', title: 'Download failed', description: err.message })
     } finally {
       setIsDownloading(false)
     }

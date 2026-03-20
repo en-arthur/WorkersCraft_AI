@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Smartphone, ChevronDown, Loader2, CheckCircle2, XCircle, Download, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/components/ui/use-toast'
 
 const STATUS_LABELS = {
   queued: 'Queued...',
@@ -25,7 +26,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
   const [iosFiles, setIosFiles] = useState({ p12: null, provision: null, password: '', scheme: '' })
   const [loading, setLoading] = useState(false)
   const [failedDialog, setFailedDialog] = useState(false)
-  const [error, setError] = useState(null)
+  const { toast } = useToast()
   const pollRef = useRef(null)
 
   useEffect(() => {
@@ -76,7 +77,6 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
 
   async function startBuild(platform, buildType) {
     setLoading(true)
-    setError(null)
     try {
       const session = await getSession()
       const res = await fetch(`/api/projects/${projectId}/build-mobile`, {
@@ -90,13 +90,13 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       })
       const data = await res.json()
       if (res.status === 403 && data.error === 'upgrade_required') {
-        setError('iOS builds require a Pro plan or higher. Please upgrade.')
+        toast({ variant: 'destructive', title: 'Upgrade required', description: 'iOS builds require a Pro plan or higher.' })
         return
       }
       if (!res.ok) throw new Error(data.error)
       setBuildState({ buildId: data.buildId, platform, buildType, status: 'queued', artifactId: null })
     } catch (e) {
-      setError(e.message)
+      toast({ variant: 'destructive', title: 'Build failed', description: e.message })
     } finally {
       setLoading(false)
     }
@@ -104,7 +104,6 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
 
   async function generateKeystore() {
     setLoading(true)
-    setError(null)
     try {
       const session = await getSession()
       const res = await fetch(`/api/projects/${projectId}/generate-keystore`, {
@@ -115,7 +114,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       if (!res.ok) throw new Error(data.error)
       setKeystoreData(data)
     } catch (e) {
-      setError(e.message)
+      toast({ variant: 'destructive', title: 'Error', description: e.message })
     } finally {
       setLoading(false)
     }
@@ -132,7 +131,6 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
 
   async function saveIosSigning() {
     setLoading(true)
-    setError(null)
     try {
       const session = await getSession()
       const form = new FormData()
@@ -150,7 +148,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       setIosDialog(false)
       await startBuild('ios', 'release')
     } catch (e) {
-      setError(e.message)
+      toast({ variant: 'destructive', title: 'Error', description: e.message })
     } finally {
       setLoading(false)
     }
@@ -222,10 +220,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
             </DropdownMenuContent>
           </DropdownMenu>
         )}
-        {error && <span className="text-xs text-red-500 max-w-48 truncate">{error}</span>}
       </div>
-
-      {/* Android Keystore Dialog */}
       <Dialog open={keystoreDialog} onOpenChange={setKeystoreDialog}>
         <DialogContent>
           <DialogHeader>
@@ -239,7 +234,6 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
               <p className="text-sm text-muted-foreground">
                 Click below to generate a keystore. You will be required to download it before proceeding.
               </p>
-              {error && <p className="text-sm text-red-500">{error}</p>}
               <Button onClick={generateKeystore} disabled={loading} className="w-full">
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                 Generate Keystore
@@ -314,7 +308,6 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
               <Label>Xcode Scheme (optional)</Label>
               <Input placeholder="MyApp" value={iosFiles.scheme} onChange={e => setIosFiles(f => ({ ...f, scheme: e.target.value }))} />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIosDialog(false)}>Cancel</Button>

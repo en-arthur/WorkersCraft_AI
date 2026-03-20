@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { GitBranch, Loader2, Search } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { useToast } from '@/components/ui/use-toast'
 
 export function ImportGitHubDialog({ onImport, disabled = false }) {
   const [open, setOpen] = useState(false)
@@ -33,6 +34,7 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
   const [selectedRepo, setSelectedRepo] = useState(null)
   const [selectedBranch, setSelectedBranch] = useState('')
   const [error, setError] = useState(null)
+  const { toast } = useToast()
   const [needsGitHubAuth, setNeedsGitHubAuth] = useState(false)
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
       setNeedsGitHubAuth(false)
       fetchRepos()
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     }
   }
 
@@ -70,7 +72,6 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
 
   const fetchRepos = async () => {
     setLoading(true)
-    setError(null)
     try {
       const { data: { session } } = await supabase.auth.getSession()
       console.debug('[ImportGitHub] session provider:', session?.user?.app_metadata?.provider)
@@ -94,7 +95,7 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
       setRepos(data.repos)
     } catch (err) {
       console.error('[ImportGitHub] fetchRepos error:', err)
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setLoading(false)
     }
@@ -126,7 +127,7 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
         setSelectedBranch(data.branches[0].name)
       }
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setLoadingBranches(false)
     }
@@ -143,7 +144,6 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
     if (!selectedRepo || !selectedBranch) return
 
     setImporting(true)
-    setError(null)
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
@@ -171,7 +171,7 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
       setOpen(false)
       onImport?.(data.project)
     } catch (err) {
-      setError(err.message)
+      toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
       setImporting(false)
     }
@@ -234,11 +234,6 @@ export function ImportGitHubDialog({ onImport, disabled = false }) {
 
             {/* Repo list — scrollable middle */}
             <div className="flex-1 overflow-y-auto px-6 py-3 min-h-0">
-              {error && (
-                <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm mb-3">
-                  {error}
-                </div>
-              )}
               {loading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
