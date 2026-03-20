@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -9,20 +9,26 @@ const supabase = createClient(
 
 export default function UsageCard() {
   const [usage, setUsage] = useState<{ count: number; limit: number | null; plan: string } | null>(null)
+  const tokenRef = useRef<string | null>(null)
+
+  const fetchUsage = useCallback(async () => {
+    const token = tokenRef.current
+    if (!token) return
+    const res = await fetch('/api/usage', { headers: { Authorization: `Bearer ${token}` } })
+    const data = await res.json()
+    if (!data.error) setUsage(data)
+  }, [])
 
   useEffect(() => {
     let channel: ReturnType<typeof supabase.channel> | null = null
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) return
-
-      const fetchUsage = () =>
-        fetch('/api/usage', { headers: { Authorization: `Bearer ${session.access_token}` } })
-          .then(r => r.json())
-          .then(data => { if (!data.error) setUsage(data) })
+      tokenRef.current = session.access_token
 
       fetchUsage()
 
+      // Realtime: update when a new project is inserted
       channel = supabase
         .channel('projects-usage')
         .on('postgres_changes', {
@@ -34,8 +40,15 @@ export default function UsageCard() {
         .subscribe()
     })
 
-    return () => { channel && supabase.removeChannel(channel) }
-  }, [])
+    // Re-fetch when user returns to this tab
+    const onVisible = () => { if (document.visibilityState === 'visible') fetchUsage() }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible)
+      if (channel) supabase.removeChannel(channel)
+    }
+  }, [fetchUsage])
 
   if (!usage || !usage.plan) return null
 
