@@ -265,7 +265,7 @@ export default function DashboardBillingPage() {
         All plans billed monthly. No hidden fees. Cancel anytime.
       </p>
 
-
+      </div>
     </div>
   )
 }
