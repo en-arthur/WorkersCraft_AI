@@ -29,6 +29,39 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
   const { toast } = useToast()
   const pollRef = useRef(null)
 
+  // Load latest build on mount
+  useEffect(() => {
+    async function loadLatestBuild() {
+      if (!projectId) return
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
+        
+        const res = await fetch(`/api/projects/${projectId}/build-status`, {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        })
+        const data = await res.json()
+        if (data.build) {
+          setBuildState({
+            buildId: data.build.id,
+            platform: data.build.platform,
+            buildType: data.build.buildType,
+            status: data.build.status,
+            artifactId: data.build.artifactId,
+            error: data.build.error,
+          })
+          // If still building, start polling
+          if (['queued', 'in_progress'].includes(data.build.status)) {
+            startPolling(data.build.id)
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load latest build:', err)
+      }
+    }
+    loadLatestBuild()
+  }, [projectId])
+
   useEffect(() => {
     if (buildState && !['completed', 'failed'].includes(buildState.status)) {
       pollRef.current = setInterval(() => pollStatus(buildState.buildId), 15000)

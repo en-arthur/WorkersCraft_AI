@@ -6,8 +6,7 @@ export async function GET(request, { params }) {
     const { id } = params
     const { searchParams } = new URL(request.url)
     const buildId = searchParams.get('build_id')
-    if (!buildId) return Response.json({ error: 'build_id is required' }, { status: 400 })
-
+    
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
@@ -18,6 +17,31 @@ export async function GET(request, { params }) {
     )
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+
+    // If no buildId, return latest build for this project
+    if (!buildId) {
+      const { data: latestBuild } = await supabase.from('project_builds')
+        .select('*')
+        .eq('project_id', id)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+      
+      if (!latestBuild) return Response.json({ build: null })
+      
+      return Response.json({
+        build: {
+          id: latestBuild.id,
+          platform: latestBuild.platform,
+          buildType: latestBuild.build_type,
+          status: latestBuild.status,
+          artifactId: latestBuild.artifact_id,
+          error: latestBuild.error,
+          runId: latestBuild.run_id,
+        }
+      })
+    }
 
     const { data: build } = await supabase.from('project_builds')
       .select('*').eq('id', buildId).eq('user_id', user.id).single()
