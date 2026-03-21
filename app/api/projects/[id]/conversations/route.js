@@ -59,10 +59,10 @@ export async function POST(req, { params }) {
 
     const { data: conversation, error } = await supabase
       .from('conversations')
-      .insert({
-        project_id: id,
-        messages
-      })
+      .upsert(
+        { project_id: id, messages },
+        { onConflict: 'project_id' }
+      )
       .select()
       .single()
 

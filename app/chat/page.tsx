@@ -194,6 +194,12 @@ function ChatContent() {
       setIsPreviewLoading(true)
       posthog.capture('fragment_generated', { template: fragment?.template })
 
+      // Save immediately on generation complete with final messages (bypass stale closure)
+      setMessages(prev => {
+        saveProjectSilently(prev, fragmentWithBackend)
+        return prev
+      })
+
       try {
         const response = await fetch('/api/sandbox', {
           method: 'POST',
@@ -346,30 +352,29 @@ function ChatContent() {
     return () => clearTimeout(autoSaveTimer)
   }, [fragment, messages, currentProject?.id, session?.user?.id])
 
-  async function saveProjectSilently() {
-    if (!fragment || !session?.user?.id || !supabase || !currentProject?.id) return
+  async function saveProjectSilently(overrideMessages?: any[], overrideFragment?: any) {
+    const activeFragment = overrideFragment ?? fragment
+    if (!activeFragment || !session?.user?.id || !supabase || !currentProject?.id) return
     
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
-      // Save new version
       await fetch(`/api/projects/${currentProject.id}/versions`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentSession?.access_token}`
         },
-        body: JSON.stringify({ fragment_data: fragment })
+        body: JSON.stringify({ fragment_data: activeFragment })
       })
 
-      // Save conversation
       await fetch(`/api/projects/${currentProject.id}/conversations`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${currentSession?.access_token}`
         },
-        body: JSON.stringify({ messages })
+        body: JSON.stringify({ messages: overrideMessages ?? messages })
       })
     } catch (error) {
       console.error('Auto-save error:', error)
