@@ -21,7 +21,6 @@ const PLANS = [
       { text: 'Backend cloud access', icon: Server },
       { text: 'Source code export', icon: Download },
       { text: '10 projects per day', icon: FolderOpen },
-      { text: 'Community support', icon: Headphones },
     ],
   },
   {
