@@ -9,8 +9,8 @@ export default function TermsPage() {
       <p className="text-muted-foreground text-sm">Effective date: March 21, 2026</p>
 
       <p>
-        These Terms of Service ("Terms") govern your access to and use of WorkersCraft AI
-        ("we", "us", "our") and its services. By creating an account or using the platform,
+        These Terms of Service (&ldquo;Terms&rdquo;) govern your access to and use of WorkersCraft AI
+        (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;) and its services. By creating an account or using the platform,
         you agree to these Terms.
       </p>
 
@@ -82,7 +82,7 @@ export default function TermsPage() {
 
       <h2>8. Limitation of Liability</h2>
       <p>
-        WorkersCraft AI is provided "as is". We make no guarantees about uptime, accuracy of
+        WorkersCraft AI is provided &ldquo;as is&rdquo;. We make no guarantees about uptime, accuracy of
         generated code, or fitness for a particular purpose. To the maximum extent permitted
         by law, we are not liable for any indirect, incidental, or consequential damages
         arising from your use of the service.

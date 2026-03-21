@@ -45,6 +45,7 @@ export default function IntegrationsPage() {
 
   useEffect(() => {
     loadIntegrations()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
   async function testConnection() {
