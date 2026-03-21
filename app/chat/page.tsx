@@ -510,11 +510,12 @@ function ChatContent() {
       }
       
       // Load messages from latest conversation if available
-      if (data.conversations?.[0]?.messages) {
-        setMessages(data.conversations[0].messages)
-        console.log('Loaded messages:', data.conversations[0].messages.length)
+      if (data.conversation?.messages) {
+        console.log('[loadProject] Loaded conversation:', data.conversation)
+        setMessages(data.conversation.messages)
+        console.log('[loadProject] Set messages count:', data.conversation.messages.length)
       } else {
-        console.log('No conversation history found')
+        console.log('[loadProject] No conversation history found, conversation:', data.conversation)
       }
     } catch (error) {
       console.error('Error loading project:', error)

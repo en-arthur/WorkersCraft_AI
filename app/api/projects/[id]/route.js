@@ -40,13 +40,13 @@ export async function GET(request, { params }) {
     .limit(1)
     .single()
 
-  const { data: conversations } = await supabase
+  const { data: conversation } = await supabase
     .from('conversations')
     .select('messages')
     .eq('project_id', id)
-    .order('created_at', { ascending: false })
+    .single()
 
-  return Response.json({ project, latest_version: latestVersion ?? null, conversations: conversations ?? [] })
+  return Response.json({ project, latest_version: latestVersion ?? null, conversation: conversation ?? null })
 }
 
 export async function PATCH(request, { params }) {
