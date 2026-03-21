@@ -26,6 +26,7 @@ export function NavBar({
   fragment,
   sandboxId,
   isPreviewLoading,
+  isChatLoading,
   hasGitHubRepo,
   githubRepoUrl,
   githubBranch,
@@ -43,6 +44,7 @@ export function NavBar({
   fragment?: any
   sandboxId?: string
   isPreviewLoading?: boolean
+  isChatLoading?: boolean
   hasGitHubRepo?: boolean
   githubRepoUrl?: string
   githubBranch?: string
@@ -146,7 +148,7 @@ export function NavBar({
           </TooltipProvider>
         )}
         {fragment && platform !== 'mobile' && (
-          <DeployVercel fragment={fragment} sandboxId={sandboxId} isPreviewLoading={isPreviewLoading} />
+          <DeployVercel fragment={fragment} sandboxId={sandboxId} isPreviewLoading={isPreviewLoading} isChatLoading={isChatLoading} />
         )}
         <TooltipProvider>
           <Tooltip delayDuration={0}>

@@ -15,7 +15,7 @@ import { Loader2, ExternalLink, ChevronDown } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/ui/use-toast'
 
-export function DeployVercel({ fragment, sandboxId, isPreviewLoading }) {
+export function DeployVercel({ fragment, sandboxId, isPreviewLoading, isChatLoading }) {
   const { toast } = useToast()
   const [isDeploying, setIsDeploying] = useState(false)
   const [showGitHubDialog, setShowGitHubDialog] = useState(false)
@@ -90,7 +90,7 @@ export function DeployVercel({ fragment, sandboxId, isPreviewLoading }) {
       {hasGitHub ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="default" size="sm" disabled={!fragment || isDeploying || isPreviewLoading} className="gap-2">
+            <Button variant="default" size="sm" disabled={!fragment || isDeploying || isPreviewLoading || isChatLoading} className="gap-2">
               {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
               Deploy
               <ChevronDown className="w-3 h-3" />
@@ -102,7 +102,7 @@ export function DeployVercel({ fragment, sandboxId, isPreviewLoading }) {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button variant="default" size="sm" onClick={handleDirectDeploy} disabled={!fragment || isDeploying || isPreviewLoading} className="gap-2">
+        <Button variant="default" size="sm" onClick={handleDirectDeploy} disabled={!fragment || isDeploying || isPreviewLoading || isChatLoading} className="gap-2">
           {isDeploying ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
           Deploy
         </Button>
