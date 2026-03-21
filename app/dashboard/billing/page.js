@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, Zap, Smartphone, Github, Server, Download, FolderOpen, Apple, Headphones, Rocket, Star } from 'lucide-react'
+import { DashboardNav } from '@/components/dashboard-nav'
 import UsageCard from '@/components/usage-card'
 
 const PLANS = [
@@ -146,13 +147,18 @@ export default function DashboardBillingPage() {
   }
 
   if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <Loader2 className="w-6 h-6 animate-spin" />
+    <div className="min-h-screen flex flex-col">
+      <DashboardNav />
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="w-6 h-6 animate-spin" />
+      </div>
     </div>
   )
 
   return (
-    <div className="p-8 max-w-6xl mx-auto">
+    <div className="min-h-screen flex flex-col">
+      <DashboardNav />
+      <div className="p-8 max-w-6xl mx-auto w-full">
       <div className="mb-10">
         <h1 className="text-3xl font-bold tracking-tight mb-1">Billing & Subscription</h1>
         <p className="text-muted-foreground">Manage your plan. Cancel anytime.</p>

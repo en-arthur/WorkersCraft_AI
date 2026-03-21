@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Search, Globe, Smartphone, Database, Github, ExternalLink } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -12,8 +12,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth'
 import { ImportGitHubDialog } from '@/components/import-github-dialog'
+import { DashboardNav } from '@/components/dashboard-nav'
 import Logo from '@/components/logo'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -36,6 +38,16 @@ export default function DashboardPage() {
   const [saving, setSaving] = useState(false)
   const [isLimitDialogOpen, setIsLimitDialogOpen] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const filteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) return projects
+    const query = searchQuery.toLowerCase()
+    return projects.filter(p => 
+      p.name.toLowerCase().includes(query) || 
+      p.description?.toLowerCase().includes(query)
+    )
+  }, [projects, searchQuery])
 
   const techStacks = {
     web: [
@@ -229,16 +241,27 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
+      <DashboardNav />
+      
       {/* Fixed header */}
-      <div className="flex-shrink-0 px-6 md:px-10 pt-8 pb-5 border-b">
+      <div className="flex-shrink-0 px-6 md:px-10 pt-8 pb-5 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold">My Projects</h1>
             <p className="text-muted-foreground mt-1">
-              {projects.length} project{projects.length !== 1 ? 's' : ''}
+              {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full sm:w-64"
+              />
+            </div>
             <ImportGitHubDialog disabled={saving} onImport={(project) => {
               router.push(`/chat?project=${project.id}`)
             }} />
@@ -384,18 +407,45 @@ export default function DashboardPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {projects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-shadow">
+            {filteredProjects.map((project) => (
+              <Card key={project.id} className="hover:shadow-lg transition-all hover:border-primary/50">
                 <CardHeader>
-                  <CardTitle className="truncate">{project.name}</CardTitle>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <CardTitle className="truncate flex-1">{project.name}</CardTitle>
+                    {project.platform === 'mobile' ? (
+                      <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
+                    ) : (
+                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                  </div>
                   <CardDescription>
                     Updated {formatDate(project.updated_at)}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-3">
                   <p className="text-sm text-muted-foreground line-clamp-2">
                     {project.description || 'No description'}
                   </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {project.github_repo_url && (
+                      <Badge variant="secondary" className="gap-1 text-xs">
+                        <Github className="w-3 h-3" />
+                        GitHub
+                      </Badge>
+                    )}
+                    {project.backend_enabled && (
+                      <Badge variant="secondary" className="gap-1 text-xs">
+                        <Database className="w-3 h-3" />
+                        Backend
+                      </Badge>
+                    )}
+                    {project.deployed_url && (
+                      <Badge variant="secondary" className="gap-1 text-xs">
+                        <ExternalLink className="w-3 h-3" />
+                        Deployed
+                      </Badge>
+                    )}
+                  </div>
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <Button
