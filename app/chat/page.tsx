@@ -366,10 +366,9 @@ function ChatContent() {
   useEffect(() => {
     if (!currentProject?.id || !fragment || !session?.user?.id) return
     
-    // Skip first run after load, then flip flag for future runs
+    // Skip if still in initial load phase
     if (isInitialLoadRef.current) {
-      console.log('[auto-save] Skipping initial load, enabling for next change')
-      isInitialLoadRef.current = false
+      console.log('[auto-save] Skipping - initial load in progress')
       return
     }
     
@@ -528,6 +527,10 @@ function ChatContent() {
       } else {
         console.log('[loadProject] No conversation history found, conversation:', data.conversation)
       }
+      
+      // Enable auto-save now that load is complete
+      console.log('[loadProject] Load complete, enabling auto-save')
+      isInitialLoadRef.current = false
     } catch (error) {
       console.error('Error loading project:', error)
       alert(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`)
