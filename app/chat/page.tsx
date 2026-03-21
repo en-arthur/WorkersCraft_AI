@@ -19,7 +19,7 @@ import { ExecutionResult } from '@/lib/types'
 import { DeepPartial } from 'ai'
 import { experimental_useObject as useObject } from 'ai/react'
 import { usePostHog } from 'posthog-js/react'
-import { SetStateAction, useEffect, useState, Suspense } from 'react'
+import { SetStateAction, useEffect, useRef, useState, Suspense } from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -71,6 +71,8 @@ function ChatContent() {
     backend_status?: string;
     backend_app_id?: string;
   } | null>(null)
+  const currentProjectRef = useRef(currentProject)
+  useEffect(() => { currentProjectRef.current = currentProject }, [currentProject])
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
@@ -210,7 +212,7 @@ function ChatContent() {
         } else {
           finalMessages = [...prev.slice(0, -1), { ...last, content: assistantContent, object: fragment }]
         }
-        saveProjectSilently(finalMessages, fragmentWithBackend)
+        saveProjectSilently(finalMessages, fragmentWithBackend, currentProjectRef.current?.id)
         return finalMessages
       })
 
@@ -366,14 +368,15 @@ function ChatContent() {
     return () => clearTimeout(autoSaveTimer)
   }, [fragment, messages, currentProject?.id, session?.user?.id])
 
-  async function saveProjectSilently(overrideMessages?: any[], overrideFragment?: any) {
+  async function saveProjectSilently(overrideMessages?: any[], overrideFragment?: any, overrideProjectId?: string) {
     const activeFragment = overrideFragment ?? fragment
-    if (!activeFragment || !session?.user?.id || !supabase || !currentProject?.id) return
+    const activeProjectId = overrideProjectId ?? currentProject?.id
+    if (!activeFragment || !session?.user?.id || !supabase || !activeProjectId) return
     
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
-      await fetch(`/api/projects/${currentProject.id}/versions`, {
+      await fetch(`/api/projects/${activeProjectId}/versions`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -382,7 +385,7 @@ function ChatContent() {
         body: JSON.stringify({ fragment_data: activeFragment })
       })
 
-      await fetch(`/api/projects/${currentProject.id}/conversations`, {
+      await fetch(`/api/projects/${activeProjectId}/conversations`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
