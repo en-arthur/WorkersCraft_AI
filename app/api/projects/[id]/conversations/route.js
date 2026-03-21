@@ -57,6 +57,8 @@ export async function POST(req, { params }) {
       return Response.json({ error: 'Messages required' }, { status: 400 })
     }
 
+    console.log('[conversations POST] projectId:', id, 'messages count:', messages.length)
+
     // Check if a conversation already exists for this project
     const { data: existing } = await supabase
       .from('conversations')
@@ -64,26 +66,34 @@ export async function POST(req, { params }) {
       .eq('project_id', id)
       .single()
 
+    console.log('[conversations POST] existing conversation:', existing?.id)
+
     let error
     if (existing?.id) {
       // Update existing row
+      console.log('[conversations POST] Updating existing conversation')
       const { error: updateError } = await supabase
         .from('conversations')
         .update({ messages })
         .eq('id', existing.id)
       error = updateError
+      if (updateError) console.error('[conversations POST] Update error:', updateError)
     } else {
       // Insert new row
+      console.log('[conversations POST] Inserting new conversation')
       const { error: insertError } = await supabase
         .from('conversations')
         .insert({ project_id: id, messages })
       error = insertError
+      if (insertError) console.error('[conversations POST] Insert error:', insertError)
     }
 
     if (error) throw error
 
+    console.log('[conversations POST] Success')
     return Response.json({ ok: true })
   } catch (error) {
+    console.error('[conversations POST] Error:', error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }
