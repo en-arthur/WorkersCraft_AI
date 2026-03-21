@@ -73,6 +73,7 @@ function ChatContent() {
   } | null>(null)
   const currentProjectRef = useRef(currentProject)
   useEffect(() => { currentProjectRef.current = currentProject }, [currentProject])
+  const isInitialLoadRef = useRef(true)
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
@@ -286,6 +287,9 @@ function ChatContent() {
 
   async function handleSubmitAuth(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    
+    // Force enable auto-save if user submits before load completes
+    isInitialLoadRef.current = false
 
     if (!session) {
       return setAuthDialog(true)
@@ -361,6 +365,13 @@ function ChatContent() {
   // Auto-save when fragment or messages change
   useEffect(() => {
     if (!currentProject?.id || !fragment || !session?.user?.id) return
+    
+    // Skip first run after load, then flip flag for future runs
+    if (isInitialLoadRef.current) {
+      console.log('[auto-save] Skipping initial load, enabling for next change')
+      isInitialLoadRef.current = false
+      return
+    }
     
     const autoSaveTimer = setTimeout(() => {
       saveProjectSilently()
