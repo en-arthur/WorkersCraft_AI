@@ -212,6 +212,7 @@ function ChatContent() {
         } else {
           finalMessages = [...prev.slice(0, -1), { ...last, content: assistantContent, object: fragment }]
         }
+        console.log('[onFinish] Saving with projectId:', currentProjectRef.current?.id, 'messages:', finalMessages.length)
         saveProjectSilently(finalMessages, fragmentWithBackend, currentProjectRef.current?.id)
         return finalMessages
       })
@@ -371,12 +372,25 @@ function ChatContent() {
   async function saveProjectSilently(overrideMessages?: any[], overrideFragment?: any, overrideProjectId?: string) {
     const activeFragment = overrideFragment ?? fragment
     const activeProjectId = overrideProjectId ?? currentProject?.id
-    if (!activeFragment || !session?.user?.id || !supabase || !activeProjectId) return
+    
+    console.log('[saveProjectSilently] Called with:', {
+      hasFragment: !!activeFragment,
+      hasSession: !!session?.user?.id,
+      hasSupabase: !!supabase,
+      projectId: activeProjectId,
+      messagesCount: (overrideMessages ?? messages).length
+    })
+    
+    if (!activeFragment || !session?.user?.id || !supabase || !activeProjectId) {
+      console.log('[saveProjectSilently] Bailing out - missing required data')
+      return
+    }
     
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
-      await fetch(`/api/projects/${activeProjectId}/versions`, {
+      console.log('[saveProjectSilently] Saving version...')
+      const versionRes = await fetch(`/api/projects/${activeProjectId}/versions`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -384,8 +398,10 @@ function ChatContent() {
         },
         body: JSON.stringify({ fragment_data: activeFragment })
       })
+      console.log('[saveProjectSilently] Version saved:', versionRes.status)
 
-      await fetch(`/api/projects/${activeProjectId}/conversations`, {
+      console.log('[saveProjectSilently] Saving conversation...')
+      const convRes = await fetch(`/api/projects/${activeProjectId}/conversations`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -393,6 +409,7 @@ function ChatContent() {
         },
         body: JSON.stringify({ messages: overrideMessages ?? messages })
       })
+      console.log('[saveProjectSilently] Conversation saved:', convRes.status)
     } catch (error) {
       console.error('Auto-save error:', error)
     }
