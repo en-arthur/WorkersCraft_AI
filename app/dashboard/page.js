@@ -240,7 +240,7 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      {/* Fixed header */}
+      {/* Header */}
       <div className="flex-shrink-0 px-6 md:px-10 py-6 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col gap-4">
           <p className="text-sm text-muted-foreground">
@@ -261,110 +261,106 @@ export default function DashboardPage() {
                 router.push(`/chat?project=${project.id}`)
               }} />
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="lg" className="px-8 py-6 text-base">
-                  + New Project
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
-                <DialogDescription>
-                  Describe what you want to build and we&apos;ll help you create it
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Project Name *</Label>
-                  <Input
-                    id="name"
-                    value={newProject.name}
-                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                    placeholder="My Awesome App"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="prompt">What do you want to build? *</Label>
-                  <Textarea
-                    id="prompt"
-                    value={newProject.user_prompt}
-                    onChange={(e) => setNewProject({ ...newProject, user_prompt: e.target.value })}
-                    placeholder="Build a todo app with dark mode, add/delete tasks, and local storage..."
-                    rows={5}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Describe your project in detail.
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Platform *</Label>
-                  <RadioGroup 
-                    value={newProject.platform} 
-                    onValueChange={(value) => {
-                      const defaultStack = value === 'web' ? 'nextjs-developer' : 'expo-developer'
-                      setNewProject({ ...newProject, platform: value, tech_stack: defaultStack })
-                    }}
-                    className="flex flex-row gap-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="web" id="web" />
-                      <Label htmlFor="web" className="cursor-pointer">Web App</Label>
+                <DialogTrigger asChild>
+                  <Button size="lg" className="px-8 py-6 text-base">
+                    + New Project
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Project</DialogTitle>
+                    <DialogDescription>
+                      Describe what you want to build and we&apos;ll help you create it
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Project Name *</Label>
+                      <Input
+                        id="name"
+                        value={newProject.name}
+                        onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                        placeholder="My Awesome App"
+                      />
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="mobile" id="mobile" />
-                      <Label htmlFor="mobile" className="cursor-pointer">Mobile App</Label>
+                    <div className="space-y-2">
+                      <Label htmlFor="prompt">What do you want to build? *</Label>
+                      <Textarea
+                        id="prompt"
+                        value={newProject.user_prompt}
+                        onChange={(e) => setNewProject({ ...newProject, user_prompt: e.target.value })}
+                        placeholder="Build a todo app with dark mode, add/delete tasks, and local storage..."
+                        rows={5}
+                      />
+                      <p className="text-xs text-muted-foreground">Describe your project in detail.</p>
                     </div>
-                  </RadioGroup>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="tech-stack">Tech Stack *</Label>
-                  <Select 
-                    value={newProject.tech_stack} 
-                    onValueChange={(value) => setNewProject({ ...newProject, tech_stack: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {techStacks[newProject.platform].map(stack => (
-                        <SelectItem key={stack.id} value={stack.id}>
-                          {stack.icon} {stack.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="backend"
-                      checked={newProject.backend_enabled}
-                      onChange={(e) => setNewProject({ ...newProject, backend_enabled: e.target.checked })}
-                      className="w-4 h-4"
-                    />
-                    <Label htmlFor="backend" className="cursor-pointer">
-                      Enable Backend (Authentication & Database)
-                    </Label>
+                    <div className="space-y-2">
+                      <Label>Platform *</Label>
+                      <RadioGroup
+                        value={newProject.platform}
+                        onValueChange={(value) => {
+                          const defaultStack = value === 'web' ? 'nextjs-developer' : 'expo-developer'
+                          setNewProject({ ...newProject, platform: value, tech_stack: defaultStack })
+                        }}
+                        className="flex flex-row gap-4"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="web" id="web" />
+                          <Label htmlFor="web" className="cursor-pointer">Web App</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mobile" id="mobile" />
+                          <Label htmlFor="mobile" className="cursor-pointer">Mobile App</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tech-stack">Tech Stack *</Label>
+                      <Select
+                        value={newProject.tech_stack}
+                        onValueChange={(value) => setNewProject({ ...newProject, tech_stack: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {techStacks[newProject.platform].map(stack => (
+                            <SelectItem key={stack.id} value={stack.id}>
+                              {stack.icon} {stack.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="backend"
+                          checked={newProject.backend_enabled}
+                          onChange={(e) => setNewProject({ ...newProject, backend_enabled: e.target.checked })}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="backend" className="cursor-pointer">
+                          Enable Backend (Authentication & Database)
+                        </Label>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Adds user authentication, data storage, and file uploads to your app
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Adds user authentication, data storage, and file uploads to your app
-                  </p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateProject} 
-                  disabled={saving || !newProject.name.trim() || !newProject.user_prompt.trim() || newProject.user_prompt.length < 10}
-                >
-                  {saving ? 'Creating...' : 'Create & Start Building →'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                    <Button
+                      onClick={handleCreateProject}
+                      disabled={saving || !newProject.name.trim() || !newProject.user_prompt.trim() || newProject.user_prompt.length < 10}
+                    >
+                      {saving ? 'Creating...' : 'Create & Start Building →'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
         </div>
@@ -374,146 +370,121 @@ export default function DashboardPage() {
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="border rounded-lg p-4 space-y-3">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-2/3" />
-                <div className="flex justify-between pt-2">
-                  <Skeleton className="h-8 w-16" />
-                  <Skeleton className="h-8 w-16" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="border rounded-lg p-4 space-y-3">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-2/3" />
+                  <div className="flex justify-between pt-2">
+                    <Skeleton className="h-8 w-16" />
+                    <Skeleton className="h-8 w-16" />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : projects.length === 0 ? (
-          <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
-            <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
-              <Logo style="fragments" className="w-full h-full" />
+              ))}
             </div>
-            <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
-            <p className="text-muted-foreground mb-6">
-              Create your first project to start building amazing applications
-            </p>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              Create Your First Project
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredProjects.map((project) => (
-              <Card key={project.id} className="hover:shadow-lg transition-all hover:border-primary/50">
-                <CardHeader>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <CardTitle className="truncate flex-1">{project.name}</CardTitle>
-                    {project.platform === 'mobile' ? (
-                      <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
-                    ) : (
-                      <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                    )}
-                  </div>
-                  <CardDescription>
-                    Updated {formatDate(project.updated_at)}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {project.description || 'No description'}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {project.github_repo_url && (
-                      <Badge variant="secondary" className="gap-1 text-xs">
-                        <Github className="w-3 h-3" />
-                        GitHub
-                      </Badge>
-                    )}
-                    {project.backend_enabled && (
-                      <Badge variant="secondary" className="gap-1 text-xs">
-                        <Database className="w-3 h-3" />
-                        Backend
-                      </Badge>
-                    )}
-                    {project.deployed_url && (
-                      <Badge variant="secondary" className="gap-1 text-xs">
-                        <ExternalLink className="w-3 h-3" />
-                        Deployed
-                      </Badge>
-                    )}
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push(`/chat?project=${project.id}`)}
-                  >
-                    Open
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setProjectToDelete(project)
-                      setIsDeleteDialogOpen(true)
-                    }}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    Delete
-                  </Button>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        )}
-        </div>
-        
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Delete Project</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete &quot;{projectToDelete?.name}&quot;? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                variant="destructive" 
-                disabled={deleting}
-                onClick={() => handleDeleteProject(projectToDelete?.id)}
-              >
-                {deleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                {deleting ? 'Deleting...' : 'Delete'}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isLimitDialogOpen} onOpenChange={setIsLimitDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Daily project limit reached</DialogTitle>
-              <DialogDescription>
-                You&apos;ve used all your project slots for today. Upgrade your plan to create more projects.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsLimitDialogOpen(false)}>
-                Close
-              </Button>
-              <Button onClick={() => router.push('/billing')}>
-                Upgrade plan
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
+              <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
+                <Logo style="fragments" className="w-full h-full" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
+              <p className="text-muted-foreground mb-6">
+                Create your first project to start building amazing applications
+              </p>
+              <Button onClick={() => setIsDialogOpen(true)}>Create Your First Project</Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProjects.map((project) => (
+                <Card key={project.id} className="hover:shadow-lg transition-all hover:border-primary/50">
+                  <CardHeader>
+                    <div className="flex items-start justify-between gap-2 mb-2">
+                      <CardTitle className="truncate flex-1">{project.name}</CardTitle>
+                      {project.platform === 'mobile' ? (
+                        <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
+                      ) : (
+                        <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
+                      )}
+                    </div>
+                    <CardDescription>Updated {formatDate(project.updated_at)}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {project.description || 'No description'}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {project.github_repo_url && (
+                        <Badge variant="secondary" className="gap-1 text-xs">
+                          <Github className="w-3 h-3" />GitHub
+                        </Badge>
+                      )}
+                      {project.backend_enabled && (
+                        <Badge variant="secondary" className="gap-1 text-xs">
+                          <Database className="w-3 h-3" />Backend
+                        </Badge>
+                      )}
+                      {project.deployed_url && (
+                        <Badge variant="secondary" className="gap-1 text-xs">
+                          <ExternalLink className="w-3 h-3" />Deployed
+                        </Badge>
+                      )}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button variant="outline" size="sm" onClick={() => router.push(`/chat?project=${project.id}`)}>
+                      Open
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      Delete
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Dialogs */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Project</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &quot;{projectToDelete?.name}&quot;? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={deleting} onClick={() => handleDeleteProject(projectToDelete?.id)}>
+              {deleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {deleting ? 'Deleting...' : 'Delete'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isLimitDialogOpen} onOpenChange={setIsLimitDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Daily project limit reached</DialogTitle>
+            <DialogDescription>
+              You&apos;ve used all your project slots for today. Upgrade your plan to create more projects.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsLimitDialogOpen(false)}>Close</Button>
+            <Button onClick={() => router.push('/billing')}>Upgrade plan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
