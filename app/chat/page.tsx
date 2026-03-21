@@ -364,6 +364,8 @@ function ChatContent() {
 
   // Auto-save when fragment or messages change
   useEffect(() => {
+    console.log('[auto-save effect] Triggered. projectId:', currentProject?.id, 'hasFragment:', !!fragment, 'hasSession:', !!session?.user?.id, 'isInitialLoad:', isInitialLoadRef.current, 'messagesCount:', messages.length)
+    
     if (!currentProject?.id || !fragment || !session?.user?.id) return
     
     // Skip if still in initial load phase
@@ -372,11 +374,16 @@ function ChatContent() {
       return
     }
     
+    console.log('[auto-save] Scheduling save in 3s...')
     const autoSaveTimer = setTimeout(() => {
+      console.log('[auto-save] Timer fired, calling saveProjectSilently')
       saveProjectSilently()
     }, 3000) // Auto-save after 3 seconds of inactivity
     
-    return () => clearTimeout(autoSaveTimer)
+    return () => {
+      console.log('[auto-save] Cleanup - clearing timer')
+      clearTimeout(autoSaveTimer)
+    }
   }, [fragment, messages, currentProject?.id, session?.user?.id])
 
   async function saveProjectSilently(overrideMessages?: any[], overrideFragment?: any, overrideProjectId?: string) {
