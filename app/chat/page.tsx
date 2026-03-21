@@ -198,15 +198,15 @@ function ChatContent() {
       const codeContent = (fragment.files && fragment.files.length > 0 && fragment.files[0]
         ? fragment.files[0].file_content
         : fragment.code) || ''
-      const assistantContent = [
+      const assistantContent: Message['content'] = [
         { type: 'text', text: fragment.commentary || '' },
         { type: 'code', text: codeContent },
       ]
       setMessages(prev => {
         const last = prev[prev.length - 1]
-        let finalMessages
+        let finalMessages: Message[]
         if (!last || last.role !== 'assistant') {
-          finalMessages = [...prev, { role: 'assistant', content: assistantContent, object: fragment }]
+          finalMessages = [...prev, { role: 'assistant' as const, content: assistantContent, object: fragment }]
         } else {
           finalMessages = [...prev.slice(0, -1), { ...last, content: assistantContent, object: fragment }]
         }
