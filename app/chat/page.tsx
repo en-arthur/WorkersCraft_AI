@@ -194,10 +194,24 @@ function ChatContent() {
       setIsPreviewLoading(true)
       posthog.capture('fragment_generated', { template: fragment?.template })
 
-      // Save immediately on generation complete with final messages (bypass stale closure)
+      // Build final messages with assistant response and save immediately
+      const codeContent = (fragment.files && fragment.files.length > 0 && fragment.files[0]
+        ? fragment.files[0].file_content
+        : fragment.code) || ''
+      const assistantContent = [
+        { type: 'text', text: fragment.commentary || '' },
+        { type: 'code', text: codeContent },
+      ]
       setMessages(prev => {
-        saveProjectSilently(prev, fragmentWithBackend)
-        return prev
+        const last = prev[prev.length - 1]
+        let finalMessages
+        if (!last || last.role !== 'assistant') {
+          finalMessages = [...prev, { role: 'assistant', content: assistantContent, object: fragment }]
+        } else {
+          finalMessages = [...prev.slice(0, -1), { ...last, content: assistantContent, object: fragment }]
+        }
+        saveProjectSilently(finalMessages, fragmentWithBackend)
+        return finalMessages
       })
 
       try {
