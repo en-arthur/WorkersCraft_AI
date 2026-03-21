@@ -15,7 +15,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/auth'
 import { ImportGitHubDialog } from '@/components/import-github-dialog'
-import { DashboardNav } from '@/components/dashboard-nav'
 import Logo from '@/components/logo'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -241,8 +240,6 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <DashboardNav />
-      
       {/* Fixed header */}
       <div className="flex-shrink-0 px-6 md:px-10 pt-8 pb-5 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
