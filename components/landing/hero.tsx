@@ -36,7 +36,7 @@ export function Hero() {
       <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold mb-6 tracking-tight">
         <span className="block">The fastest way to build</span>
         <RotatingText
-          texts={['Apps', 'Dashboards', 'APIs', 'Tools', 'Products']}
+          texts={['Mobile apps', 'Web apps', 'Backend APIs', 'Internal tools', 'Full-stack apps']}
           rotationInterval={2500}
           staggerDuration={0}
           staggerFrom="first"
