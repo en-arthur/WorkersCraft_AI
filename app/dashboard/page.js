@@ -241,28 +241,26 @@ export default function DashboardPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Fixed header */}
-      <div className="flex-shrink-0 px-6 md:px-10 pt-8 pb-5 border-b bg-muted/20">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">My Projects</h1>
-            <p className="text-muted-foreground mt-1">
-              {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-initial">
+      <div className="flex-shrink-0 px-6 md:px-10 py-6 border-b bg-muted/20">
+        <div className="max-w-6xl mx-auto flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full sm:w-64"
+                className="pl-9 w-full"
               />
             </div>
-            <ImportGitHubDialog disabled={saving} onImport={(project) => {
-              router.push(`/chat?project=${project.id}`)
-            }} />
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <div className="flex gap-2 shrink-0">
+              <ImportGitHubDialog disabled={saving} onImport={(project) => {
+                router.push(`/chat?project=${project.id}`)
+              }} />
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="px-8 py-6 text-base">
                   + New Project
