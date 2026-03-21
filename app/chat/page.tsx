@@ -427,6 +427,11 @@ function ChatContent() {
 
   async function loadProject(projectId: string) {
     if (!supabase) return
+    
+    // Disable auto-save during load
+    isInitialLoadRef.current = true
+    console.log('[loadProject] Disabled auto-save for load')
+    
     setIsProjectLoading(true)
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
