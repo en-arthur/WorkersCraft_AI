@@ -465,6 +465,7 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+        </div>
         
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
