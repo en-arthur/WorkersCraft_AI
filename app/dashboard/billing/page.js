@@ -16,7 +16,7 @@ const PLANS = [
     popular: false,
     features: [
       { text: 'AI app generation', icon: Zap },
-      { text: 'Full-stack web & Android builds', icon: Smartphone },
+      { text: 'Android debug builds (APK)', icon: Smartphone },
       { text: 'GitHub integration', icon: Github },
       { text: 'Backend cloud access', icon: Server },
       { text: 'Source code export', icon: Download },
@@ -33,7 +33,8 @@ const PLANS = [
     popular: true,
     features: [
       { text: 'Everything in Starter', icon: CheckCircle2 },
-      { text: 'iOS app builds', icon: Apple },
+      { text: 'Android release builds (AAB)', icon: Smartphone },
+      { text: 'iOS builds (coming soon)', icon: Apple },
       { text: '30 projects per day', icon: FolderOpen },
       { text: 'Priority support', icon: Headphones },
     ],

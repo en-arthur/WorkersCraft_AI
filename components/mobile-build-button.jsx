@@ -90,7 +90,11 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
       })
       const data = await res.json()
       if (res.status === 403 && data.error === 'upgrade_required') {
-        toast({ variant: 'destructive', title: 'Upgrade required', description: 'iOS builds require a Pro plan or higher.' })
+        toast({ variant: 'destructive', title: 'Upgrade required', description: 'Android release builds require a Pro plan or higher.' })
+        return
+      }
+      if (res.status === 403 && data.error === 'coming_soon') {
+        toast({ title: 'Coming soon', description: 'iOS builds are not available yet.' })
         return
       }
       if (!res.ok) throw new Error(data.error)
@@ -211,11 +215,13 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
                 Android Release (AAB)
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => triggerBuild('ios', 'debug')}>
-                iOS Debug (unsigned)
+              <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed flex items-center justify-between">
+                <span>iOS Debug (unsigned)</span>
+                <span className="text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5 ml-2">Soon</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => triggerBuild('ios', 'release')}>
-                iOS Release (signed)
+              <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed flex items-center justify-between">
+                <span>iOS Release (signed)</span>
+                <span className="text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5 ml-2">Soon</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

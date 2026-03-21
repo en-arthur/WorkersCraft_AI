@@ -127,7 +127,8 @@ ${isRelease ? `      - name: Import certificate
             -configuration Debug -sdk iphonesimulator \\
             CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \\
             -derivedDataPath build
-          APP=$(find build/Build/Products/Debug-iphonesimulator -maxdepth 2 -name "*.app" -type d | head -1)
+          APP=$(find build/Build/Products -name "*.app" -type d | head -1)
+          echo "Found app: $APP"
           mkdir Payload && cp -r "$APP" Payload/
           zip -r app-debug.ipa Payload`}
       - uses: actions/upload-artifact@v4
@@ -160,13 +161,14 @@ export async function POST(request, { params }) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // iOS build plan gate
+    // Plan gates
+    const plan = await getUserPlan(user.id)
+    const limits = PLAN_LIMITS[plan?.plan] || PLAN_LIMITS.starter
     if (platform === 'ios') {
-      const plan = await getUserPlan(user.id)
-      const limits = PLAN_LIMITS[plan?.plan] || PLAN_LIMITS.starter
-      if (!limits.iosBuilds) {
-        return Response.json({ error: 'upgrade_required' }, { status: 403 })
-      }
+      return Response.json({ error: 'coming_soon' }, { status: 403 })
+    }
+    if (platform === 'android' && buildType === 'release' && !limits.androidRelease) {
+      return Response.json({ error: 'upgrade_required' }, { status: 403 })
     }
 
     const githubToken = request.headers.get('x-github-token')
