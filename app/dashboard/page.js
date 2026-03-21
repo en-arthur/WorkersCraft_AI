@@ -365,6 +365,8 @@ export default function DashboardPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+            </div>
+          </div>
         </div>
       </div>
 
