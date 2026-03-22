@@ -241,20 +241,10 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex-shrink-0 px-6 md:px-10 py-6 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col gap-4">
-          <p className="text-sm text-muted-foreground">
-            {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 w-full">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
-              <Input
-                placeholder="Search projects..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full"
-              />
-            </div>
-            <div className="flex gap-2 shrink-0">
+          {/* Top row: title + actions */}
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold">My Projects</h1>
+            <div className="flex gap-2">
               <ImportGitHubDialog disabled={saving} onImport={(project) => {
                 router.push(`/chat?project=${project.id}`)
               }} />
@@ -363,6 +353,21 @@ export default function DashboardPage() {
                 </DialogContent>
               </Dialog>
             </div>
+          </div>
+          {/* Bottom row: search + count */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+              <Input
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 w-full"
+              />
+            </div>
+            <p className="text-sm text-muted-foreground shrink-0">
+              {filteredProjects.length} of {projects.length} project{projects.length !== 1 ? 's' : ''}
+            </p>
           </div>
         </div>
       </div>
