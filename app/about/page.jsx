@@ -15,11 +15,8 @@ export default function AboutPage() {
           
           {/* Hero */}
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-              Building the future of <br />
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
-                app development
-              </span>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight leading-tight">
+              Building the future of <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">app development</span>
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Turn ideas into full-stack web and mobile apps in minutes — no coding required.
