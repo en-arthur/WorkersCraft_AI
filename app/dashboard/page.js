@@ -242,7 +242,7 @@ export default function DashboardPage() {
       <div className="flex-shrink-0 px-6 md:px-10 py-6 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col gap-4">
           {/* Top row: title + actions */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pl-12">
             <h1 className="text-xl font-semibold">My Projects</h1>
             <div className="flex gap-2">
               <ImportGitHubDialog disabled={saving} onImport={(project) => {
