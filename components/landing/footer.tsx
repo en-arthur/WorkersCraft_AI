@@ -22,13 +22,13 @@ export function Footer() {
           <div>
             <p className="font-semibold mb-3">Company</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/" className="hover:text-foreground transition-colors">About</Link></li>
+              <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
+              <li><Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link></li>
             </ul>
           </div>
           <div>
             <p className="font-semibold mb-3">Legal</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
               <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link></li>
             </ul>
           </div>
