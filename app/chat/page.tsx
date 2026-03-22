@@ -74,6 +74,7 @@ function ChatContent() {
   const currentProjectRef = useRef(currentProject)
   useEffect(() => { currentProjectRef.current = currentProject }, [currentProject])
   const isInitialLoadRef = useRef(true)
+  const apiEndpointRef = useRef('/api/chat')
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false)
   const [newProject, setNewProject] = useState({ name: '', description: '' })
   const [saving, setSaving] = useState(false)
@@ -125,6 +126,7 @@ function ChatContent() {
     setPendingPrompt(null)
     const content: Message['content'] = [{ type: 'text', text: pendingPrompt }]
     const updatedMessages = addMessage({ role: 'user', content })
+    apiEndpointRef.current = '/api/chat' // pending prompt is always a fresh generation
     submit({
       userID: session.user.id,
       teamID: userTeam?.id,
@@ -163,10 +165,9 @@ function ChatContent() {
     (fragment.files && fragment.files.length > 0)
   )
   const shouldUseMorph = useMorphApply && hasFragment && isPureEdit
-  const apiEndpoint = shouldUseMorph ? '/api/morph-chat' : '/api/chat'
 
   const { object, submit, isLoading, stop, error } = useObject({
-    api: apiEndpoint,
+    api: apiEndpointRef.current,
     schema,
     onError: (error) => {
       console.error('Error submitting request:', error)
@@ -319,7 +320,8 @@ function ChatContent() {
       content,
     })
 
-    console.log('Using API:', apiEndpoint, '| Pure edit:', isPureEdit, '| Has fragment:', hasFragment)
+    apiEndpointRef.current = shouldUseMorph ? '/api/morph-chat' : '/api/chat'
+    console.log('Using API:', apiEndpointRef.current, '| Pure edit:', isPureEdit, '| Has fragment:', hasFragment)
 
     submit({
       userID: session?.user?.id,
