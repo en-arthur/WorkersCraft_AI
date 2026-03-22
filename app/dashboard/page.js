@@ -212,12 +212,14 @@ export default function DashboardPage() {
   }
 
   function formatDate(dateString) {
+    const now = new Date()
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
+    const diff = Math.floor((now - date) / 1000)
+    if (diff < 60) return 'just now'
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`
+    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   if (!session) {
@@ -347,6 +349,7 @@ export default function DashboardPage() {
                       onClick={handleCreateProject}
                       disabled={saving || !newProject.name.trim() || !newProject.user_prompt.trim() || newProject.user_prompt.length < 10}
                     >
+                      {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                       {saving ? 'Creating...' : 'Create & Start Building →'}
                     </Button>
                   </DialogFooter>
@@ -390,6 +393,12 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          ) : filteredProjects.length === 0 && searchQuery ? (
+            <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
+              <h3 className="text-lg font-semibold mb-2">No projects match &quot;{searchQuery}&quot;</h3>
+              <p className="text-muted-foreground mb-4 text-sm">Try a different search term</p>
+              <Button variant="outline" onClick={() => setSearchQuery('')}>Clear search</Button>
+            </div>
           ) : projects.length === 0 ? (
             <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
               <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
@@ -404,7 +413,11 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredProjects.map((project) => (
-                <Card key={project.id} className="hover:shadow-lg transition-all hover:border-primary/50">
+                <Card
+                  key={project.id}
+                  className="hover:shadow-lg transition-all hover:border-primary/50 hover:-translate-y-0.5 cursor-pointer"
+                  onClick={() => router.push(`/chat?project=${project.id}`)}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <CardTitle className="truncate flex-1">{project.name}</CardTitle>
@@ -438,14 +451,11 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" size="sm" onClick={() => router.push(`/chat?project=${project.id}`)}>
-                      Open
-                    </Button>
+                  <CardFooter className="flex justify-end">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
+                      onClick={(e) => { e.stopPropagation(); setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
                       className="text-destructive hover:text-destructive"
                     >
                       Delete
