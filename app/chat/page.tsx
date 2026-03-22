@@ -252,7 +252,7 @@ function ChatContent() {
   })
 
   useEffect(() => {
-    if (!object) return
+    if (!object || !isLoading) return
     setFragment(object)
 
     const codeContent = (object.files && object.files.length > 0 && object.files[0]
@@ -273,7 +273,7 @@ function ChatContent() {
       updated[updated.length - 1] = { ...last, content, object }
       return updated
     })
-  }, [object])
+  }, [object, isLoading])
 
   useEffect(() => {
     if (error) stop()
