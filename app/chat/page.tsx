@@ -766,9 +766,6 @@ function ChatContent() {
             handleFileChange={handleFileChange}
           >
             <ChatPicker
-              templates={templates}
-              selectedTemplate={selectedTemplate}
-              onSelectedTemplateChange={setSelectedTemplate}
               models={filteredModels}
               languageModel={languageModel}
               onLanguageModelChange={handleLanguageModelChange}
