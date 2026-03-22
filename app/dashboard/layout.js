@@ -26,9 +26,19 @@ export default function DashboardLayout({ children }) {
       {/* Sidebar */}
       <aside className={`${sidebarOpen ? 'w-36' : 'w-12'} transition-all duration-300 border-r bg-muted/10 flex flex-col flex-shrink-0 h-full`}>
         <div className="p-2">
-          <div className="flex items-center gap-2 mb-4">
-            <Logo width={20} height={20} />
-            {sidebarOpen && <h2 className="font-semibold text-sm whitespace-nowrap">WorkersCraft</h2>}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Logo width={20} height={20} />
+              {sidebarOpen && <h2 className="font-semibold text-sm whitespace-nowrap">WorkersCraft</h2>}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="h-6 w-6 shrink-0"
+            >
+              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
           </div>
           
           <nav className="space-y-1">
@@ -77,17 +87,7 @@ export default function DashboardLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Toggle Button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="absolute top-4 left-4 z-10"
-        >
-          {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
-        
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto">
           {children}
