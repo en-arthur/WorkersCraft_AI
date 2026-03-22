@@ -5,7 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'WorkersCraft AI - Build Apps with AI',
+  title: 'Build Full-stack Mobile and Web Apps in Minutes',
   description: 'AI-powered application builder that creates production-ready apps in seconds',
 }
 
