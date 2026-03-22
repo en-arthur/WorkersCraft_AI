@@ -106,18 +106,29 @@ IMPORTANT:
         ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
         : ''
 
-      const { object: intent } = await generateObject({
-        model: modelClient as LanguageModel,
-        schema: z.object({ type: z.enum(['chat', 'build']) }),
-        system: `Classify the user message as either:
-- "chat": greeting, question, thanks, feedback, or anything NOT asking to build/create/edit/add/fix/change code or UI
-- "build": any request to create, build, edit, modify, add, fix, update, or change an app, page, component, feature, or code
-Reply with only the JSON.`,
-        messages: [{ role: 'user', content: lastText }],
-        maxRetries: 0,
-      })
+      // Fast regex check first — no LLM call needed for obvious cases
+      const isClearlyChat = lastText.trim().length < 80 &&
+        /^(hi|hello|hey|thanks|thank you|ok|okay|cool|great|yes|no|sure|how are|what can you|who are you|what is this|what do you do|nice|awesome|perfect|got it|sounds good|makes sense)/i.test(lastText.trim())
 
-      if (intent.type === 'chat') {
+      const isClearlyBuild = /\b(build|create|make|add|fix|update|change|edit|remove|delete|refactor|style|implement|generate|write|show|display|render)\b/i.test(lastText)
+
+      let intentType: 'chat' | 'build' = 'build'
+
+      if (isClearlyChat && !isClearlyBuild) {
+        intentType = 'chat'
+      } else if (!isClearlyBuild) {
+        // Only call LLM for ambiguous cases
+        const { object: intent } = await generateObject({
+          model: modelClient as LanguageModel,
+          schema: z.object({ type: z.enum(['chat', 'build']) }),
+          system: `Classify the user message as "chat" (greeting/question/feedback, NOT a code request) or "build" (any request to create/edit/modify an app or code). Reply with only the JSON.`,
+          messages: [{ role: 'user', content: lastText }],
+          maxRetries: 0,
+        })
+        intentType = intent.type
+      }
+
+      if (intentType === 'chat') {
         const chatStream = await streamText({
           model: modelClient as LanguageModel,
           system: `You are WorkersCraft AI, a friendly AI app builder assistant.
