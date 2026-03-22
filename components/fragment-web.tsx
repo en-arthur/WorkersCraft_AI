@@ -24,6 +24,7 @@ export function FragmentWeb({
   device?: DeviceConfig
 }) {
   const [iframeKey, setIframeKey] = useState(0)
+  const [barVisible, setBarVisible] = useState(false)
   if (!result) return null
 
   function refreshIframe() {
@@ -40,7 +41,7 @@ export function FragmentWeb({
   }
 
   return (
-    <div className="group flex flex-col w-full h-full items-center justify-center bg-gray-50">
+    <div className="flex flex-col w-full h-full items-center justify-center bg-gray-50">
       <div 
         className={`flex flex-col transition-all duration-300 ${isMobile ? 'bg-gray-900 rounded-[40px] p-2 shadow-2xl border-4 border-gray-800' : 'bg-white'}`}
         style={isFullWidth ? { width: '100%', height: '100%' } : containerStyle}
@@ -60,8 +61,13 @@ export function FragmentWeb({
           />
         </div>
       </div>
-      <div className="max-h-0 overflow-hidden group-hover:max-h-16 transition-all duration-200 p-0 group-hover:p-2 border-t w-full bg-popover">
-        <div className="flex items-center bg-muted rounded-2xl">
+      <div
+        className="w-full"
+        onMouseEnter={() => setBarVisible(true)}
+        onMouseLeave={() => setBarVisible(false)}
+      >
+        <div className={`overflow-hidden transition-all duration-200 bg-popover border-t ${barVisible ? 'max-h-16 p-2' : 'max-h-0 p-0'}`}>
+          <div className="flex items-center bg-muted rounded-2xl">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
@@ -91,6 +97,7 @@ export function FragmentWeb({
               <TooltipContent>Copy URL</TooltipContent>
             </Tooltip>
           </TooltipProvider>
+        </div>
         </div>
       </div>
     </div>
