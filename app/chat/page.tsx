@@ -321,7 +321,7 @@ function ChatContent() {
 
     console.log('Using API:', apiEndpoint, '| Pure edit:', isPureEdit, '| Has fragment:', hasFragment)
 
-    const payload = {
+    submit({
       userID: session?.user?.id,
       teamID: userTeam?.id,
       messages: toAISDKMessages(updatedMessages),
@@ -331,45 +331,7 @@ function ChatContent() {
       currentFragment: fragment || undefined,
       backendEnabled: currentProject?.backend_enabled || false,
       backendStatus: currentProject?.backend_status || 'inactive',
-    }
-
-    // Fetch manually so we can check X-Response-Type before routing
-    const res = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
     })
-
-    if (res.headers.get('X-Response-Type') === 'chat') {
-      // Stream plain text reply — no code generation, no sandbox
-      const reader = res.body?.getReader()
-      const decoder = new TextDecoder()
-      let text = ''
-      setMessages(prev => [...prev, { role: 'assistant' as const, content: [{ type: 'text', text: '' }] }])
-      if (reader) {
-        while (true) {
-          const { done, value } = await reader.read()
-          if (done) break
-          const chunk = decoder.decode(value)
-          for (const line of chunk.split('\n').filter(Boolean)) {
-            if (line.startsWith('0:')) {
-              try { text += JSON.parse(line.slice(2)) } catch { text += line.slice(2) }
-            }
-          }
-          setMessages(prev => {
-            const updated = [...prev]
-            updated[updated.length - 1] = { role: 'assistant' as const, content: [{ type: 'text', text }] }
-            return updated
-          })
-        }
-      }
-      setChatInput('')
-      setFiles([])
-      return
-    }
-
-    // Build request — re-submit through useObject (skipClassification avoids double API call cost)
-    submit({ ...payload, skipClassification: true })
 
     setChatInput('')
     setFiles([])
