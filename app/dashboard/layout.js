@@ -56,10 +56,6 @@ export default function DashboardLayout({ children }) {
         <div className="p-2 mt-auto space-y-1 border-t">
           {sidebarOpen && (
             <>
-              <div className="flex items-center justify-between mb-2 px-1.5">
-                <span className="text-xs text-muted-foreground">Theme</span>
-                <ThemeToggle />
-              </div>
               <div className="flex items-center gap-2 px-1.5 py-1">
                 <Avatar className="w-6 h-6">
                   <AvatarImage

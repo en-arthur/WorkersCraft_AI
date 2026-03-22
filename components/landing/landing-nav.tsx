@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import Logo from '@/components/logo'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Button } from '@/components/ui/button'
 
 export function LandingNav() {
@@ -16,7 +15,6 @@ export function LandingNav() {
           <Link href="/cloud" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             Cloud
           </Link>
-          <ThemeToggle />
           <Link href="/auth">
             <Button size="sm">Launch App</Button>
           </Link>
