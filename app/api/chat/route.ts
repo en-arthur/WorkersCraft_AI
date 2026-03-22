@@ -114,12 +114,19 @@ IMPORTANT:
       system: toPrompt(template) + existingCodeContext + backendPrompt,
       messages,
       maxTokens: (model as any).maxOutputTokens ?? 32000,
-      maxRetries: 0,
+      maxRetries: 2,
       ...modelParams,
     })
 
     if (userID) ingestEvent(userID, 'ai_generation', { model: model.id })
-    return stream.toTextStreamResponse()
+
+    const response = stream.toTextStreamResponse()
+    return new Response(response.body, {
+      headers: {
+        ...Object.fromEntries(response.headers.entries()),
+        'X-Stream-Error': 'false',
+      },
+    })
   } catch (error: any) {
     return handleAPIError(error, { hasOwnApiKey: !!config.apiKey })
   }

@@ -172,9 +172,14 @@ function ChatContent() {
       console.error('Error submitting request:', error)
       if (error.message.includes('limit')) {
         setIsRateLimited(true)
+        setErrorMessage('Rate limit reached. Please wait before trying again.')
+      } else if (error.message.includes('context') || error.message.includes('token')) {
+        setErrorMessage('The conversation is too long. Please start a new project or simplify your request.')
+      } else if (error.message.includes('network') || error.message.includes('fetch')) {
+        setErrorMessage('Network error. Check your connection and try again.')
+      } else {
+        setErrorMessage(error.message || 'Something went wrong. Please try again.')
       }
-
-      setErrorMessage(error.message)
     },
     onFinish: async ({ object: fragment, error }) => {
       if (!fragment) return
@@ -190,6 +195,7 @@ function ChatContent() {
 
       if (error) {
         console.error('Fragment generation error:', error)
+        setErrorMessage('Generation was incomplete. The code shown may be partial — try again.')
         setCurrentTab('code')
         return
       }
