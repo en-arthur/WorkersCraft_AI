@@ -4,7 +4,7 @@ export const fragmentSchema = z.object({
   commentary: z
     .string()
     .describe(
-      'For the initial build: briefly list what was built (e.g. "Built a Kanban board with drag-and-drop, task modal, and priority labels"). For follow-up edits: describe only what changed (e.g. "Added dark mode toggle to the navbar"). Keep it short — 1 to 2 sentences max.',
+      'Conversational explanation of what you built or changed. For initial builds: briefly describe the app and key features (2-3 sentences). For follow-ups: explain what you changed and why, mentioning specific components or files affected (e.g. "Added a Profile page at app/profile.tsx with avatar, display name, and edit form. Updated the sidebar to include a Profile nav link."). Be specific and helpful like a senior engineer explaining their work — never just say "Updated X file(s)".',
     ),
   template: z
     .string()

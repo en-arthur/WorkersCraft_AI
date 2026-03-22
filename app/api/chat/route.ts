@@ -80,10 +80,10 @@ ${f.file_content}
 
 IMPORTANT: 
 - You are working with an existing project
-- Preserve all existing files unless specifically asked to remove them
-- If adding new files, include them in the files array along with existing files
-- If editing files, only modify what the user requested
-- Keep all other code unchanged
+- Your response MUST include ALL existing files in the files array, unchanged
+- Add the new file(s) to the files array alongside ALL existing files
+- NEVER drop or omit any existing file from the output
+- Only modify the specific file(s) the user asked to change
 `
     } 
     // Handle single-file format

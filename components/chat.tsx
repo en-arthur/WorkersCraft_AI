@@ -36,7 +36,7 @@ export function Chat({
         >
           {message.content.map((content, id) => {
             if (content.type === 'text') {
-              return content.text
+              return content.text ? <span key={id}>{content.text}</span> : null
             }
             if (content.type === 'image') {
               return (
