@@ -50,11 +50,11 @@ export default function DashboardPage() {
 
   const techStacks = {
     web: [
-      { id: 'nextjs-developer', name: 'Next.js', icon: '⚡' },
-      { id: 'streamlit-developer', name: 'Streamlit', icon: '🐍' }
+      { id: 'nextjs-developer', name: 'Next.js', icon: '/thirdparty/templates/nextjs-developer.svg' },
+      { id: 'streamlit-developer', name: 'Streamlit', icon: '/thirdparty/templates/streamlit-developer.svg' }
     ],
     mobile: [
-      { id: 'expo-developer', name: 'Expo (React Native)', icon: '📱' }
+      { id: 'expo-developer', name: 'Expo (React Native)', icon: '/thirdparty/templates/expo-developer.png' }
     ]
   }
 
@@ -324,7 +324,10 @@ export default function DashboardPage() {
                         <SelectContent>
                           {techStacks[newProject.platform].map(stack => (
                             <SelectItem key={stack.id} value={stack.id}>
-                              {stack.icon} {stack.name}
+                              <div className="flex items-center gap-2">
+                                <img src={stack.icon} alt={stack.name} width={14} height={14} />
+                                {stack.name}
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
