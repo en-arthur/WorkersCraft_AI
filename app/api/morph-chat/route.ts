@@ -84,6 +84,7 @@ export async function POST(req: Request) {
 
       // Step 2: parallel morph edits on relevant files only
       let updatedFiles: typeof currentFragment.files
+      const fileCommentaries: string[] = []
       try {
         updatedFiles = await Promise.all(
           currentFragment.files.map(async (file) => {
@@ -111,6 +112,8 @@ User request: ${userRequest}`,
               maxRetries: 0,
               ...modelParams,
             })
+
+            fileCommentaries.push(result.object.commentary)
 
             try {
               const morphResult = await applyPatch({
@@ -150,7 +153,7 @@ User request: ${userRequest}`,
       updatedFragment = {
         ...currentFragment,
         files: updatedFiles,
-        commentary: `Updated ${relevantPaths.size} file(s)`,
+        commentary: fileCommentaries.join(' '),
       }
     } 
     // Handle single-file format

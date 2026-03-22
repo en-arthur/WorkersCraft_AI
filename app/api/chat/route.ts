@@ -107,7 +107,34 @@ IMPORTANT:
   try {
     const { getBackendPrompt } = await import('@/lib/prompt')
     const backendPrompt = getBackendPrompt(backendEnabled || false, backendStatus || 'inactive')
-    
+
+    // Detect conversational messages — don't force schema generation for greetings/questions
+    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
+    const lastText = typeof lastUserMessage?.content === 'string'
+      ? lastUserMessage.content
+      : Array.isArray(lastUserMessage?.content)
+      ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
+      : ''
+    const isConversational = lastText.trim().length < 50 &&
+      /^(hi|hello|hey|thanks|thank you|ok|okay|cool|great|yes|no|sure|what|who|why|how are|what can|what do)\b/i.test(lastText.trim())
+
+    if (isConversational) {
+      const { generateText } = await import('ai')
+      const { text } = await generateText({
+        model: modelClient as LanguageModel,
+        system: `You are a helpful AI app builder assistant called WorkersCraft AI. 
+For greetings and general questions, respond conversationally in 1-2 sentences. 
+Do not generate code unless the user asks you to build or modify something.`,
+        messages,
+        maxTokens: 200,
+      })
+      return new Response(
+        // Wrap in the schema shape so the client can render commentary
+        JSON.stringify({ commentary: text, title: '', description: '', template: '', additional_dependencies: [], has_additional_dependencies: false, install_dependencies_command: '', port: null }),
+        { headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
+      )
+    }
+
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
