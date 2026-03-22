@@ -10,7 +10,7 @@ const features = [
   {
     icon: Code2,
     title: 'Multiple Frameworks',
-    description: 'Support for Next.js, Vue.js, Streamlit, Gradio, and Python for any type of application.',
+    description: 'Support for Next.js, Streamlit, and Expo (React Native) for web and mobile applications.',
   },
   {
     icon: Zap,
