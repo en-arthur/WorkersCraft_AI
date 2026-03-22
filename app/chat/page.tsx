@@ -28,8 +28,10 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/logo'
+import { useToast } from '@/components/ui/use-toast'
 
 function ChatContent() {
+  const { toast } = useToast()
   const [chatInput, setChatInput] = useLocalStorage('chat', '')
   const [files, setFiles] = useState<File[]>([])
   const [selectedTemplate, setSelectedTemplate] = useState<string>(
@@ -435,8 +437,10 @@ function ChatContent() {
         body: JSON.stringify({ messages: overrideMessages ?? messages })
       })
       console.log('[saveProjectSilently] Conversation saved:', convRes.status)
+      toast({ title: 'Saved', description: 'Project saved successfully.', duration: 2000 })
     } catch (error) {
       console.error('Auto-save error:', error)
+      toast({ title: 'Save failed', description: 'Could not auto-save your project.', variant: 'destructive', duration: 3000 })
     }
   }
 
@@ -464,7 +468,7 @@ function ChatContent() {
       
       if (data.error) {
         console.error('Error loading project:', data.error)
-        alert(`Failed to load project: ${data.error}`)
+        toast({ title: 'Failed to load project', description: data.error, variant: 'destructive' })
         return
       }
       
@@ -553,7 +557,7 @@ function ChatContent() {
       isInitialLoadRef.current = false
     } catch (error) {
       console.error('Error loading project:', error)
-      alert(`Failed to load project: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast({ title: 'Failed to load project', description: error instanceof Error ? error.message : 'Unknown error', variant: 'destructive' })
     } finally {
       setIsProjectLoading(false)
     }
@@ -587,7 +591,7 @@ function ChatContent() {
           body: JSON.stringify({ messages })
         })
 
-        alert('Project saved successfully!')
+        toast({ title: 'Project saved', duration: 2000 })
       } else {
         // Create new project
         const response = await fetch('/api/projects', {
@@ -609,12 +613,12 @@ function ChatContent() {
           setCurrentProject(data.project)
           setNewProject({ name: '', description: '' })
           setIsSaveDialogOpen(false)
-          alert('Project created successfully!')
+          toast({ title: 'Project created', duration: 2000 })
         }
       }
     } catch (error) {
       console.error('Error saving project:', error)
-      alert('Error saving project')
+      toast({ title: 'Error saving project', variant: 'destructive' })
     } finally {
       setSaving(false)
     }
