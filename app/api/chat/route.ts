@@ -119,13 +119,13 @@ IMPORTANT:
       /^(hi|hello|hey|thanks|thank you|ok|okay|cool|great|yes|no|sure|what|who|why|how are|what can|what do)\b/i.test(lastText.trim())
 
     const conversationalInstruction = isConversational
-      ? `\n\nThe user sent a conversational message, not a build request. Respond ONLY in the commentary field with a friendly 1-2 sentence reply. Do NOT generate or modify any code. Return the existing files completely unchanged.`
+      ? `\n\nThe user sent a conversational message, not a build request. Respond ONLY in the commentary field with a friendly, helpful reply (1-5 sentences). Do NOT generate, modify, or return any code or files. Leave all code fields empty.`
       : ''
 
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
-      system: toPrompt(template) + existingCodeContext + backendPrompt + conversationalInstruction,
+      system: toPrompt(template) + (isConversational ? '' : existingCodeContext) + backendPrompt + conversationalInstruction,
       messages,
       maxTokens: (model as any).maxOutputTokens ?? 32000,
       maxRetries: 2,
