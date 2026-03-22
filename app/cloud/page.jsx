@@ -1,39 +1,11 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { LandingNav } from '@/components/landing/landing-nav'
 import { Footer } from '@/components/landing/footer'
+import { Reveal } from '@/components/landing/reveal'
 import { Database, Users, FileUp, Shield, Zap, Code2, ArrowRight, CheckCircle } from 'lucide-react'
-
-function useScrollReveal() {
-  const ref = useRef(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) { el.classList.add('revealed'); observer.disconnect() } },
-      { threshold: 0.15 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-  return ref
-}
-
-function Reveal({ children, className = '', delay = 0 }) {
-  const ref = useScrollReveal()
-  return (
-    <div
-      ref={ref}
-      className={`scroll-reveal ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
-    >
-      {children}
-    </div>
-  )
-}
 
 const features = [
   { icon: Users,    title: 'User Authentication',    description: 'Built-in user management with secure sign up, login, and session handling out of the box.' },
@@ -61,15 +33,6 @@ export default function CloudPage() {
   return (
     <div className="min-h-screen bg-background">
       <style>{`
-        .scroll-reveal {
-          opacity: 0;
-          transform: translateY(32px);
-          transition: opacity 0.6s ease, transform 0.6s ease;
-        }
-        .scroll-reveal.revealed {
-          opacity: 1;
-          transform: translateY(0);
-        }
         .glass-card {
           background: rgba(255,255,255,0.04);
           border: 1px solid rgba(255,255,255,0.1);

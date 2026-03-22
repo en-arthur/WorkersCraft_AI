@@ -8,6 +8,16 @@
   font-variation-settings: "GRAD" 0;
 }
 
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.scroll-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 @keyframes progress-indeterminate {
   0%   { transform: translateX(-100%) scaleX(0.5); }
   50%  { transform: translateX(0%) scaleX(0.4); }

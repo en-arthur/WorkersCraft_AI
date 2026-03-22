@@ -17,7 +17,7 @@ export default function AboutPage() {
           full-stack web and mobile applications in minutes — no coding required.
         </p>
         <p className="text-muted-foreground mb-6 leading-relaxed">
-          We believe building software should be accessible to everyone. Whether you're a
+          We believe building software should be accessible to everyone. Whether you&apos;re a
           founder validating an idea, a designer prototyping a product, or a developer
           moving fast — WorkersCraft AI removes the friction between imagination and a
           working app.
