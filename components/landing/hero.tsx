@@ -46,8 +46,7 @@ export function Hero() {
       </h1>
       
       <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl leading-relaxed">
-        Transform your ideas into interactive applications using natural language. 
-        WorkersCraft AI creates production-ready apps in seconds.
+        Turn ideas into apps in minutes — no coding needed.
       </p>
       
       <div className="flex gap-4 flex-wrap justify-center">
