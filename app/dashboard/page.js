@@ -245,9 +245,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl font-semibold">My Projects</h1>
             <div className="flex gap-2">
-              <ImportGitHubDialog disabled={saving} onImport={(project) => {
+              {/* <ImportGitHubDialog disabled={saving} onImport={(project) => {
                 router.push(`/chat?project=${project.id}`)
-              }} />
+              }} /> */}
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="px-8 py-6 text-base">
