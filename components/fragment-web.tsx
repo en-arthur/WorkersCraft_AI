@@ -31,6 +31,7 @@ export function FragmentWeb({
   }
 
   const isFullWidth = !device || device.width === '100%'
+  const isMobile = device?.label?.toLowerCase().includes('mobile')
   const containerStyle = isFullWidth ? {} : {
     width: typeof device.width === 'number' ? `${device.width}px` : device.width,
     height: typeof device.height === 'number' ? `${device.height}px` : device.height,
@@ -41,16 +42,23 @@ export function FragmentWeb({
   return (
     <div className="flex flex-col w-full h-full items-center justify-center bg-gray-50">
       <div 
-        className="flex flex-col bg-white transition-all duration-300"
+        className={`flex flex-col transition-all duration-300 ${isMobile ? 'bg-gray-900 rounded-[40px] p-2 shadow-2xl border-4 border-gray-800' : 'bg-white'}`}
         style={isFullWidth ? { width: '100%', height: '100%' } : containerStyle}
       >
-        <iframe
-          key={iframeKey}
-          className="h-full w-full border"
-          sandbox="allow-forms allow-scripts allow-same-origin"
-          loading="lazy"
-          src={result.url}
-        />
+        {isMobile && (
+          <div className="flex justify-center items-center py-2 shrink-0">
+            <div className="w-20 h-5 bg-gray-800 rounded-full" />
+          </div>
+        )}
+        <div className={`flex-1 overflow-hidden ${isMobile ? 'rounded-[28px]' : ''}`}>
+          <iframe
+            key={iframeKey}
+            className="h-full w-full border-0"
+            sandbox="allow-forms allow-scripts allow-same-origin"
+            loading="lazy"
+            src={result.url}
+          />
+        </div>
       </div>
       <div className="p-2 border-t w-full bg-popover">
         <div className="flex items-center bg-muted rounded-2xl">
