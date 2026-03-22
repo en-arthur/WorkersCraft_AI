@@ -115,30 +115,17 @@ IMPORTANT:
       : Array.isArray(lastUserMessage?.content)
       ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
       : ''
-    const isConversational = lastText.trim().length < 50 &&
+    const isConversational = lastText.trim().length < 60 &&
       /^(hi|hello|hey|thanks|thank you|ok|okay|cool|great|yes|no|sure|what|who|why|how are|what can|what do)\b/i.test(lastText.trim())
 
-    if (isConversational) {
-      const { generateText } = await import('ai')
-      const { text } = await generateText({
-        model: modelClient as LanguageModel,
-        system: `You are a helpful AI app builder assistant called WorkersCraft AI. 
-For greetings and general questions, respond conversationally in 1-2 sentences. 
-Do not generate code unless the user asks you to build or modify something.`,
-        messages,
-        maxTokens: 200,
-      })
-      return new Response(
-        // Wrap in the schema shape so the client can render commentary
-        JSON.stringify({ commentary: text, title: '', description: '', template: '', additional_dependencies: [], has_additional_dependencies: false, install_dependencies_command: '', port: null }),
-        { headers: { 'Content-Type': 'text/plain; charset=utf-8' } }
-      )
-    }
+    const conversationalInstruction = isConversational
+      ? `\n\nThe user sent a conversational message, not a build request. Respond ONLY in the commentary field with a friendly 1-2 sentence reply. Do NOT generate or modify any code. Return the existing files completely unchanged.`
+      : ''
 
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
-      system: toPrompt(template) + existingCodeContext + backendPrompt,
+      system: toPrompt(template) + existingCodeContext + backendPrompt + conversationalInstruction,
       messages,
       maxTokens: (model as any).maxOutputTokens ?? 32000,
       maxRetries: 2,
