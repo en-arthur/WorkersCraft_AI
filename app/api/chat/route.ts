@@ -5,8 +5,9 @@ import { toPrompt } from '@/lib/prompt'
 import ratelimit from '@/lib/ratelimit'
 import { fragmentSchema as schema } from '@/lib/schema'
 import { Templates } from '@/lib/templates'
-import { streamObject, LanguageModel, CoreMessage } from 'ai'
+import { streamObject, streamText, generateObject, LanguageModel, CoreMessage } from 'ai'
 import { ingestEvent } from '@/lib/usage'
+import { z } from 'zod'
 
 export const maxDuration = 300
 
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
     currentFragment,
     backendEnabled,
     backendStatus,
+    skipClassification,
   }: {
     messages: CoreMessage[]
     userID: string | undefined
@@ -42,19 +44,14 @@ export async function POST(req: Request) {
     }
     backendEnabled?: boolean
     backendStatus?: string
+    skipClassification?: boolean
   } = await req.json()
 
   const limit = !config.apiKey
-    ? await ratelimit(
-        req.headers.get('x-forwarded-for'),
-        rateLimitMaxRequests,
-        ratelimitWindow,
-      )
+    ? await ratelimit(req.headers.get('x-forwarded-for'), rateLimitMaxRequests, ratelimitWindow)
     : false
 
-  if (limit) {
-    return createRateLimitResponse(limit)
-  }
+  if (limit) return createRateLimitResponse(limit)
 
   console.log('userID', userID)
   console.log('teamID', teamID)
@@ -65,29 +62,21 @@ export async function POST(req: Request) {
 
   // Build existing code context
   let existingCodeContext = ''
-  
   if (currentFragment) {
-    // Handle multi-file format
     if (currentFragment.files && currentFragment.files.length > 0) {
       existingCodeContext = `
 
 EXISTING CODE (read this before making changes):
 
-${currentFragment.files.map(f => 
-  `=== File: ${f.file_path} ===
-${f.file_content}
-`).join('\n')}
+${currentFragment.files.map(f => `=== File: ${f.file_path} ===\n${f.file_content}\n`).join('\n')}
 
-IMPORTANT: 
-- You are working with an existing project
+IMPORTANT:
 - Your response MUST include ALL existing files in the files array, unchanged
 - Add the new file(s) to the files array alongside ALL existing files
 - NEVER drop or omit any existing file from the output
 - Only modify the specific file(s) the user asked to change
 `
-    } 
-    // Handle single-file format
-    else if (currentFragment.code && currentFragment.file_path) {
+    } else if (currentFragment.code && currentFragment.file_path) {
       existingCodeContext = `
 
 EXISTING CODE (read this before making changes):
@@ -95,7 +84,7 @@ EXISTING CODE (read this before making changes):
 === File: ${currentFragment.file_path} ===
 ${currentFragment.code}
 
-IMPORTANT: 
+IMPORTANT:
 - You are working with an existing project
 - If adding new files, use the files array format
 - If editing the existing file, only modify what the user requested
@@ -108,24 +97,46 @@ IMPORTANT:
     const { getBackendPrompt } = await import('@/lib/prompt')
     const backendPrompt = getBackendPrompt(backendEnabled || false, backendStatus || 'inactive')
 
-    // Detect conversational messages — don't force schema generation for greetings/questions
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
-    const lastText = typeof lastUserMessage?.content === 'string'
-      ? lastUserMessage.content
-      : Array.isArray(lastUserMessage?.content)
-      ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
-      : ''
-    const isConversational = lastText.trim().length < 60 &&
-      /^(hi|hello|hey|thanks|thank you|ok|okay|cool|great|yes|no|sure|what|who|why|how are|what can|what do)\b/i.test(lastText.trim())
+    // Classify intent — skip on re-submit (already classified)
+    if (!skipClassification) {
+      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
+      const lastText = typeof lastUserMessage?.content === 'string'
+        ? lastUserMessage.content
+        : Array.isArray(lastUserMessage?.content)
+        ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
+        : ''
 
-    const conversationalInstruction = isConversational
-      ? `\n\nThe user sent a conversational message, not a build request. Respond ONLY in the commentary field with a friendly 1-2 sentence reply. Do NOT generate or modify any code. Return the existing files completely unchanged.`
-      : ''
+      const { object: intent } = await generateObject({
+        model: modelClient as LanguageModel,
+        schema: z.object({ type: z.enum(['chat', 'build']) }),
+        system: `Classify the user message as either:
+- "chat": greeting, question, thanks, feedback, or anything NOT asking to build/create/edit/add/fix/change code or UI
+- "build": any request to create, build, edit, modify, add, fix, update, or change an app, page, component, feature, or code
+Reply with only the JSON.`,
+        messages: [{ role: 'user', content: lastText }],
+        maxRetries: 0,
+      })
+
+      if (intent.type === 'chat') {
+        const chatStream = await streamText({
+          model: modelClient as LanguageModel,
+          system: `You are WorkersCraft AI, a friendly AI app builder assistant.
+The user is chatting — they have NOT asked you to build anything.
+Respond conversationally in 1-3 sentences. Do NOT generate code or mention files.`,
+          messages,
+          maxTokens: 300,
+        })
+        const response = chatStream.toTextStreamResponse()
+        return new Response(response.body, {
+          headers: { ...Object.fromEntries(response.headers.entries()), 'X-Response-Type': 'chat' },
+        })
+      }
+    }
 
     const stream = await streamObject({
       model: modelClient as LanguageModel,
       schema,
-      system: toPrompt(template) + existingCodeContext + backendPrompt + conversationalInstruction,
+      system: toPrompt(template) + existingCodeContext + backendPrompt,
       messages,
       maxTokens: (model as any).maxOutputTokens ?? 32000,
       maxRetries: 2,
