@@ -10,7 +10,7 @@ export default function AboutPage() {
   return (
     <>
       <LandingNav />
-      <main className="min-h-screen pt-32 pb-20 px-4">
+      <main className="min-h-screen pt-36 pb-20 px-4">
         <div className="max-w-3xl mx-auto">
           
           {/* Hero */}
