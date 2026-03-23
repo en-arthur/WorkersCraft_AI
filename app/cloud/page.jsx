@@ -83,7 +83,7 @@ export default function CloudPage() {
           <Reveal delay={100}>
             <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-[1.1]">
               The backend that powers<br />
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent animate-gradient">
+              <span className="text-foreground">
                 every WorkersCraft app
               </span>
             </h1>
