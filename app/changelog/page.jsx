@@ -20,7 +20,7 @@ export default function ChangelogPage() {
       <main className="min-h-screen bg-background">
 
         {/* ── Hero ──────────────────────────────────────────────── */}
-        <section className="relative pt-40 pb-16 px-4 overflow-hidden">
+        <section className="relative pt-48 pb-16 px-4 overflow-hidden">
           {/* Ambient glow */}
           <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
             <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-blue-500/10 blur-[120px]" />
@@ -30,7 +30,7 @@ export default function ChangelogPage() {
             {/* Eyebrow */}
             <span className="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full border border-border/60 bg-muted/40 text-xs font-medium text-muted-foreground tracking-wide uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-              What&apos;s new
+              What&apos;s New
             </span>
 
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-3">
