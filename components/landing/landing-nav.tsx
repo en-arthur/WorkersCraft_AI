@@ -32,22 +32,22 @@ export function LandingNav() {
           : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
 
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 group"
+          className="flex items-center gap-2 group shrink-0"
         >
           <div className="transition-transform duration-300 group-hover:scale-110">
             <Logo style="fragments" className="w-7 h-7" />
           </div>
-          <span className="font-bold text-base tracking-tight">WorkersCraft AI</span>
+          <span className="font-bold text-sm sm:text-base tracking-tight whitespace-nowrap">WorkersCraft AI</span>
         </Link>
 
         {/* Nav links */}
         <div
-          className={`flex items-center gap-1 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+          className={`hidden md:flex items-center gap-1 transition-all duration-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
         >
           {links.map(({ href, label }) => {
             const active = pathname === href
@@ -71,7 +71,7 @@ export function LandingNav() {
         </div>
 
         {/* CTA */}
-        <div className={`transition-all duration-500 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
+        <div className={`shrink-0 transition-all duration-500 delay-100 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}>
           <Link href="/auth">
             <Button
               size="sm"
