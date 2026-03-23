@@ -1,5 +1,6 @@
 import { LandingNav } from '@/components/landing/landing-nav'
 import { Footer } from '@/components/landing/footer'
+import { Target, Wrench, Zap, Rocket, Unlock, Settings, BarChart3, Smartphone } from 'lucide-react'
 
 export const metadata = {
   title: 'About — WorkersCraft AI',
@@ -33,7 +34,7 @@ export default function AboutPage() {
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.1] mb-6">
               Building the future of{' '}
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <span className="text-foreground">
                 app development
               </span>
             </h1>
@@ -52,8 +53,8 @@ export default function AboutPage() {
             {/* Mission */}
             <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm p-8">
               <div className="flex items-start gap-4">
-                <div className="shrink-0 mt-0.5 w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 text-lg">
-                  🎯
+                <div className="shrink-0 mt-0.5 w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400">
+                  <Target className="w-5 h-5" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold mb-2">Our Mission</h2>
@@ -70,8 +71,8 @@ export default function AboutPage() {
             {/* What We Build */}
             <div className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm p-8">
               <div className="flex items-start gap-4">
-                <div className="shrink-0 mt-0.5 w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400 text-lg">
-                  🛠️
+                <div className="shrink-0 mt-0.5 w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-400">
+                  <Wrench className="w-5 h-5" />
                 </div>
                 <div className="w-full">
                   <h2 className="text-lg font-semibold mb-2">What We Build</h2>
@@ -83,21 +84,23 @@ export default function AboutPage() {
                   {/* Tech stack pills */}
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
-                      { label: 'Next.js', icon: '⚡', desc: 'Web apps' },
-                      { label: 'Streamlit', icon: '📊', desc: 'Data apps' },
-                      { label: 'Expo', icon: '📱', desc: 'React Native' },
-                    ].map((tech) => (
+                      { label: 'Next.js', icon: Zap, desc: 'Web apps' },
+                      { label: 'Streamlit', icon: BarChart3, desc: 'Data apps' },
+                      { label: 'Expo', icon: Smartphone, desc: 'React Native' },
+                    ].map((tech) => {
+                      const Icon = tech.icon
+                      return (
                       <div
                         key={tech.label}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/8 border border-primary/10"
                       >
-                        <span className="text-base">{tech.icon}</span>
+                        <Icon className="w-4 h-4 text-primary" />
                         <div>
                           <p className="text-sm font-medium leading-none">{tech.label}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">{tech.desc}</p>
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 </div>
               </div>
@@ -106,19 +109,21 @@ export default function AboutPage() {
             {/* Values row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[
-                { icon: '🚀', title: 'Speed', body: 'From idea to deployed app in minutes, not months.' },
-                { icon: '🔓', title: 'Accessibility', body: 'No coding background needed to build real products.' },
-                { icon: '⚙️', title: 'Production-ready', body: 'Code you can own, extend, and deploy anywhere.' },
-              ].map((v) => (
+                { icon: Rocket, title: 'Speed', body: 'From idea to deployed app in minutes, not months.' },
+                { icon: Unlock, title: 'Accessibility', body: 'No coding background needed to build real products.' },
+                { icon: Settings, title: 'Production-ready', body: 'Code you can own, extend, and deploy anywhere.' },
+              ].map((v) => {
+                const Icon = v.icon
+                return (
                 <div
                   key={v.title}
                   className="rounded-2xl border border-border/60 bg-card/50 backdrop-blur-sm p-6"
                 >
-                  <div className="text-2xl mb-3">{v.icon}</div>
+                  <Icon className="w-6 h-6 text-primary mb-3" />
                   <h3 className="text-sm font-semibold mb-1">{v.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{v.body}</p>
                 </div>
-              ))}
+              )})}
             </div>
 
           </div>
