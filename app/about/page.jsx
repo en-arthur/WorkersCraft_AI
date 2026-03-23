@@ -14,7 +14,7 @@ export default function AboutPage() {
       <main className="min-h-screen bg-background">
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="relative pt-40 pb-24 px-4 overflow-hidden">
+        <section className="relative pt-48 pb-24 px-4 overflow-hidden">
           {/* Ambient background blobs */}
           <div
             aria-hidden
