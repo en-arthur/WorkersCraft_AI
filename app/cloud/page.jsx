@@ -112,7 +112,7 @@ export default function CloudPage() {
                 No setup, no config files, no DevOps. Your backend is ready the moment your app is generated.
               </p>
             </Reveal>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {features.map(({ icon: Icon, title, description }, i) => (
                 <Reveal key={title} delay={i * 80}>
                   <div className="glass-card gradient-border rounded-2xl p-8 flex flex-col gap-4 h-full hover:bg-white/5 hover:scale-[1.02] transition-all duration-300">
