@@ -241,8 +241,8 @@ export default function DashboardPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 md:px-10 py-6 border-b bg-muted/20">
-        <div className="max-w-6xl mx-auto flex flex-col gap-4">
+      <div className="flex-shrink-0 px-6 md:px-10 py-8 border-b bg-muted/20">
+        <div className="max-w-6xl mx-auto flex flex-col gap-6">
           {/* Top row: title + actions */}
           <div className="flex items-center justify-between gap-4">
             <h1 className="text-xl font-semibold">My Projects</h1>
@@ -401,8 +401,8 @@ export default function DashboardPage() {
             </div>
           ) : projects.length === 0 ? (
             <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
-              <div className="mx-auto w-12 h-12 text-muted-foreground mb-4">
-                <Logo style="fragments" className="w-full h-full" />
+              <div className="mx-auto w-16 h-16 mb-4 opacity-50">
+                <Logo className="w-full h-full" />
               </div>
               <h3 className="text-lg font-semibold mb-2">No projects yet</h3>
               <p className="text-muted-foreground mb-6">
@@ -411,25 +411,30 @@ export default function DashboardPage() {
               <Button onClick={() => setIsDialogOpen(true)}>Create Your First Project</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project) => (
                 <Card
                   key={project.id}
-                  className="hover:shadow-lg transition-all hover:border-primary/50 hover:-translate-y-0.5 cursor-pointer"
+                  className="group relative overflow-hidden hover:shadow-lg transition-all hover:border-primary/50 hover:-translate-y-0.5 cursor-pointer bg-gradient-to-br from-card to-card/50"
                   onClick={() => router.push(`/chat?project=${project.id}`)}
                 >
-                  <CardHeader>
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  
+                  <CardHeader className="relative">
                     <div className="flex items-start justify-between gap-2 mb-2">
-                      <CardTitle className="truncate flex-1">{project.name}</CardTitle>
-                      {project.platform === 'mobile' ? (
-                        <Smartphone className="w-4 h-4 text-muted-foreground shrink-0" />
-                      ) : (
-                        <Globe className="w-4 h-4 text-muted-foreground shrink-0" />
-                      )}
+                      <CardTitle className="truncate flex-1 text-lg">{project.name}</CardTitle>
+                      <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        {project.platform === 'mobile' ? (
+                          <Smartphone className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Globe className="w-4 h-4 text-primary" />
+                        )}
+                      </div>
                     </div>
                     <CardDescription>Updated {formatDate(project.updated_at)}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3">
+                  <CardContent className="space-y-3 relative">
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {project.description || 'No description'}
                     </p>
@@ -451,12 +456,12 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-end">
+                  <CardFooter className="flex justify-end relative opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={(e) => { e.stopPropagation(); setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
-                      className="text-destructive hover:text-destructive"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
                     >
                       Delete
                     </Button>
