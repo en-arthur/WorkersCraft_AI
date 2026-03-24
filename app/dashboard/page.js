@@ -241,7 +241,7 @@ export default function DashboardPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 md:px-10 py-8 border-b bg-muted/20">
+      <div className="flex-shrink-0 px-6 md:px-10 py-8 mt-4 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col gap-6">
           {/* Top row: title + actions */}
           <div className="flex items-center justify-between gap-4">
