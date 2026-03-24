@@ -13,7 +13,6 @@ const features = [
   { icon: FileUp,   title: 'File Uploads',           description: 'Upload and serve files via a global CDN. Images, documents, and any binary data supported.' },
   { icon: Shield,   title: 'Secure by Default',      description: 'Every app gets isolated storage. Auth-gated endpoints and row-level access built in.' },
   { icon: Zap,      title: 'Instant Provisioning',   description: 'Your backend is created automatically when you build an app. Zero configuration needed.' },
-  { icon: Code2,    title: 'Auto-generated SDK',     description: 'A typed SDK is injected into your generated app so it can talk to its backend immediately.' },
 ]
 
 const steps = [
