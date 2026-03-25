@@ -16,8 +16,8 @@ const plans = [
     period: 'forever',
     description: 'Perfect for trying out WorkersCraft AI',
     features: [
-      '3 projects',
-      '50 AI generations/month',
+      '3 projects per day',
+      'AI app generation',
       'Next.js & Streamlit templates',
       'Live sandbox preview',
       'Community support',
@@ -28,15 +28,31 @@ const plans = [
   },
   {
     name: 'Starter',
-    price: '$29',
+    price: '$30',
     period: 'per month',
-    description: 'For indie developers and small teams',
+    description: 'Perfect for indie developers getting started',
     features: [
-      'Unlimited projects',
-      '500 AI generations/month',
-      'All templates (Next.js, Streamlit, Expo)',
-      'Backend (auth, storage, files)',
+      '10 projects per day',
+      'AI app generation',
+      'Android debug builds (APK)',
       'GitHub integration',
+      'Backend cloud access',
+      'Source code export',
+    ],
+    cta: 'Start Free Trial',
+    href: '/auth',
+    popular: false,
+  },
+  {
+    name: 'Pro',
+    price: '$50',
+    period: 'per month',
+    description: 'For teams shipping production apps',
+    features: [
+      'Everything in Starter',
+      '30 projects per day',
+      'Android release builds (AAB)',
+      'iOS builds (coming soon)',
       'Priority support',
     ],
     cta: 'Start Free Trial',
@@ -44,21 +60,18 @@ const plans = [
     popular: true,
   },
   {
-    name: 'Pro',
-    price: '$99',
+    name: 'Max',
+    price: '$100',
     period: 'per month',
-    description: 'For teams building at scale',
+    description: 'Unlimited power for serious builders',
     features: [
-      'Everything in Starter',
-      'Unlimited AI generations',
-      'Custom templates',
-      'Team collaboration',
-      'Advanced analytics',
+      'Everything in Pro',
+      'Unlimited projects per day',
       'Dedicated support',
-      'Custom integrations',
+      'Early access to new features',
     ],
-    cta: 'Contact Sales',
-    href: 'mailto:hello@workerscraft.ai',
+    cta: 'Start Free Trial',
+    href: '/auth',
     popular: false,
   },
 ]
@@ -93,8 +106,8 @@ export default function PricingPage() {
 
         {/* Pricing Cards */}
         <section className="px-4 pb-28">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {plans.map((plan) => (
                 <div
                   key={plan.name}
