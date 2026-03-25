@@ -11,22 +11,6 @@ export const metadata = {
 
 const plans = [
   {
-    name: 'Free',
-    price: '$0',
-    period: 'forever',
-    description: 'Perfect for trying out WorkersCraft AI',
-    features: [
-      '3 projects per day',
-      'AI app generation',
-      'Next.js & Streamlit templates',
-      'Live sandbox preview',
-      'Community support',
-    ],
-    cta: 'Get Started',
-    href: '/auth',
-    popular: false,
-  },
-  {
     name: 'Starter',
     price: '$30',
     period: 'per month',
@@ -107,7 +91,7 @@ export default function PricingPage() {
         {/* Pricing Cards */}
         <section className="px-4 pb-28">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {plans.map((plan) => (
                 <div
                   key={plan.name}
