@@ -359,13 +359,13 @@ export default function DashboardPage() {
           </div>
           {/* Bottom row: search + count */}
           <div className="flex flex-col sm:flex-row gap-3 items-center">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+            <div className="relative flex-1 w-full">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full border bg-background"
+                className="pl-10 w-full border bg-background"
               />
             </div>
             <p className="text-sm text-muted-foreground shrink-0">
