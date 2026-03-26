@@ -75,15 +75,21 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-2xl font-semibold mb-3">5. Refund Policy</h2>
+            <p className="text-muted-foreground leading-relaxed mb-3">
+              All purchases are final and non-refundable, except where required by law.
+            </p>
             <p className="text-muted-foreground leading-relaxed">
-              All subscription payments are generally non-refundable. However, we may issue a
-              refund at our sole discretion under exceptional circumstances — for example, if you
-              were charged due to a technical error on our end or if the service was completely
-              unavailable for an extended period. To request a refund, contact us at{' '}
+              For customers in the EU, EEA, and UK: You have the right to withdraw within 14 days 
+              of purchase. However, by using WorkersCraft AI to generate code or create projects, 
+              you agree to immediate delivery of digital content and waive your 14-day withdrawal 
+              right as permitted under consumer law.
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-3">
+              For refund requests, contact{' '}
               <a href="mailto:workerscraftai@gmail.com" className="text-primary hover:underline">
                 workerscraftai@gmail.com
               </a>{' '}
-              with your account details and reason. We will review each request individually.
+              within 14 days of your purchase date.
             </p>
           </section>
 
