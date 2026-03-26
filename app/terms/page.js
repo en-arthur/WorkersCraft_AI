@@ -66,7 +66,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-2xl font-semibold mb-3">4. Subscriptions and Billing</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Paid plans are billed on a recurring basis through Paddle, our payment processor.
+              Paid plans are billed on a recurring basis through our payment processor.
               By subscribing, you authorize recurring charges to your payment method. You may
               cancel your subscription at any time from your billing dashboard; cancellation takes
               effect at the end of the current billing period.
@@ -110,15 +110,15 @@ export default function TermsPage() {
             <ul className="space-y-2 text-muted-foreground ml-6">
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-1">•</span>
-                <span><strong className="text-foreground">Account data</strong>: email address and authentication information via Supabase</span>
+                <span><strong className="text-foreground">Account data</strong>: email address and authentication information</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-1">•</span>
-                <span><strong className="text-foreground">Usage data</strong>: projects created, prompts submitted, and feature usage via PostHog</span>
+                <span><strong className="text-foreground">Usage data</strong>: projects created, prompts submitted, and feature usage</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-1">•</span>
-                <span><strong className="text-foreground">Billing data</strong>: subscription and payment information processed by Paddle</span>
+                <span><strong className="text-foreground">Billing data</strong>: subscription and payment information</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-primary mt-1">•</span>
@@ -126,9 +126,8 @@ export default function TermsPage() {
               </li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mt-3">
-              We do not sell your personal data. Data is shared only with the third-party services
-              necessary to operate the platform: Supabase (database and auth), Paddle (billing),
-              PostHog (analytics), E2B (sandbox execution), and GitHub (repository integration).
+              We do not sell your personal data. Data is shared only with trusted third-party services
+              necessary to operate the platform, including authentication, billing, analytics, code execution, and repository integration providers.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-3">
               You may request deletion of your account and associated data at any time by emailing{' '}
