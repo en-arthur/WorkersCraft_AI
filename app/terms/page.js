@@ -86,8 +86,8 @@ export default function TermsPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed mt-3">
               For refund requests, contact{' '}
-              <a href="mailto:workerscraftai@gmail.com" className="text-primary hover:underline">
-                workerscraftai@gmail.com
+              <a href="mailto:hello@workerscraft.com" className="text-primary hover:underline">
+                hello@workerscraft.com
               </a>{' '}
               within 14 days of your purchase date.
             </p>
@@ -132,8 +132,8 @@ export default function TermsPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed mt-3">
               You may request deletion of your account and associated data at any time by emailing{' '}
-              <a href="mailto:workerscraftai@gmail.com" className="text-primary hover:underline">
-                workerscraftai@gmail.com
+              <a href="mailto:hello@workerscraft.com" className="text-primary hover:underline">
+                hello@workerscraft.com
               </a>.
             </p>
           </section>
@@ -170,8 +170,8 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold mb-3">11. Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
               For any questions about these Terms, contact us at{' '}
-              <a href="mailto:workerscraftai@gmail.com" className="text-primary hover:underline">
-                workerscraftai@gmail.com
+              <a href="mailto:hello@workerscraft.com" className="text-primary hover:underline">
+                hello@workerscraft.com
               </a>.
             </p>
           </section>

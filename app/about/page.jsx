@@ -146,7 +146,7 @@ export default function AboutPage() {
                 Questions or feedback? We&apos;d love to hear from you.
               </p>
               <a
-                href="mailto:hello@workerscraft.ai"
+                href="mailto:hello@workerscraft.com"
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 transition-all font-medium text-sm shadow-sm"
               >
                 <svg
@@ -159,7 +159,7 @@ export default function AboutPage() {
                   <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
                   <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
                 </svg>
-                hello@workerscraft.ai
+                hello@workerscraft.com
               </a>
             </div>
           </div>
