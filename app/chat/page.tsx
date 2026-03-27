@@ -257,7 +257,7 @@ function ChatContent() {
           
           // Auto-submit fix request to AI
           const fixMessage = `Fix this error:\n\n${result.stderr}`
-          const updatedMessages = [...messages, { role: 'user' as const, content: fixMessage }]
+          const updatedMessages = [...messages, { role: 'user' as const, content: [{ type: 'text' as const, text: fixMessage }] }]
           
           setMessages(updatedMessages)
           submit({ messages: toAISDKMessages(updatedMessages) })
@@ -558,7 +558,7 @@ function ChatContent() {
             
             // Auto-submit fix request to AI
             const fixMessage = `Fix this error:\n\n${result.stderr}`
-            const updatedMessages = [...messages, { role: 'user' as const, content: fixMessage }]
+            const updatedMessages = [...messages, { role: 'user' as const, content: [{ type: 'text' as const, text: fixMessage }] }]
             
             setMessages(updatedMessages)
             submit({ messages: toAISDKMessages(updatedMessages) })
