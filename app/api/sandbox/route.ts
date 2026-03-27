@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   if (fragment.has_additional_dependencies) {
     await sbx.commands.run(fragment.install_dependencies_command, {
       onStderr: (data) => {
-        stderrBuffer += data.line + '\n'
+        stderrBuffer += data + '\n'
       }
     })
     console.log(
@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       sbx.commands.run('cd /home/user && npx expo start --web', { 
         background: true,
         onStderr: (data) => {
-          stderrBuffer += data.line + '\n'
+          stderrBuffer += data + '\n'
         }
       })
       await new Promise(resolve => setTimeout(resolve, 15000))
@@ -126,7 +126,7 @@ export async function POST(req: Request) {
       sbx.commands.run(startCmd, { 
         background: true,
         onStderr: (data) => {
-          stderrBuffer += data.line + '\n'
+          stderrBuffer += data + '\n'
         }
       })
 
