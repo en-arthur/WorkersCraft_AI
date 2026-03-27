@@ -236,6 +236,7 @@ function ChatContent() {
             userID: session?.user?.id,
             teamID: userTeam?.id,
             accessToken: session?.access_token,
+            projectId: currentProjectRef.current?.id,
           }),
         })
 
@@ -525,6 +526,7 @@ function ChatContent() {
               userID: session?.user?.id,
               teamID: userTeam?.id,
               accessToken: session?.access_token,
+              projectId: currentProjectRef.current?.id,
               githubToken: session?.provider_token ?? undefined,
             }),
           })

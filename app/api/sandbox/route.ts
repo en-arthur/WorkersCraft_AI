@@ -1,34 +1,29 @@
 import { FragmentSchema } from '@/lib/schema'
 import { ExecutionResultInterpreter, ExecutionResultWeb } from '@/lib/types'
 import { Sandbox } from '@e2b/code-interpreter'
+import { createClient } from '@supabase/supabase-js'
 
-const sandboxTimeout = 10 * 60 * 1000 // 10 minute in ms
+const sandboxTimeout = 30 * 60 * 1000 // 30 minutes in ms
 
 export const maxDuration = 60
 
-export async function POST(req: Request) {
-  const {
-    fragment,
-    userID,
-    teamID,
-    accessToken,
-  }: {
-    fragment: FragmentSchema
-    userID: string | undefined
-    teamID: string | undefined
-    accessToken: string | undefined
-  } = await req.json()
-  console.log('fragment', fragment)
-  console.log('userID', userID)
-
-  // Create an interpreter or a sandbox
-  const sbx = await Sandbox.create(fragment.template, {
+async function createSandbox(
+  fragment: FragmentSchema,
+  userID: string | undefined,
+  teamID: string | undefined,
+  accessToken: string | undefined
+): Promise<Sandbox> {
+  return await Sandbox.create(fragment.template, {
     metadata: {
       template: fragment.template,
       userID: userID ?? '',
       teamID: teamID ?? '',
     },
     timeoutMs: sandboxTimeout,
+    lifecycle: {
+      onTimeout: 'pause',  // Auto-pause instead of kill
+      autoResume: true,    // Auto-resume when reconnecting
+    },
     ...(teamID && accessToken
       ? {
           headers: {
@@ -38,6 +33,71 @@ export async function POST(req: Request) {
         }
       : {}),
   })
+}
+
+export async function POST(req: Request) {
+  const {
+    fragment,
+    userID,
+    teamID,
+    accessToken,
+    projectId,
+  }: {
+    fragment: FragmentSchema
+    userID: string | undefined
+    teamID: string | undefined
+    accessToken: string | undefined
+    projectId: string | undefined
+  } = await req.json()
+  console.log('fragment', fragment)
+  console.log('userID', userID)
+  console.log('projectId', projectId)
+
+  let sbx: Sandbox
+
+  // Try to reconnect to existing sandbox if projectId is provided
+  if (projectId && accessToken) {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
+    )
+
+    const { data: project } = await supabase
+      .from('projects')
+      .select('sandbox_id')
+      .eq('id', projectId)
+      .single()
+
+    if (project?.sandbox_id) {
+      try {
+        console.log(`Attempting to reconnect to sandbox ${project.sandbox_id}`)
+        sbx = await Sandbox.connect(project.sandbox_id, {
+          timeoutMs: sandboxTimeout,
+        })
+        console.log(`Successfully reconnected to sandbox ${project.sandbox_id}`)
+      } catch (error) {
+        console.log(`Failed to reconnect to sandbox ${project.sandbox_id}, creating new one:`, error)
+        sbx = await createSandbox(fragment, userID, teamID, accessToken)
+        // Update database with new sandbox ID
+        await supabase
+          .from('projects')
+          .update({ sandbox_id: sbx.sandboxId })
+          .eq('id', projectId)
+        console.log(`Updated project ${projectId} with new sandbox ${sbx.sandboxId}`)
+      }
+    } else {
+      sbx = await createSandbox(fragment, userID, teamID, accessToken)
+      // Save sandbox ID to database
+      await supabase
+        .from('projects')
+        .update({ sandbox_id: sbx.sandboxId })
+        .eq('id', projectId)
+      console.log(`Saved sandbox ${sbx.sandboxId} to project ${projectId}`)
+    }
+  } else {
+    sbx = await createSandbox(fragment, userID, teamID, accessToken)
+  }
 
   // Install packages
   if (fragment.has_additional_dependencies) {
