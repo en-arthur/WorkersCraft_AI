@@ -1,6 +1,7 @@
 import { FragmentSchema } from '@/lib/schema'
 import { ExecutionResultInterpreter, ExecutionResultWeb } from '@/lib/types'
-import { Sandbox } from '@e2b/code-interpreter'
+import { Sandbox as CodeInterpreter } from '@e2b/code-interpreter'
+import { Sandbox } from 'e2b'
 import { createClient } from '@supabase/supabase-js'
 
 const sandboxTimeout = 30 * 60 * 1000 // 30 minutes in ms
@@ -8,22 +9,43 @@ const sandboxTimeout = 30 * 60 * 1000 // 30 minutes in ms
 export const maxDuration = 60
 
 async function createSandbox(
-  fragment: FragmentSchema,
+  template: string,
   userID: string | undefined,
   teamID: string | undefined,
   accessToken: string | undefined
-): Promise<Sandbox> {
-  return await Sandbox.create(fragment.template, {
+): Promise<Sandbox | CodeInterpreter> {
+  // Use regular Sandbox for templates that support lifecycle
+  if (template !== 'code-interpreter-v1') {
+    return await Sandbox.create(template, {
+      metadata: {
+        template,
+        userID: userID ?? '',
+        teamID: teamID ?? '',
+      },
+      timeoutMs: sandboxTimeout,
+      lifecycle: {
+        onTimeout: 'pause',  // Auto-pause instead of kill
+        autoResume: true,    // Auto-resume when reconnecting
+      },
+      ...(teamID && accessToken
+        ? {
+            headers: {
+              'X-Supabase-Team': teamID,
+              'X-Supabase-Token': accessToken,
+            },
+          }
+        : {}),
+    })
+  }
+  
+  // Use CodeInterpreter for code-interpreter-v1 (doesn't support lifecycle)
+  return await CodeInterpreter.create({
     metadata: {
-      template: fragment.template,
+      template,
       userID: userID ?? '',
       teamID: teamID ?? '',
     },
     timeoutMs: sandboxTimeout,
-    lifecycle: {
-      onTimeout: 'pause',  // Auto-pause instead of kill
-      autoResume: true,    // Auto-resume when reconnecting
-    },
     ...(teamID && accessToken
       ? {
           headers: {
@@ -53,7 +75,7 @@ export async function POST(req: Request) {
   console.log('userID', userID)
   console.log('projectId', projectId)
 
-  let sbx: Sandbox
+  let sbx: Sandbox | CodeInterpreter
 
   // Try to reconnect to existing sandbox if projectId is provided
   if (projectId && accessToken) {
@@ -78,7 +100,7 @@ export async function POST(req: Request) {
         console.log(`Successfully reconnected to sandbox ${project.sandbox_id}`)
       } catch (error) {
         console.log(`Failed to reconnect to sandbox ${project.sandbox_id}, creating new one:`, error)
-        sbx = await createSandbox(fragment, userID, teamID, accessToken)
+        sbx = await createSandbox(fragment.template, userID, teamID, accessToken)
         // Update database with new sandbox ID
         await supabase
           .from('projects')
@@ -87,7 +109,7 @@ export async function POST(req: Request) {
         console.log(`Updated project ${projectId} with new sandbox ${sbx.sandboxId}`)
       }
     } else {
-      sbx = await createSandbox(fragment, userID, teamID, accessToken)
+      sbx = await createSandbox(fragment.template, userID, teamID, accessToken)
       // Save sandbox ID to database
       await supabase
         .from('projects')
@@ -96,7 +118,7 @@ export async function POST(req: Request) {
       console.log(`Saved sandbox ${sbx.sandboxId} to project ${projectId}`)
     }
   } else {
-    sbx = await createSandbox(fragment, userID, teamID, accessToken)
+    sbx = await createSandbox(fragment.template, userID, teamID, accessToken)
   }
 
   // Install packages
