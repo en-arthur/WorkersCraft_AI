@@ -150,9 +150,18 @@ export async function POST(req: Request) {
     }
   }
 
+  // Type guard to check if sandbox is CodeInterpreter
+  const isCodeInterpreterSandbox = (s: Sandbox | CodeInterpreter): s is CodeInterpreter => {
+    return isCodeInterpreter
+  }
+
   // Install packages
   if (fragment.has_additional_dependencies) {
-    await sbx.commands.run(fragment.install_dependencies_command)
+    if (isCodeInterpreterSandbox(sbx)) {
+      await sbx.commands.run(fragment.install_dependencies_command)
+    } else {
+      await sbx.commands.run(fragment.install_dependencies_command)
+    }
     console.log(
       `Installed dependencies: ${fragment.additional_dependencies.join(', ')} in sandbox ${sbx.sandboxId}`,
     )
@@ -191,8 +200,8 @@ export async function POST(req: Request) {
     await sbx.files.write('/home/user/lib/backend.js', errorSDK)
   }
 
-  // Start Metro bundler for Expo after writing files
-  if (fragment.template.includes('expo-developer')) {
+  // Start Metro bundler for Expo after writing files (only for regular Sandbox)
+  if (!isCodeInterpreterSandbox(sbx) && fragment.template.includes('expo-developer')) {
     console.log('Starting Expo Metro bundler...')
     try {
       sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
@@ -204,7 +213,7 @@ export async function POST(req: Request) {
 
   // For imported projects (cloned from GitHub), restart dev server with new files
   const isImportedProject = !!fragment.github_repo_url
-  if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
+  if (!isCodeInterpreterSandbox(sbx) && isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
     const startCommands: Record<string, string> = {
       'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev -- --port 3000',
       'vue-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev',
@@ -244,7 +253,7 @@ export async function POST(req: Request) {
   }
 
   // Execute code or return a URL to the running sandbox
-  if (fragment.template === 'code-interpreter-v1') {
+  if (isCodeInterpreterSandbox(sbx)) {
     const code = fragment.files && fragment.files.length > 0
       ? fragment.files[0].file_content
       : fragment.code || ''
@@ -253,7 +262,7 @@ export async function POST(req: Request) {
 
     return new Response(
       JSON.stringify({
-        sbxId: sbx?.sandboxId,
+        sbxId: sbx.sandboxId,
         template: fragment.template,
         stdout: logs.stdout,
         stderr: logs.stderr,
@@ -265,9 +274,9 @@ export async function POST(req: Request) {
 
   return new Response(
     JSON.stringify({
-      sbxId: sbx?.sandboxId,
+      sbxId: sbx.sandboxId,
       template: fragment.template,
-      url: `https://${sbx?.getHost(fragment.port ?? 80)}`,
+      url: `https://${sbx.getHost(fragment.port ?? 80)}`,
     } as ExecutionResultWeb),
   )
 }
