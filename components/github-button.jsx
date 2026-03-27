@@ -13,6 +13,11 @@ import { ChevronDown, Unlink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 export function GitHubButton({ projectId, platform, hasGitHubRepo, githubRepoUrl, githubBranch, onConnect, onPush, onDisconnect, forceOpenConnect, onForceOpenHandled }) {
+  // Hide GitHub button for web platform
+  if (platform === 'web') {
+    return null
+  }
+
   if (!hasGitHubRepo) {
     return <ConnectGitHubDialog projectId={projectId} platform={platform} onConnect={onConnect} forceOpen={forceOpenConnect} onForceOpenHandled={onForceOpenHandled} />
   }
