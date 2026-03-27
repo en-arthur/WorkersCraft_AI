@@ -1,8 +1,6 @@
 import { FragmentSchema } from '@/lib/schema'
 import { ExecutionResultInterpreter, ExecutionResultWeb } from '@/lib/types'
-import { Sandbox as CodeInterpreter } from '@e2b/code-interpreter'
-import { Sandbox } from 'e2b'
-import { createClient } from '@supabase/supabase-js'
+import { Sandbox } from '@e2b/code-interpreter'
 
 const sandboxTimeout = 30 * 60 * 1000 // 30 minutes in ms
 
@@ -14,154 +12,36 @@ export async function POST(req: Request) {
     userID,
     teamID,
     accessToken,
-    projectId,
   }: {
     fragment: FragmentSchema
     userID: string | undefined
     teamID: string | undefined
     accessToken: string | undefined
-    projectId: string | undefined
   } = await req.json()
   console.log('fragment', fragment)
   console.log('userID', userID)
-  console.log('projectId', projectId)
 
-  const isCodeInterpreter = fragment.template === 'code-interpreter-v1'
-  let sbx: Sandbox | CodeInterpreter
-
-  // Try to reconnect to existing sandbox if projectId is provided (only for non-code-interpreter)
-  if (!isCodeInterpreter && projectId && accessToken) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
-    )
-
-    const { data: project } = await supabase
-      .from('projects')
-      .select('sandbox_id')
-      .eq('id', projectId)
-      .single()
-
-    if (project?.sandbox_id) {
-      try {
-        console.log(`Attempting to reconnect to sandbox ${project.sandbox_id}`)
-        sbx = await Sandbox.connect(project.sandbox_id, {
-          timeoutMs: sandboxTimeout,
-        })
-        console.log(`Successfully reconnected to sandbox ${project.sandbox_id}`)
-      } catch (error) {
-        console.log(`Failed to reconnect to sandbox ${project.sandbox_id}, creating new one:`, error)
-        sbx = await Sandbox.create(fragment.template, {
-          metadata: {
-            template: fragment.template,
-            userID: userID ?? '',
-            teamID: teamID ?? '',
+  // Create an interpreter or a sandbox
+  const sbx = await Sandbox.create(fragment.template, {
+    metadata: {
+      template: fragment.template,
+      userID: userID ?? '',
+      teamID: teamID ?? '',
+    },
+    timeoutMs: sandboxTimeout,
+    ...(teamID && accessToken
+      ? {
+          headers: {
+            'X-Supabase-Team': teamID,
+            'X-Supabase-Token': accessToken,
           },
-          timeoutMs: sandboxTimeout,
-          lifecycle: {
-            onTimeout: 'pause',
-            autoResume: true,
-          },
-          ...(teamID && accessToken
-            ? {
-                headers: {
-                  'X-Supabase-Team': teamID,
-                  'X-Supabase-Token': accessToken,
-                },
-              }
-            : {}),
-        })
-        // Update database with new sandbox ID
-        await supabase
-          .from('projects')
-          .update({ sandbox_id: sbx.sandboxId })
-          .eq('id', projectId)
-        console.log(`Updated project ${projectId} with new sandbox ${sbx.sandboxId}`)
-      }
-    } else {
-      sbx = await Sandbox.create(fragment.template, {
-        metadata: {
-          template: fragment.template,
-          userID: userID ?? '',
-          teamID: teamID ?? '',
-        },
-        timeoutMs: sandboxTimeout,
-        lifecycle: {
-          onTimeout: 'pause',
-          autoResume: true,
-        },
-        ...(teamID && accessToken
-          ? {
-              headers: {
-                'X-Supabase-Team': teamID,
-                'X-Supabase-Token': accessToken,
-              },
-            }
-          : {}),
-      })
-      // Save sandbox ID to database
-      await supabase
-        .from('projects')
-        .update({ sandbox_id: sbx.sandboxId })
-        .eq('id', projectId)
-      console.log(`Saved sandbox ${sbx.sandboxId} to project ${projectId}`)
-    }
-  } else {
-    // Create new sandbox (code-interpreter or no projectId)
-    if (isCodeInterpreter) {
-      sbx = await CodeInterpreter.create({
-        metadata: {
-          template: fragment.template,
-          userID: userID ?? '',
-          teamID: teamID ?? '',
-        },
-        timeoutMs: sandboxTimeout,
-        ...(teamID && accessToken
-          ? {
-              headers: {
-                'X-Supabase-Team': teamID,
-                'X-Supabase-Token': accessToken,
-              },
-            }
-          : {}),
-      })
-    } else {
-      sbx = await Sandbox.create(fragment.template, {
-        metadata: {
-          template: fragment.template,
-          userID: userID ?? '',
-          teamID: teamID ?? '',
-        },
-        timeoutMs: sandboxTimeout,
-        lifecycle: {
-          onTimeout: 'pause',
-          autoResume: true,
-        },
-        ...(teamID && accessToken
-          ? {
-              headers: {
-                'X-Supabase-Team': teamID,
-                'X-Supabase-Token': accessToken,
-              },
-            }
-          : {}),
-      })
-    }
-  }
-
-  // Type guard to check if sandbox is CodeInterpreter
-  const isCodeInterpreterSandbox = (s: Sandbox | CodeInterpreter): s is CodeInterpreter => {
-    return isCodeInterpreter
-  }
+        }
+      : {}),
+  })
 
   // Install packages
   if (fragment.has_additional_dependencies) {
-    if (isCodeInterpreterSandbox(sbx)) {
-      await sbx.commands.run(fragment.install_dependencies_command)
-    } else {
-      await sbx.commands.run(fragment.install_dependencies_command)
-    }
+    await sbx.commands.run(fragment.install_dependencies_command)
     console.log(
       `Installed dependencies: ${fragment.additional_dependencies.join(', ')} in sandbox ${sbx.sandboxId}`,
     )
@@ -200,8 +80,8 @@ export async function POST(req: Request) {
     await sbx.files.write('/home/user/lib/backend.js', errorSDK)
   }
 
-  // Start Metro bundler for Expo after writing files (only for regular Sandbox)
-  if (!isCodeInterpreterSandbox(sbx) && fragment.template.includes('expo-developer')) {
+  // Start Metro bundler for Expo after writing files
+  if (fragment.template.includes('expo-developer')) {
     console.log('Starting Expo Metro bundler...')
     try {
       sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
@@ -213,7 +93,7 @@ export async function POST(req: Request) {
 
   // For imported projects (cloned from GitHub), restart dev server with new files
   const isImportedProject = !!fragment.github_repo_url
-  if (!isCodeInterpreterSandbox(sbx) && isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
+  if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
     const startCommands: Record<string, string> = {
       'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev -- --port 3000',
       'vue-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev',
@@ -253,7 +133,7 @@ export async function POST(req: Request) {
   }
 
   // Execute code or return a URL to the running sandbox
-  if (isCodeInterpreterSandbox(sbx)) {
+  if (fragment.template === 'code-interpreter-v1') {
     const code = fragment.files && fragment.files.length > 0
       ? fragment.files[0].file_content
       : fragment.code || ''
@@ -262,7 +142,7 @@ export async function POST(req: Request) {
 
     return new Response(
       JSON.stringify({
-        sbxId: sbx.sandboxId,
+        sbxId: sbx?.sandboxId,
         template: fragment.template,
         stdout: logs.stdout,
         stderr: logs.stderr,
@@ -274,9 +154,9 @@ export async function POST(req: Request) {
 
   return new Response(
     JSON.stringify({
-      sbxId: sbx.sandboxId,
+      sbxId: sbx?.sandboxId,
       template: fragment.template,
-      url: `https://${sbx.getHost(fragment.port ?? 80)}`,
+      url: `https://${sbx?.getHost(fragment.port ?? 80)}`,
     } as ExecutionResultWeb),
   )
 }
