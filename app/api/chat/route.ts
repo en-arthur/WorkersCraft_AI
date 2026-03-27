@@ -80,10 +80,13 @@ ${f.file_content}
 
 IMPORTANT: 
 - You are working with an existing project
-- Your response MUST include ALL existing files in the files array, unchanged
-- Add the new file(s) to the files array alongside ALL existing files
+- For SIMPLE EDITS (styling, text changes, small fixes): Only modify the specific file(s) mentioned
+- For BUILD ERRORS or COMPLEX CHANGES: You may need to regenerate affected components
+- Your response MUST include ALL existing files in the files array
+- Add new file(s) to the files array alongside ALL existing files
 - NEVER drop or omit any existing file from the output
-- Only modify the specific file(s) the user asked to change
+- If user says "fix build error" or "syntax error", identify the specific file and fix ONLY that error
+- If user says "change color" or "update text", modify ONLY the mentioned elements
 `
     } 
     // Handle single-file format

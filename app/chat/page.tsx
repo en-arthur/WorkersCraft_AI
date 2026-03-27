@@ -159,7 +159,11 @@ function ChatContent() {
   const isCreatingFiles = /\b(add|create|new|make)\b/i.test(userMessage)
   const isDeletingFiles = /\b(delete|remove)\s+file/i.test(userMessage)
   const isRenamingFiles = /\b(rename|move)\s+file/i.test(userMessage)
-  const isPureEdit = !isCreatingFiles && !isDeletingFiles && !isRenamingFiles
+  const isBuildError = /\b(build\s+error|failed\s+to\s+compile|syntax\s+error|parsing\s+error)\b/i.test(userMessage)
+  const isComplexChange = /\b(rebuild|recreate|rewrite|refactor|restructure)\b/i.test(userMessage)
+  
+  // Use Morph only for simple, targeted edits
+  const isPureEdit = !isCreatingFiles && !isDeletingFiles && !isRenamingFiles && !isBuildError && !isComplexChange
 
   // Determine which API to use based on morph toggle and existing fragment
   const hasFragment = fragment && (
