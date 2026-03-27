@@ -39,9 +39,16 @@ export async function POST(req: Request) {
       : {}),
   })
 
+  // Buffer to capture stderr from all commands
+  let stderrBuffer = ''
+
   // Install packages
   if (fragment.has_additional_dependencies) {
-    await sbx.commands.run(fragment.install_dependencies_command)
+    await sbx.commands.run(fragment.install_dependencies_command, {
+      onStderr: (data) => {
+        stderrBuffer += data.line + '\n'
+      }
+    })
     console.log(
       `Installed dependencies: ${fragment.additional_dependencies.join(', ')} in sandbox ${sbx.sandboxId}`,
     )
@@ -84,7 +91,12 @@ export async function POST(req: Request) {
   if (fragment.template.includes('expo-developer')) {
     console.log('Starting Expo Metro bundler...')
     try {
-      sbx.commands.run('cd /home/user && npx expo start --web', { background: true })
+      sbx.commands.run('cd /home/user && npx expo start --web', { 
+        background: true,
+        onStderr: (data) => {
+          stderrBuffer += data.line + '\n'
+        }
+      })
       await new Promise(resolve => setTimeout(resolve, 15000))
     } catch (error) {
       console.error('Error starting Metro:', error)
@@ -111,7 +123,12 @@ export async function POST(req: Request) {
     if (killCmd && startCmd) {
       console.log(`Restarting dev server for imported project template: ${fragment.template}`)
       await sbx.commands.run(killCmd).catch(() => {})
-      sbx.commands.run(startCmd, { background: true })
+      sbx.commands.run(startCmd, { 
+        background: true,
+        onStderr: (data) => {
+          stderrBuffer += data.line + '\n'
+        }
+      })
 
       // Poll until the port is ready (max 60s)
       const port = fragment.port ?? 3000
@@ -157,6 +174,7 @@ export async function POST(req: Request) {
       sbxId: sbx?.sandboxId,
       template: fragment.template,
       url: `https://${sbx?.getHost(fragment.port ?? 80)}`,
+      stderr: stderrBuffer.trim() || undefined,
     } as ExecutionResultWeb),
   )
 }

@@ -15,6 +15,7 @@ export type ExecutionResultInterpreter = ExecutionResultBase & {
 export type ExecutionResultWeb = ExecutionResultBase & {
   template: string
   url: string
+  stderr?: string
 }
 
 export type ExecutionResult = ExecutionResultInterpreter | ExecutionResultWeb

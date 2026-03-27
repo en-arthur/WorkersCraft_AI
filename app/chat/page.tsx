@@ -250,6 +250,18 @@ function ChatContent() {
         setCurrentPreview({ fragment: fragmentWithBackend, result })
         setMessage({ result })
         setCurrentTab('fragment')
+
+        // Auto-fix if error detected in stderr
+        if (result.stderr && result.stderr.trim().length > 0) {
+          console.log('[Auto-fix] Error detected, submitting fix request:', result.stderr.slice(0, 200))
+          
+          // Auto-submit fix request to AI
+          const fixMessage = `Fix this error:\n\n${result.stderr}`
+          const updatedMessages = [...messages, { role: 'user' as const, content: fixMessage }]
+          
+          setMessages(updatedMessages)
+          submit({ messages: toAISDKMessages(updatedMessages) })
+        }
       } catch (err) {
         console.error('Sandbox error:', err)
         setCurrentTab('code')
@@ -539,6 +551,18 @@ function ChatContent() {
           console.log('Sandbox result:', result)
           setResult(result)
           setCurrentTab('fragment')
+
+          // Auto-fix if error detected in stderr
+          if (result.stderr && result.stderr.trim().length > 0) {
+            console.log('[Auto-fix] Error detected on load, submitting fix request:', result.stderr.slice(0, 200))
+            
+            // Auto-submit fix request to AI
+            const fixMessage = `Fix this error:\n\n${result.stderr}`
+            const updatedMessages = [...messages, { role: 'user' as const, content: fixMessage }]
+            
+            setMessages(updatedMessages)
+            submit({ messages: toAISDKMessages(updatedMessages) })
+          }
         } catch (error) {
           console.error('Error running sandbox:', error)
           setCurrentTab('code')
