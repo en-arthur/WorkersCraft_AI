@@ -109,12 +109,7 @@ export default function DashboardBillingPage() {
           window.Paddle.Environment.set('sandbox')
         }
         window.Paddle.Initialize({
-          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
-          eventCallback: function(data) {
-            if (data.name === 'checkout.error') {
-              console.error('Paddle checkout error:', data)
-            }
-          }
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
         })
       }
     }
@@ -146,7 +141,6 @@ export default function DashboardBillingPage() {
     setCheckoutLoading(planId)
     try {
       if (window.Paddle) {
-        console.log('Opening checkout with:', { priceId, email: session?.user?.email })
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
           customer: {
