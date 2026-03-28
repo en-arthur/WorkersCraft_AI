@@ -47,12 +47,15 @@ export async function GET(request) {
       .eq('user_id', user.id)
       .single()
 
+    console.log('[customer-portal] Subscription data:', sub)
+
     if (!sub?.paddle_customer_id) return Response.json({ error: 'No subscription found' }, { status: 404 })
 
     const url = await getCustomerPortalUrl(sub.paddle_customer_id, sub.paddle_subscription_id)
+    console.log('[customer-portal] Portal URL:', url)
     return Response.json({ url })
   } catch (err) {
-    console.error('[customer-portal]', err)
+    console.error('[customer-portal] Error:', err)
     return Response.json({ error: 'Failed to create portal session' }, { status: 500 })
   }
 }
