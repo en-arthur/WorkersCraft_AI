@@ -102,14 +102,42 @@ export default function DashboardBillingPage() {
 
   // Initialize Paddle.js
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Paddle) {
-      // Only set environment for sandbox, production is default
-      if (process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox') {
-        window.Paddle.Environment.set('sandbox')
+    const initPaddle = () => {
+      if (window.Paddle) {
+        // Only set environment for sandbox, production is default
+        if (process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox') {
+          window.Paddle.Environment.set('sandbox')
+        }
+        window.Paddle.Initialize({
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+          eventCallback: function(data) {
+            if (data.name === 'checkout.error') {
+              console.error('Paddle checkout error:', data)
+            }
+          }
+        })
       }
-      window.Paddle.Initialize({
-        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
-      })
+    }
+
+    // If Paddle is already loaded, initialize immediately
+    if (window.Paddle) {
+      initPaddle()
+    } else {
+      // Otherwise wait for script to load
+      window.addEventListener('paddleLoaded', initPaddle)
+      // Fallback: check every 100ms for up to 5 seconds
+      const checkInterval = setInterval(() => {
+        if (window.Paddle) {
+          initPaddle()
+          clearInterval(checkInterval)
+        }
+      }, 100)
+      setTimeout(() => clearInterval(checkInterval), 5000)
+      
+      return () => {
+        window.removeEventListener('paddleLoaded', initPaddle)
+        clearInterval(checkInterval)
+      }
     }
   }, [])
 
