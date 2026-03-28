@@ -100,11 +100,13 @@ export default function DashboardBillingPage() {
 
   const [inlineCheckout, setInlineCheckout] = useState(null)
 
-  // Initialize Paddle.js for inline checkout
+  // Initialize Paddle.js
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Paddle) {
-      const paddleEnv = process.env.NEXT_PUBLIC_PADDLE_ENV || 'sandbox'
-      window.Paddle.Environment.set(paddleEnv)
+      // Only set environment for sandbox, production is default
+      if (process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox') {
+        window.Paddle.Environment.set('sandbox')
+      }
       window.Paddle.Initialize({
         token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
       })
