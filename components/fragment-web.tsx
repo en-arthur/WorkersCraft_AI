@@ -73,31 +73,6 @@ export function FragmentWeb({
           />
         </div>
       </div>
-      <div
-        className="w-full"
-        onMouseEnter={() => setBarVisible(true)}
-        onMouseLeave={() => setBarVisible(false)}
-      >
-        <div className={`overflow-hidden transition-all duration-200 bg-popover border-t ${barVisible ? 'max-h-16 p-2' : 'max-h-0 p-0'}`}>
-          <div className="flex items-center justify-center gap-1 bg-muted rounded-2xl py-1">
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground h-8 w-8"
-                  onClick={refreshIframe}
-                >
-                  <RotateCw className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        </div>
-      </div>
     </div>
   )
 }

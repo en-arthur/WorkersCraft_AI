@@ -23,7 +23,7 @@ import { FragmentSchema } from '@/lib/schema'
 import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
-import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2, MoreVertical } from 'lucide-react'
+import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2, MoreVertical, RotateCw } from 'lucide-react'
 import { Dispatch, SetStateAction, useState, useEffect } from 'react'
 
 interface FragmentFiles {
@@ -196,21 +196,38 @@ export function Preview({
               {/* Desktop: Show all actions */}
               <div className="hidden lg:flex items-center gap-2">
                 {previewUrl && (
-                  <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="text-muted-foreground"
-                          onClick={() => window.open(previewUrl, '_blank')}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Open in new tab</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <>
+                    <TooltipProvider>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground"
+                            onClick={() => window.location.reload()}
+                          >
+                            <RotateCw className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Refresh preview</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    <TooltipProvider>
+                      <Tooltip delayDuration={0}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground"
+                            onClick={() => window.open(previewUrl, '_blank')}
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Open in new tab</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </>
                 )}
                 {projectId && fragment.github_repo_url && fragment.github_branch && (
                   <PushGitHubDialog
