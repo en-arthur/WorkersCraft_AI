@@ -74,27 +74,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">5. Refund Policy</h2>
-            <p className="text-muted-foreground leading-relaxed mb-3">
-              All purchases are final and non-refundable, except where required by law.
-            </p>
-            <p className="text-muted-foreground leading-relaxed">
-              For customers in the EU, EEA, and UK: You have the right to withdraw within 14 days 
-              of purchase. However, by using WorkersCraft AI to generate code or create projects, 
-              you agree to immediate delivery of digital content and waive your 14-day withdrawal 
-              right as permitted under consumer law.
-            </p>
-            <p className="text-muted-foreground leading-relaxed mt-3">
-              For refund requests, contact{' '}
-              <a href="mailto:hello@workerscraft.com" className="text-primary hover:underline">
-                hello@workerscraft.com
-              </a>{' '}
-              within 14 days of your purchase date.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">6. Intellectual Property</h2>
+            <h2 className="text-2xl font-semibold mb-3">5. Intellectual Property</h2>
             <p className="text-muted-foreground leading-relaxed">
               You own the code and applications generated through your use of the platform.
               WorkersCraft AI retains ownership of the platform itself, including its UI, models
@@ -103,7 +83,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">7. Privacy Policy</h2>
+            <h2 className="text-2xl font-semibold mb-3">6. Privacy Policy</h2>
             <p className="text-muted-foreground leading-relaxed mb-3">
               We collect and process the following data to operate the service:
             </p>
@@ -138,7 +118,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">8. Limitation of Liability</h2>
+            <h2 className="text-2xl font-semibold mb-3">7. Limitation of Liability</h2>
             <p className="text-muted-foreground leading-relaxed">
               WorkersCraft AI is provided &ldquo;as is&rdquo;. We make no guarantees about uptime, accuracy of
               generated code, or fitness for a particular purpose. To the maximum extent permitted
@@ -148,7 +128,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">9. Termination</h2>
+            <h2 className="text-2xl font-semibold mb-3">8. Termination</h2>
             <p className="text-muted-foreground leading-relaxed">
               We may suspend or terminate your account at any time for violation of these Terms.
               You may delete your account at any time. Upon termination, your access to the service
@@ -157,7 +137,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">10. Changes to These Terms</h2>
+            <h2 className="text-2xl font-semibold mb-3">9. Changes to These Terms</h2>
             <p className="text-muted-foreground leading-relaxed">
               We may update these Terms from time to time. Continued use of the service after
               changes are posted constitutes acceptance of the updated Terms. We will notify users
@@ -166,7 +146,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">11. Contact</h2>
+            <h2 className="text-2xl font-semibold mb-3">10. Contact</h2>
             <p className="text-muted-foreground leading-relaxed">
               For any questions about these Terms, contact us at{' '}
               <a href="mailto:hello@workerscraft.com" className="text-primary hover:underline">
