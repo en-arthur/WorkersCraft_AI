@@ -100,17 +100,39 @@ export default function DashboardBillingPage() {
 
   const [inlineCheckout, setInlineCheckout] = useState(null)
 
+  // Initialize Paddle.js for inline checkout
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Paddle) {
+      const paddleEnv = process.env.NEXT_PUBLIC_PADDLE_ENV || 'sandbox'
+      window.Paddle.Environment.set(paddleEnv)
+      window.Paddle.Initialize({
+        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+        checkout: {
+          settings: {
+            displayMode: 'inline',
+            frameTarget: 'checkout-container',
+            frameInitialHeight: 450,
+            frameStyle: 'width: 100%; min-width: 312px; background-color: transparent; border: none;'
+          }
+        }
+      })
+    }
+  }, [])
+
   async function handleCheckout(priceId, planId) {
     setCheckoutError(null)
     setCheckoutLoading(planId)
     try {
-      const res = await fetch(`/api/checkout?priceId=${priceId}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else setCheckoutError('Failed to start checkout. Please try again.')
-    } catch {
+      if (window.Paddle) {
+        window.Paddle.Checkout.open({
+          items: [{ priceId, quantity: 1 }],
+          customer: {
+            email: session?.user?.email
+          }
+        })
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
       setCheckoutError('Failed to start checkout. Please try again.')
     } finally {
       setCheckoutLoading(null)
@@ -195,6 +217,9 @@ export default function DashboardBillingPage() {
           </Button>
         </div>
       )}
+
+      {/* Inline Checkout Container */}
+      <div id="checkout-container" className="my-8 min-h-[450px]"></div>
 
       <div className="grid grid-cols-3 gap-6">
         {PLANS.map((plan) => {
