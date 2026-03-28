@@ -3,9 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 export const dynamic = 'force-dynamic'
 
 async function getCustomerPortalUrl(customerId, subscriptionId) {
-  const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'production'
-    ? 'https://api.paddle.com'
-    : 'https://sandbox-api.paddle.com'
+  // Production is default, only use sandbox if explicitly set
+  const PADDLE_API_BASE = process.env.PADDLE_ENV === 'sandbox'
+    ? 'https://sandbox-api.paddle.com'
+    : 'https://api.paddle.com'
 
   const body = subscriptionId ? { subscription_ids: [subscriptionId] } : {}
   
