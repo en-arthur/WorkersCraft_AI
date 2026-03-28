@@ -7,8 +7,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip'
 import { ExecutionResultWeb } from '@/lib/types'
-import { RotateCw } from 'lucide-react'
-import { useState } from 'react'
+import { ExternalLink, RotateCw } from 'lucide-react'
+import { useState, useEffect } from 'react'
 
 interface DeviceConfig {
   width: number | string
@@ -30,6 +30,18 @@ export function FragmentWeb({
   function refreshIframe() {
     setIframeKey((prevKey) => prevKey + 1)
   }
+
+  // Keep dev server alive with periodic health checks (for mobile/Expo)
+  useEffect(() => {
+    if (!result?.url) return
+    
+    const keepAlive = setInterval(() => {
+      // Ping server to keep connection alive
+      fetch(result.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {})
+    }, 25000) // Ping every 25 seconds
+    
+    return () => clearInterval(keepAlive)
+  }, [result?.url])
 
   const isFullWidth = !device || device.width === '100%'
   const isMobile = device?.label?.toLowerCase().includes('mobile')
@@ -67,34 +79,20 @@ export function FragmentWeb({
         onMouseLeave={() => setBarVisible(false)}
       >
         <div className={`overflow-hidden transition-all duration-200 bg-popover border-t ${barVisible ? 'max-h-16 p-2' : 'max-h-0 p-0'}`}>
-          <div className="flex items-center bg-muted rounded-2xl">
+          <div className="flex items-center justify-center gap-1 bg-muted rounded-2xl py-1">
           <TooltipProvider>
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <Button
-                  variant="link"
-                  className="text-muted-foreground"
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground h-8 w-8"
                   onClick={refreshIframe}
                 >
                   <RotateCw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Refresh</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <span className="text-muted-foreground text-xs flex-1 text-ellipsis overflow-hidden whitespace-nowrap">
-            {result.url}
-          </span>
-          <TooltipProvider>
-            <Tooltip delayDuration={0}>
-              <TooltipTrigger asChild>
-                <CopyButton
-                  variant="link"
-                  content={result.url}
-                  className="text-muted-foreground"
-                />
-              </TooltipTrigger>
-              <TooltipContent>Copy URL</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

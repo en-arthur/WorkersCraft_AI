@@ -251,16 +251,19 @@ function ChatContent() {
         setMessage({ result })
         setCurrentTab('fragment')
 
-        // Auto-fix if error detected in stderr
+        // Auto-fix if actual error detected in stderr (not warnings)
         if (result.stderr && result.stderr.trim().length > 0) {
-          console.log('[Auto-fix] Error detected, submitting fix request:', result.stderr.slice(0, 200))
-          
-          // Auto-submit fix request to AI
-          const fixMessage = `Fix this error:\n\n${result.stderr}`
-          const updatedMessages = [...messages, { role: 'user' as const, content: [{ type: 'text' as const, text: fixMessage }] }]
-          
-          setMessages(updatedMessages)
-          submit({ messages: toAISDKMessages(updatedMessages) })
+          const hasError = /error:|failed|enoent|module_not_found|syntaxerror|cannot find|unexpected token/i.test(result.stderr)
+          if (hasError) {
+            console.log('[Auto-fix] Error detected, submitting fix request:', result.stderr.slice(0, 200))
+            
+            // Auto-submit fix request to AI
+            const fixMessage = `Fix this error:\n\n${result.stderr}`
+            const updatedMessages = [...messages, { role: 'user' as const, content: [{ type: 'text' as const, text: fixMessage }] }]
+            
+            setMessages(updatedMessages)
+            submit({ messages: toAISDKMessages(updatedMessages) })
+          }
         }
       } catch (err) {
         console.error('Sandbox error:', err)
@@ -552,16 +555,19 @@ function ChatContent() {
           setResult(result)
           setCurrentTab('fragment')
 
-          // Auto-fix if error detected in stderr
+          // Auto-fix if actual error detected in stderr (not warnings)
           if (result.stderr && result.stderr.trim().length > 0) {
-            console.log('[Auto-fix] Error detected on load, submitting fix request:', result.stderr.slice(0, 200))
-            
-            // Auto-submit fix request to AI
-            const fixMessage = `Fix this error:\n\n${result.stderr}`
-            const updatedMessages = [...messages, { role: 'user' as const, content: [{ type: 'text' as const, text: fixMessage }] }]
-            
-            setMessages(updatedMessages)
-            submit({ messages: toAISDKMessages(updatedMessages) })
+            const hasError = /error:|failed|enoent|module_not_found|syntaxerror|cannot find|unexpected token/i.test(result.stderr)
+            if (hasError) {
+              console.log('[Auto-fix] Error detected on load, submitting fix request:', result.stderr.slice(0, 200))
+              
+              // Auto-submit fix request to AI
+              const fixMessage = `Fix this error:\n\n${result.stderr}`
+              const updatedMessages = [...messages, { role: 'user' as const, content: [{ type: 'text' as const, text: fixMessage }] }]
+              
+              setMessages(updatedMessages)
+              submit({ messages: toAISDKMessages(updatedMessages) })
+            }
           }
         } catch (error) {
           console.error('Error running sandbox:', error)
