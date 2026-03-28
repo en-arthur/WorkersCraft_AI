@@ -801,11 +801,13 @@ function ChatContent() {
             files={files}
             handleFileChange={handleFileChange}
           >
-            <ChatPicker
-              models={filteredModels}
-              languageModel={languageModel}
-              onLanguageModelChange={handleLanguageModelChange}
-            />
+            {!process.env.NEXT_PUBLIC_HIDE_MODEL_SELECTOR && (
+              <ChatPicker
+                models={filteredModels}
+                languageModel={languageModel}
+                onLanguageModelChange={handleLanguageModelChange}
+              />
+            )}
             <ChatSettings
               languageModel={languageModel}
               onLanguageModelChange={handleLanguageModelChange}
