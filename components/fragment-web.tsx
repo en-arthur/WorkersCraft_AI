@@ -25,11 +25,6 @@ export function FragmentWeb({
 }) {
   const [iframeKey, setIframeKey] = useState(0)
   const [barVisible, setBarVisible] = useState(false)
-  if (!result) return null
-
-  function refreshIframe() {
-    setIframeKey((prevKey) => prevKey + 1)
-  }
 
   // Keep dev server alive with periodic health checks (for mobile/Expo)
   useEffect(() => {
@@ -42,6 +37,12 @@ export function FragmentWeb({
     
     return () => clearInterval(keepAlive)
   }, [result?.url])
+
+  if (!result) return null
+
+  function refreshIframe() {
+    setIframeKey((prevKey) => prevKey + 1)
+  }
 
   const isFullWidth = !device || device.width === '100%'
   const isMobile = device?.label?.toLowerCase().includes('mobile')
