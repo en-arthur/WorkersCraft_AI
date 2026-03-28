@@ -40,7 +40,7 @@ function ChatContent() {
   const [languageModel, setLanguageModel] = useLocalStorage<LLMModelConfig>(
     'languageModel',
     {
-      model: 'models/gemini-3-flash-preview',
+      model: process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'models/gemini-3-flash-preview',
     },
   )
 
@@ -93,7 +93,7 @@ function ChatContent() {
   })
 
   const defaultModel = filteredModels.find(
-    (model) => model.id === 'models/gemini-3-flash-preview',
+    (model) => model.id === (process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'models/gemini-3-flash-preview'),
   ) || filteredModels[0]
 
   const currentModel = filteredModels.find(
