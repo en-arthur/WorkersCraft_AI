@@ -106,7 +106,15 @@ export default function DashboardBillingPage() {
       const paddleEnv = process.env.NEXT_PUBLIC_PADDLE_ENV || 'sandbox'
       window.Paddle.Environment.set(paddleEnv)
       window.Paddle.Initialize({
-        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+        token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN,
+        checkout: {
+          settings: {
+            displayMode: 'inline',
+            frameTarget: 'checkout-container',
+            frameInitialHeight: 450,
+            frameStyle: 'width: 100%; min-width: 312px; background-color: transparent; border: none;'
+          }
+        }
       })
     }
   }, [])
@@ -209,6 +217,9 @@ export default function DashboardBillingPage() {
           </Button>
         </div>
       )}
+
+      {/* Inline Checkout Container */}
+      <div id="checkout-container" className="my-8 min-h-[450px]"></div>
 
       <div className="grid grid-cols-3 gap-6">
         {PLANS.map((plan) => {
