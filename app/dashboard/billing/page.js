@@ -116,12 +116,18 @@ export default function DashboardBillingPage() {
     setCheckoutLoading(planId)
     try {
       if (window.Paddle) {
+        console.log('Opening checkout with:', { priceId, email: session?.user?.email })
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
           customer: {
             email: session?.user?.email
+          },
+          settings: {
+            successUrl: `${window.location.origin}/dashboard/billing?success=true`
           }
         })
+      } else {
+        throw new Error('Paddle not loaded')
       }
     } catch (error) {
       console.error('Checkout error:', error)
