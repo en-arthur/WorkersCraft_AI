@@ -1,7 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
-import { getCustomerPortalUrl } from '@/lib/paddle'
 
 export const dynamic = 'force-dynamic'
+
+async function getCustomerPortalUrl(customerId, subscriptionId) {
+  const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'production'
+    ? 'https://api.paddle.com'
+    : 'https://sandbox-api.paddle.com'
+
+  const body = subscriptionId ? { subscription_ids: [subscriptionId] } : {}
+  
+  const res = await fetch(`${PADDLE_API_BASE}/customers/${customerId}/portal-sessions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${process.env.PADDLE_API_KEY}`,
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!res.ok) {
+    const text = await res.text()
+    throw new Error(`Paddle API error ${res.status}: ${text}`)
+  }
+
+  const data = await res.json()
+  return data?.data?.urls?.general?.overview ?? null
+}
 
 export async function GET(request) {
   try {
