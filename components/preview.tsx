@@ -325,7 +325,7 @@ export function Preview({
               <FragmentCode files={fragmentFiles} />
             </TabsContent>
             <TabsContent value="fragment" className="h-full">
-              {result && <FragmentPreview result={result as ExecutionResult} device={deviceConfig} refreshKey={refreshKey} />}
+              {result && <FragmentPreview result={result as ExecutionResult} device={deviceConfig} refreshKey={refreshKey} fragment={fragment} teamID={teamID} accessToken={accessToken} />}
             </TabsContent>
             {backendAppId && (
               <TabsContent value="backend" className="h-full">

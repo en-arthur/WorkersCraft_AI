@@ -6,10 +6,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { ExecutionResultWeb } from '@/lib/types'
+import { ExecutionResultWeb, FragmentSchema } from '@/lib/types'
 import { ExternalLink, RotateCw } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import * as React from 'react'
+import { DeepPartial } from 'ai'
 
 interface DeviceConfig {
   width: number | string
@@ -20,18 +21,109 @@ interface DeviceConfig {
 export function FragmentWeb({ 
   result, 
   device,
-  refreshKey = 0
+  refreshKey = 0,
+  fragment,
+  teamID,
+  accessToken
 }: { 
   result: ExecutionResultWeb
   device?: DeviceConfig
   refreshKey?: number
+  fragment?: DeepPartial<FragmentSchema>
+  teamID?: string
+  accessToken?: string
 }) {
   const [iframeKey, setIframeKey] = useState(0)
   const [barVisible, setBarVisible] = useState(false)
+  const [isRestarting, setIsRestarting] = useState(false)
+  const [currentUrl, setCurrentUrl] = useState(result.url)
+  const hasLeftTabRef = useRef(false)
+  const isRestartingRef = useRef(false)
 
-  // Update iframe key when refreshKey changes
+  const isExpo = currentUrl?.includes('8081')
+
+  // Restart sandbox by calling /api/sandbox
+  const restartSandbox = async () => {
+    if (!fragment || isRestartingRef.current) return
+    
+    isRestartingRef.current = true
+    setIsRestarting(true)
+    
+    try {
+      const response = await fetch('/api/sandbox', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` })
+        },
+        body: JSON.stringify({
+          fragment,
+          userID: undefined,
+          teamID,
+          accessToken
+        })
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.url) {
+          setCurrentUrl(data.url)
+          setIframeKey(prev => prev + 1)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restart sandbox:', error)
+    } finally {
+      setIsRestarting(false)
+      isRestartingRef.current = false
+    }
+  }
+
+  // Ping Metro to check if alive
+  const pingMetro = async (url: string): Promise<boolean> => {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 3000)
+      
+      await fetch(url, { 
+        method: 'HEAD', 
+        mode: 'no-cors',
+        signal: controller.signal 
+      })
+      
+      clearTimeout(timeout)
+      return true
+    } catch {
+      return false
+    }
+  }
+
+  // Auto-restart on tab return if Metro is dead
+  useEffect(() => {
+    if (!isExpo) return
+
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        hasLeftTabRef.current = true
+      } else if (hasLeftTabRef.current && !isRestartingRef.current) {
+        // User returned, check if Metro is alive
+        const isAlive = await pingMetro(currentUrl)
+        if (!isAlive) {
+          await restartSandbox()
+        }
+        hasLeftTabRef.current = false
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [isExpo, currentUrl, fragment])
+
+  // Manual refresh via refreshKey
   React.useEffect(() => {
-    if (refreshKey > 0) {
+    if (refreshKey > 0 && isExpo) {
+      restartSandbox()
+    } else if (refreshKey > 0) {
       setIframeKey(refreshKey)
     }
   }, [refreshKey])
@@ -62,13 +154,21 @@ export function FragmentWeb({
             <div className="w-20 h-5 bg-gray-800 rounded-full" />
           </div>
         )}
-        <div className={`flex-1 overflow-hidden ${isMobile ? 'rounded-[28px]' : ''}`}>
+        <div className={`flex-1 overflow-hidden ${isMobile ? 'rounded-[28px]' : ''} relative`}>
+          {isRestarting && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 rounded-[28px]">
+              <div className="text-white text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                <p className="text-sm">Reconnecting preview...</p>
+              </div>
+            </div>
+          )}
           <iframe
             key={iframeKey}
             className="h-full w-full border-0"
             sandbox="allow-forms allow-scripts allow-same-origin"
             loading="lazy"
-            src={result.url}
+            src={currentUrl}
           />
         </div>
       </div>
