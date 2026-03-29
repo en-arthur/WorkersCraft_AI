@@ -31,10 +31,16 @@ export function FragmentWeb({
     const isExpo = result?.url?.includes('8081')
     if (!isExpo) return
 
+    let hasLeftTab = false
+
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // User returned to tab, refresh iframe
+      if (document.hidden) {
+        // User left tab
+        hasLeftTab = true
+      } else if (hasLeftTab) {
+        // User returned to tab after leaving, refresh iframe
         setIframeKey((prev) => prev + 1)
+        hasLeftTab = false
       }
     }
 
