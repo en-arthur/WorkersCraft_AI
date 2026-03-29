@@ -43,7 +43,7 @@ export function FragmentWeb({
 
   const isExpo = currentUrl?.includes('8081')
 
-  // Restart sandbox by calling /api/sandbox
+  // Restart sandbox by calling /api/sandbox/restart or creating new
   const restartSandbox = async () => {
     if (!fragment || isRestartingRef.current) return
     
@@ -51,6 +51,28 @@ export function FragmentWeb({
     setIsRestarting(true)
     
     try {
+      // Try to restart existing sandbox first (faster)
+      if (result.sbxId && isExpo) {
+        const response = await fetch('/api/sandbox/restart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sandboxId: result.sbxId,
+            template: result.template
+          })
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.url) {
+            setCurrentUrl(data.url)
+            setIframeKey(prev => prev + 1)
+            return
+          }
+        }
+      }
+      
+      // Fallback: Create new sandbox (if restart failed or no sbxId)
       const response = await fetch('/api/sandbox', {
         method: 'POST',
         headers: {
