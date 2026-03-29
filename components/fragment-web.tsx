@@ -38,7 +38,6 @@ export function FragmentWeb({
   const [barVisible, setBarVisible] = useState(false)
   const [isRestarting, setIsRestarting] = useState(false)
   const [currentUrl, setCurrentUrl] = useState(result.url)
-  const hasLeftTabRef = useRef(false)
   const isRestartingRef = useRef(false)
 
   const isExpo = currentUrl?.includes('8081')
@@ -101,46 +100,6 @@ export function FragmentWeb({
       isRestartingRef.current = false
     }
   }
-
-  // Ping Metro to check if alive
-  const pingMetro = async (url: string): Promise<boolean> => {
-    try {
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 3000)
-      
-      await fetch(url, { 
-        method: 'HEAD', 
-        mode: 'no-cors',
-        signal: controller.signal 
-      })
-      
-      clearTimeout(timeout)
-      return true
-    } catch {
-      return false
-    }
-  }
-
-  // Auto-restart on tab return if Metro is dead
-  useEffect(() => {
-    if (!isExpo) return
-
-    const handleVisibilityChange = async () => {
-      if (document.hidden) {
-        hasLeftTabRef.current = true
-      } else if (hasLeftTabRef.current && !isRestartingRef.current) {
-        // User returned, check if Metro is alive
-        const isAlive = await pingMetro(currentUrl)
-        if (!isAlive) {
-          await restartSandbox()
-        }
-        hasLeftTabRef.current = false
-      }
-    }
-
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
-  }, [isExpo, currentUrl, fragment])
 
   // Manual refresh via refreshKey
   React.useEffect(() => {

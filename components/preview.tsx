@@ -24,7 +24,7 @@ import { getTemplateId } from '@/lib/templates'
 import { ExecutionResult, ExecutionResultWeb } from '@/lib/types'
 import { DeepPartial } from 'ai'
 import { ChevronsRight, ExternalLink, LoaderCircle, Maximize2, Minimize2, MoreVertical, RotateCw } from 'lucide-react'
-import { Dispatch, SetStateAction, useState, useEffect } from 'react'
+import { Dispatch, SetStateAction, useState, useEffect, useRef } from 'react'
 
 interface FragmentFiles {
   name: string
@@ -89,6 +89,22 @@ export function Preview({
 }) {
   const [device, setDevice] = useState<keyof typeof DEVICES>('desktop')
   const [refreshKey, setRefreshKey] = useState(0)
+  const lastRefreshTimeRef = useRef<number>(0)
+
+  // Auto-refresh Expo when switching to preview tab
+  useEffect(() => {
+    if (selectedTab === 'fragment' && result) {
+      const isExpo = result.url?.includes('8081')
+      const now = Date.now()
+      const timeSinceLastRefresh = now - lastRefreshTimeRef.current
+      
+      // If Expo and more than 30 seconds since last refresh, auto-refresh
+      if (isExpo && timeSinceLastRefresh > 30000) {
+        setRefreshKey(prev => prev + 1)
+        lastRefreshTimeRef.current = now
+      }
+    }
+  }, [selectedTab, result])
 
   // Auto-set device based on template and load preference
   useEffect(() => {
