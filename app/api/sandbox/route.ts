@@ -91,7 +91,7 @@ export async function POST(req: Request) {
   if (fragment.template.includes('expo-developer')) {
     console.log('Starting Expo Metro bundler...')
     try {
-      sbx.commands.run('cd /home/user && npx expo start --web', { 
+      sbx.commands.run('cd /home/user && npx expo start --port 8081', { 
         background: true,
         onStderr: (data) => {
           stderrBuffer += data + '\n'
