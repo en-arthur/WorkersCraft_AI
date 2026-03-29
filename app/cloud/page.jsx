@@ -37,21 +37,6 @@ export default function CloudPage() {
           border: 1px solid rgba(255,255,255,0.1);
           backdrop-filter: blur(16px);
         }
-        .gradient-border {
-          position: relative;
-        }
-        .gradient-border::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          border-radius: inherit;
-          padding: 1px;
-          background: linear-gradient(135deg, #3b82f6, #8b5cf6, #3b82f6);
-          -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-          -webkit-mask-composite: xor;
-          mask-composite: exclude;
-          pointer-events: none;
-        }
         .bg-grid-white {
           background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
                             linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
@@ -115,7 +100,7 @@ export default function CloudPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {features.map(({ icon: Icon, title, description }, i) => (
                 <Reveal key={title} delay={i * 80}>
-                  <div className="glass-card gradient-border rounded-2xl p-8 flex flex-col gap-4 h-full hover:bg-white/5 hover:scale-[1.02] transition-all duration-300">
+                  <div className="glass-card rounded-2xl p-8 flex flex-col gap-4 h-full hover:bg-white/5 hover:scale-[1.02] transition-all duration-300">
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center border border-white/10">
                       <Icon className="w-6 h-6 text-primary" />
                     </div>
@@ -179,7 +164,7 @@ export default function CloudPage() {
         <section className="px-4 py-32 md:py-40 text-center relative">
           <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(99,102,241,0.15),transparent)]" />
           <Reveal>
-            <div className="max-w-3xl mx-auto glass-card gradient-border rounded-3xl px-10 py-20 shadow-2xl">
+            <div className="max-w-3xl mx-auto glass-card rounded-3xl px-10 py-20 shadow-2xl">
               <h2 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">Ready to build?</h2>
               <p className="text-muted-foreground mb-10 text-lg md:text-xl max-w-xl mx-auto leading-relaxed">
                 Create your first AI-powered app and get a full backend automatically.
