@@ -17,14 +17,16 @@ interface DeviceConfig {
 
 export function FragmentPreview({ 
   result, 
-  device 
+  device,
+  refreshKey
 }: { 
   result: ExecutionResult
   device?: DeviceConfig
+  refreshKey?: number
 }) {
   if (getTemplateId(result.template) === 'code-interpreter-v1') {
     return <FragmentInterpreter result={result as ExecutionResultInterpreter} />
   }
 
-  return <FragmentWeb result={result as ExecutionResultWeb} device={device} />
+  return <FragmentWeb result={result as ExecutionResultWeb} device={device} refreshKey={refreshKey} />
 }

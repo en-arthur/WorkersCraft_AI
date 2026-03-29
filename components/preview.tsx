@@ -88,6 +88,7 @@ export function Preview({
   onGitHubConnect?: () => void
 }) {
   const [device, setDevice] = useState<keyof typeof DEVICES>('desktop')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   // Auto-set device based on template and load preference
   useEffect(() => {
@@ -204,7 +205,7 @@ export function Preview({
                             variant="ghost"
                             size="icon"
                             className="text-muted-foreground"
-                            onClick={() => window.location.reload()}
+                            onClick={() => setRefreshKey(prev => prev + 1)}
                           >
                             <RotateCw className="h-4 w-4" />
                           </Button>
@@ -324,7 +325,7 @@ export function Preview({
               <FragmentCode files={fragmentFiles} />
             </TabsContent>
             <TabsContent value="fragment" className="h-full">
-              {result && <FragmentPreview result={result as ExecutionResult} device={deviceConfig} />}
+              {result && <FragmentPreview result={result as ExecutionResult} device={deviceConfig} refreshKey={refreshKey} />}
             </TabsContent>
             {backendAppId && (
               <TabsContent value="backend" className="h-full">

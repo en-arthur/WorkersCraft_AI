@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/tooltip'
 import { ExecutionResultWeb } from '@/lib/types'
 import { ExternalLink, RotateCw } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import * as React from 'react'
 
 interface DeviceConfig {
   width: number | string
@@ -18,13 +19,22 @@ interface DeviceConfig {
 
 export function FragmentWeb({ 
   result, 
-  device 
+  device,
+  refreshKey = 0
 }: { 
   result: ExecutionResultWeb
   device?: DeviceConfig
+  refreshKey?: number
 }) {
   const [iframeKey, setIframeKey] = useState(0)
   const [barVisible, setBarVisible] = useState(false)
+
+  // Update iframe key when refreshKey changes
+  React.useEffect(() => {
+    if (refreshKey > 0) {
+      setIframeKey(refreshKey)
+    }
+  }, [refreshKey])
 
   if (!result) return null
 
