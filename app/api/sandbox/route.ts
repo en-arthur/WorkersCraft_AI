@@ -29,6 +29,12 @@ export async function POST(req: Request) {
       teamID: teamID ?? '',
     },
     timeoutMs: sandboxTimeout,
+    // Fix Metro bundler Host header for Expo mobile preview
+    ...(fragment.template.includes('expo-developer') && {
+      network: {
+        maskRequestHost: 'localhost:8081'
+      }
+    }),
     ...(teamID && accessToken
       ? {
           headers: {
