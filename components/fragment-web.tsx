@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/tooltip'
 import { ExecutionResultWeb } from '@/lib/types'
 import { ExternalLink, RotateCw } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface DeviceConfig {
   width: number | string
@@ -25,22 +25,21 @@ export function FragmentWeb({
 }) {
   const [iframeKey, setIframeKey] = useState(0)
   const [barVisible, setBarVisible] = useState(false)
+  const hasLeftTabRef = useRef(false)
 
   // Auto-refresh Expo preview when user returns to tab
   useEffect(() => {
     const isExpo = result?.url?.includes('8081')
     if (!isExpo) return
 
-    let hasLeftTab = false
-
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // User left tab
-        hasLeftTab = true
-      } else if (hasLeftTab) {
+        hasLeftTabRef.current = true
+      } else if (hasLeftTabRef.current) {
         // User returned to tab after leaving, refresh iframe
         setIframeKey((prev) => prev + 1)
-        hasLeftTab = false
+        hasLeftTabRef.current = false
       }
     }
 
