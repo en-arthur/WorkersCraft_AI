@@ -5,7 +5,7 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Build Full-stack Mobile and Web Apps in Minutes',
+  title: 'Build Full-Stack Mobile and Web Apps in Minutes',
   description: 'AI-powered application builder that creates production-ready apps in seconds',
   icons: {
     icon: [
