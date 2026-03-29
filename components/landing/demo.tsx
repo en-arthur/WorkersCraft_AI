@@ -18,7 +18,7 @@ export function Demo() {
             <div className="relative aspect-video">
               <iframe
                 className="w-full h-full"
-                src="https://www.youtube.com/embed/8GXGHYc6nxU"
+                src="https://www.youtube.com/embed/8GXGHYc6nxU?vq=hd1080"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               />
