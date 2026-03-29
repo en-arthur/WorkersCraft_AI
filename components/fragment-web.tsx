@@ -30,14 +30,18 @@ export function FragmentWeb({
   // Auto-refresh Expo preview when user returns to tab
   useEffect(() => {
     const isExpo = result?.url?.includes('8081')
+    console.log('[FragmentWeb] isExpo:', isExpo, 'url:', result?.url)
     if (!isExpo) return
 
     const handleVisibilityChange = () => {
+      console.log('[FragmentWeb] visibility changed, hidden:', document.hidden, 'hasLeftTab:', hasLeftTabRef.current)
       if (document.hidden) {
         // User left tab
         hasLeftTabRef.current = true
+        console.log('[FragmentWeb] User left tab, set hasLeftTab to true')
       } else if (hasLeftTabRef.current) {
         // User returned to tab after leaving, refresh iframe
+        console.log('[FragmentWeb] User returned, refreshing iframe')
         setIframeKey((prev) => prev + 1)
         hasLeftTabRef.current = false
       }
