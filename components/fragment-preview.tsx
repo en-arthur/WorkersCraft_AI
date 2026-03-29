@@ -7,8 +7,8 @@ import {
   ExecutionResult,
   ExecutionResultInterpreter,
   ExecutionResultWeb,
-  FragmentSchema,
 } from '@/lib/types'
+import { FragmentSchema } from '@/lib/schema'
 import { DeepPartial } from 'ai'
 
 interface DeviceConfig {

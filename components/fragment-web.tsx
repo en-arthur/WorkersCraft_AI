@@ -6,7 +6,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { ExecutionResultWeb, FragmentSchema } from '@/lib/types'
+import { ExecutionResultWeb } from '@/lib/types'
+import { FragmentSchema } from '@/lib/schema'
 import { ExternalLink, RotateCw } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import * as React from 'react'
