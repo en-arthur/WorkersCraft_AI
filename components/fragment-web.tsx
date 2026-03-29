@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/tooltip'
 import { ExecutionResultWeb } from '@/lib/types'
 import { ExternalLink, RotateCw } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface DeviceConfig {
   width: number | string
@@ -25,18 +25,6 @@ export function FragmentWeb({
 }) {
   const [iframeKey, setIframeKey] = useState(0)
   const [barVisible, setBarVisible] = useState(false)
-
-  // Keep dev server alive with periodic health checks (for mobile/Expo)
-  useEffect(() => {
-    if (!result?.url) return
-    
-    const keepAlive = setInterval(() => {
-      // Ping server to keep connection alive
-      fetch(result.url, { method: 'HEAD', mode: 'no-cors' }).catch(() => {})
-    }, 25000) // Ping every 25 seconds
-    
-    return () => clearInterval(keepAlive)
-  }, [result?.url])
 
   if (!result) return null
 
