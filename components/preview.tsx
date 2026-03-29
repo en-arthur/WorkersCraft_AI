@@ -94,7 +94,7 @@ export function Preview({
   // Auto-refresh Expo when switching to preview tab
   useEffect(() => {
     if (selectedTab === 'fragment' && result) {
-      const isExpo = result.url?.includes('8081')
+      const isExpo = 'url' in result && result.url?.includes('8081')
       const now = Date.now()
       const timeSinceLastRefresh = now - lastRefreshTimeRef.current
       
