@@ -91,6 +91,13 @@ export function Preview({
   const [refreshKey, setRefreshKey] = useState(0)
   const lastRefreshTimeRef = useRef<number>(0)
 
+  // Reset timestamp when result changes (new project loaded)
+  useEffect(() => {
+    if (result) {
+      lastRefreshTimeRef.current = Date.now()
+    }
+  }, [result])
+
   // Auto-refresh Expo when switching to preview tab
   useEffect(() => {
     if (selectedTab === 'fragment' && result) {
