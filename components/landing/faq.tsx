@@ -27,7 +27,7 @@ const faqs = [
   },
   {
     q: 'Is there a free trial?',
-    a: 'We offer paid plans starting at $19/month. Each plan includes a set number of projects per month so you can build and ship real apps right away.'
+    a: 'Plans start at $30/month with a 40% launch discount available. Each plan includes a set number of projects per month so you can build and ship real apps right away.'
   },
   {
     q: 'What kind of apps can I build?',
