@@ -85,7 +85,7 @@ export default function AboutPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
                       { label: 'Next.js', icon: Zap, desc: 'Web apps' },
-                      { label: 'Next.js', icon: Code2, desc: 'Web apps' },
+                      { label: 'Next.js', icon: Wrench, desc: 'Web apps' },
                       { label: 'Expo', icon: Smartphone, desc: 'React Native' },
                     ].map((tech) => {
                       const Icon = tech.icon
