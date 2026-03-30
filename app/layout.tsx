@@ -7,6 +7,10 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Build Full-Stack Mobile and Web Apps in Minutes',
   description: 'AI-powered application builder that creates production-ready apps in seconds',
+  metadataBase: new URL('https://www.workerscraft.com'),
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
