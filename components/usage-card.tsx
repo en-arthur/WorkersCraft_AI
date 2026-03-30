@@ -62,7 +62,7 @@ export default function UsageCard() {
     <div className="p-5 rounded-xl border bg-muted/40 mb-6">
       <div className="flex items-center justify-between mb-3">
         <p className="font-semibold text-sm flex items-center gap-1.5"><BarChart2 className="w-4 h-4" /> Usage — <span className="capitalize">{plan}</span> Plan</p>
-        <p className="text-xs text-muted-foreground">Resets monthly</p>
+        <p className="text-xs text-muted-foreground"></p>
       </div>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
