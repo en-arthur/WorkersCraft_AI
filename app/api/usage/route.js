@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { getUserPlan, getDailyProjectCount, PLAN_LIMITS } from '@/lib/entitlements'
+import { getUserPlan, getMonthlyProjectCount, PLAN_LIMITS } from '@/lib/entitlements'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,11 +20,11 @@ export async function GET(request) {
     if (!plan) return Response.json({ count: 0, limit: 0, plan: null })
 
     const limits = PLAN_LIMITS[plan.plan] || PLAN_LIMITS.starter
-    const count = await getDailyProjectCount(user.id)
+    const count = await getMonthlyProjectCount(user.id)
 
     return Response.json({
       count,
-      limit: limits.projectsPerDay === Infinity ? null : limits.projectsPerDay,
+      limit: limits.projectsPerMonth === Infinity ? null : limits.projectsPerMonth,
       plan: plan.plan,
     })
   } catch (err) {

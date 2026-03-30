@@ -22,7 +22,7 @@ const PLANS = [
       { text: 'GitHub integration', icon: Github },
       { text: 'Backend cloud access', icon: Server },
       { text: 'Source code export', icon: Download },
-      { text: '10 projects per day', icon: FolderOpen },
+      { text: '12 projects per month', icon: FolderOpen },
     ],
   },
   {
@@ -35,7 +35,7 @@ const PLANS = [
     features: [
       { text: 'Everything in Starter', icon: CheckCircle2 },
       { text: 'iOS app builds', icon: Apple },
-      { text: '30 projects per day', icon: FolderOpen },
+      { text: '30 projects per month', icon: FolderOpen },
       { text: 'Priority support', icon: Headphones },
     ],
   },
@@ -48,7 +48,7 @@ const PLANS = [
     popular: false,
     features: [
       { text: 'Everything in Pro', icon: CheckCircle2 },
-      { text: 'Unlimited projects per day', icon: Rocket },
+      { text: 'Unlimited projects per month', icon: Rocket },
       { text: 'Dedicated support', icon: Star },
       { text: 'Early access to new features', icon: Zap },
     ],

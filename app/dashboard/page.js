@@ -149,7 +149,7 @@ export default function DashboardPage() {
         router.push('/billing')
         return
       }
-      if (response.status === 429 || data.error === 'daily_limit_reached') {
+      if (response.status === 429 || data.error === 'monthly_limit_reached') {
         setIsLimitDialogOpen(true)
         return
       }
@@ -495,7 +495,7 @@ export default function DashboardPage() {
       <Dialog open={isLimitDialogOpen} onOpenChange={setIsLimitDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Daily project limit reached</DialogTitle>
+            <DialogTitle>Monthly project limit reached</DialogTitle>
             <DialogDescription>
               You&apos;ve used all your project slots for today. Upgrade your plan to create more projects.
             </DialogDescription>

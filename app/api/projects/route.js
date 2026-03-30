@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { createClient } from '@supabase/supabase-js'
-import { getUserPlan, getDailyProjectCount, PLAN_LIMITS } from '@/lib/entitlements'
+import { getUserPlan, getMonthlyProjectCount, PLAN_LIMITS } from '@/lib/entitlements'
 import { ingestEvent } from '@/lib/usage'
 
 function getSupabaseWithAuth(token) {
@@ -83,12 +83,12 @@ export async function POST(req) {
       return Response.json({ error: 'subscription_required' }, { status: 402 })
     }
 
-    // Daily project limit
+    // Monthly project limit
     const limits = PLAN_LIMITS[plan.plan] || PLAN_LIMITS.starter
-    if (limits.projectsPerDay !== Infinity) {
-      const count = await getDailyProjectCount(user_id)
-      if (count >= limits.projectsPerDay) {
-        return Response.json({ error: 'daily_limit_reached' }, { status: 429 })
+    if (limits.projectsPerMonth !== Infinity) {
+      const count = await getMonthlyProjectCount(user_id)
+      if (count >= limits.projectsPerMonth) {
+        return Response.json({ error: 'monthly_limit_reached' }, { status: 429 })
       }
     }
 

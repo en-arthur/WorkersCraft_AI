@@ -16,7 +16,7 @@ const plans = [
     period: 'per month',
     description: 'Perfect for indie developers getting started',
     features: [
-      '10 projects per day',
+      '12 projects per month',
       'AI app generation',
       'Android debug builds (APK)',
       'GitHub integration',
@@ -34,7 +34,7 @@ const plans = [
     description: 'For teams shipping production apps',
     features: [
       'Everything in Starter',
-      '30 projects per day',
+      '30 projects per month',
       'Android release builds (AAB)',
       'iOS builds (coming soon)',
       'Priority support',
@@ -50,7 +50,7 @@ const plans = [
     description: 'Unlimited power for serious builders',
     features: [
       'Everything in Pro',
-      'Unlimited projects per day',
+      'Unlimited projects per month',
       'Dedicated support',
       'Early access to new features',
     ],
