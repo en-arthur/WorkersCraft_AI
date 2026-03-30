@@ -66,7 +66,7 @@ export default function UsageCard() {
       </div>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span>Projects today</span>
+          <span>Projects this month</span>
           <span className="font-medium">{count}{isUnlimited ? ' (unlimited)' : ` / ${limit}`}</span>
         </div>
         {!isUnlimited && (
