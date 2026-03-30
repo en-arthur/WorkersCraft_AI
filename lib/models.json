@@ -441,6 +441,14 @@
       "maxOutputTokens": 32768
     },
     {
+      "id": "moonshotai/Kimi-K2.5",
+      "provider": "Together AI",
+      "providerId": "togetherai",
+      "name": "Kimi K2.5",
+      "multiModal": true,
+      "maxOutputTokens": 32768
+    },
+    {
       "id": "grok-4",
       "provider": "xAI",
       "providerId": "xai",

@@ -63,6 +63,46 @@ export async function POST(req: Request) {
   const { model: modelNameString, apiKey: modelApiKey, ...modelParams } = config
   const modelClient = getModelClient(model, config)
 
+  // Extract last user message text (used for complexity detection and conversational check)
+  const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
+  const lastText = typeof lastUserMessage?.content === 'string'
+    ? lastUserMessage.content
+    : Array.isArray(lastUserMessage?.content)
+    ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
+    : ''
+
+  // Smart mode switching for Kimi K2.5
+  const isKimi = model.id === 'moonshotai/Kimi-K2.5'
+  const isFirstMessage = messages.filter(m => m.role === 'user').length === 1
+
+  if (isKimi && isFirstMessage) {
+    try {
+      const { createOpenAI } = await import('@ai-sdk/openai')
+      const { generateText } = await import('ai')
+      const togetherDetect = createOpenAI({
+        apiKey: process.env.TOGETHER_API_KEY,
+        baseURL: 'https://api.together.xyz/v1',
+      })
+      const { text } = await generateText({
+        model: togetherDetect('moonshotai/Kimi-K2.5'),
+        prompt: `Reply with ONLY "COMPLEX" or "SIMPLE". Is this app request complex (needs auth, database, multi-page, payments, real-time)?\n\nRequest: "${lastText}"`,
+        maxTokens: 5,
+        temperature: 0.6,
+      })
+      const isComplex = text.trim().toUpperCase().includes('COMPLEX')
+      console.log(`[Kimi] Complexity: ${text.trim()} → ${isComplex ? 'thinking' : 'instant'} mode`)
+      if (isComplex) {
+        modelParams.temperature = 1.0;
+        (modelParams as any).reasoning = { enabled: true }
+      } else {
+        modelParams.temperature = 0.6
+      }
+    } catch (e) {
+      console.error('[Kimi] Complexity detection failed, using instant mode', e)
+      modelParams.temperature = 0.6
+    }
+  }
+
   // Build existing code context
   let existingCodeContext = ''
   
@@ -112,12 +152,6 @@ IMPORTANT:
     const backendPrompt = getBackendPrompt(backendEnabled || false, backendStatus || 'inactive')
 
     // Detect conversational messages — don't force schema generation for greetings/questions
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
-    const lastText = typeof lastUserMessage?.content === 'string'
-      ? lastUserMessage.content
-      : Array.isArray(lastUserMessage?.content)
-      ? lastUserMessage.content.map((c: any) => c.type === 'text' ? c.text : '').join(' ')
-      : ''
     const isConversational = lastText.trim().length < 60 &&
       /^(hi|hello|hey|thanks|thank you|ok|okay|cool|great|yes|no|sure|what|who|why|how are|what can|what do)\b/i.test(lastText.trim())
 
