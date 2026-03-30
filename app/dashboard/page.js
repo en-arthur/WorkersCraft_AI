@@ -51,7 +51,6 @@ export default function DashboardPage() {
   const techStacks = {
     web: [
       { id: 'nextjs-developer', name: 'Next.js', icon: '/thirdparty/templates/nextjs-developer.svg' },
-      { id: 'streamlit-developer', name: 'Streamlit', icon: '/thirdparty/templates/streamlit-developer.svg' }
     ],
     mobile: [
       { id: 'expo-developer', name: 'Expo (React Native)', icon: '/thirdparty/templates/expo-developer.png' }
