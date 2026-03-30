@@ -78,7 +78,18 @@ class Backend {
   async getUser() { return await this._request(\`\${API_URL}/api/auth/me\`, { headers: this._headers() }) }
   async changePassword(oldPassword, newPassword) { return await this._request(\`\${API_URL}/api/auth/password\`, { method: 'PUT', headers: this._headers(), body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }) }) }
   async create(collection, data) { return await this._request(\`\${API_URL}/api/storage/\${collection}\`, { method: 'POST', headers: this._headers(), body: JSON.stringify({ data }) }) }
-  async list(collection) { return await this._request(\`\${API_URL}/api/storage/\${collection}\`, { headers: this._headers() }) }
+  async list(collection, options = {}) {
+    const { filter, sort, order, limit, offset } = options
+    const params = new URLSearchParams()
+    if (filter?.field) params.set('filter_field', filter.field)
+    if (filter?.value !== undefined) params.set('filter_value', String(filter.value))
+    if (sort) params.set('sort', sort)
+    if (order) params.set('order', order)
+    if (limit !== undefined) params.set('limit', String(limit))
+    if (offset !== undefined) params.set('offset', String(offset))
+    const qs = params.toString() ? \`?\${params.toString()}\` : ''
+    return await this._request(\`\${API_URL}/api/storage/\${collection}\${qs}\`, { headers: this._headers() })
+  }
   async get(collection, id) { return await this._request(\`\${API_URL}/api/storage/\${collection}/\${id}\`, { headers: this._headers() }) }
   async update(collection, id, data) { return await this._request(\`\${API_URL}/api/storage/\${collection}/\${id}\`, { method: 'PUT', headers: this._headers(), body: JSON.stringify({ data }) }) }
   async delete(collection, id) { return await this._request(\`\${API_URL}/api/storage/\${collection}/\${id}\`, { method: 'DELETE', headers: this._headers() }) }
