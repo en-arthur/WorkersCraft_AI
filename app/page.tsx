@@ -7,6 +7,7 @@ import { LandingNav } from '@/components/landing/landing-nav'
 import { Hero } from '@/components/landing/hero'
 import { Features } from '@/components/landing/features'
 import { Demo } from '@/components/landing/demo'
+import { FAQ } from '@/components/landing/faq'
 import { CTA } from '@/components/landing/cta'
 import { Footer } from '@/components/landing/footer'
 import { Reveal } from '@/components/landing/reveal'
@@ -26,6 +27,7 @@ export default function LandingPage() {
         <Hero />
         <Reveal><Features /></Reveal>
         <Reveal delay={80}><Demo /></Reveal>
+        <Reveal delay={80}><FAQ /></Reveal>
         <Reveal delay={80}><CTA /></Reveal>
       </main>
       <Footer />

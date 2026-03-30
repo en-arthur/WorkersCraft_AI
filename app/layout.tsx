@@ -5,8 +5,8 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Build Full-Stack Mobile and Web Apps in Minutes',
-  description: 'AI-powered application builder that creates production-ready apps in seconds',
+  title: 'WorkersCraft AI — AI App Builder with Backend | Build Full-Stack Apps',
+  description: 'The only AI app builder that includes backend, auth, and database automatically. Build web and mobile apps in minutes without coding. No external services needed.',
   metadataBase: new URL('https://www.workerscraft.com'),
   alternates: {
     canonical: '/',
