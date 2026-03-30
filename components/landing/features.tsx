@@ -10,7 +10,7 @@ const features = [
   {
     icon: Code2,
     title: 'Multiple Frameworks',
-    description: 'Support for Next.js, Streamlit, and Expo (React Native) for web and mobile applications.',
+    description: 'Support for Next.js and Expo (React Native) for web and mobile applications.',
   },
   {
     icon: Zap,
