@@ -304,27 +304,6 @@ export default function DashboardPage() {
                       </RadioGroup>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tech-stack">Tech Stack *</Label>
-                      <Select
-                        value={newProject.tech_stack}
-                        onValueChange={(value) => setNewProject({ ...newProject, tech_stack: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {techStacks[newProject.platform].map(stack => (
-                            <SelectItem key={stack.id} value={stack.id}>
-                              <div className="flex items-center gap-2">
-                                <img src={stack.icon} alt={stack.name} width={14} height={14} />
-                                {stack.name}
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
                       <div className="flex items-center space-x-2">
                         <input
                           type="checkbox"
