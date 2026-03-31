@@ -61,6 +61,33 @@ async function handleTransactionCompleted(txn) {
   }
   const { data: sub } = await res.json()
   await upsertSubscription({ ...sub, custom_data: txn.custom_data }, 'active')
+
+  // Track referral with Endorsely
+  const referralId = txn.custom_data?.endorsely_referral
+  if (referralId && process.env.ENDORSELY_API_SECRET) {
+    try {
+      const amount = txn.details?.totals?.subtotal
+        ? parseInt(txn.details.totals.subtotal)
+        : 0
+      await fetch('https://app.endorsely.com/api/public/refer', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.ENDORSELY_API_SECRET}`,
+        },
+        body: JSON.stringify({
+          referralId,
+          organizationId: '2e4c7866-d841-48a8-8128-32eb3ae6090d',
+          email: txn.customer?.email,
+          amount,
+          customerId: userId,
+        }),
+      })
+      console.log('[endorsely] Referral tracked for referralId:', referralId)
+    } catch (err) {
+      console.error('[endorsely] Failed to track referral:', err)
+    }
+  }
 }
 
 export async function POST(request) {

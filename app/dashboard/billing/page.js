@@ -101,6 +101,13 @@ export default function DashboardBillingPage() {
 
   const [inlineCheckout, setInlineCheckout] = useState(null)
 
+  // Capture Endorsely referral ID
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.endorsely_referral) {
+      localStorage.setItem('endorsely_referral', window.endorsely_referral)
+    }
+  }, [])
+
   // Initialize Paddle.js
   useEffect(() => {
     const initPaddle = () => {
@@ -142,14 +149,12 @@ export default function DashboardBillingPage() {
     setCheckoutLoading(planId)
     try {
       if (window.Paddle) {
+        const referralId = localStorage.getItem('endorsely_referral')
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
-          customer: {
-            email: session?.user?.email
-          },
-          settings: {
-            successUrl: `${window.location.origin}/dashboard/billing?success=true`
-          }
+          customer: { email: session?.user?.email },
+          customData: referralId ? { endorsely_referral: referralId } : undefined,
+          settings: { successUrl: `${window.location.origin}/dashboard/billing?success=true` }
         })
       } else {
         throw new Error('Paddle not loaded')

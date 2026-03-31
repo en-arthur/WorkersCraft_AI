@@ -32,6 +32,7 @@ export default function RootLayout({
       <head>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap');`}</style>
         <script src="https://cdn.paddle.com/paddle/v2/paddle.js" async></script>
+        <script async src="https://assets.endorsely.com/endorsely.js" data-endorsely="2e4c7866-d841-48a8-8128-32eb3ae6090d"></script>
       </head>
       <PostHogProvider>
         <body>
