@@ -1,3 +1,5 @@
+import { ShoppingBag, Dumbbell, Users, ChefHat, CheckSquare, Trophy } from 'lucide-react'
+
 export type ProjectTemplate = {
   id: string
   name: string
@@ -5,7 +7,7 @@ export type ProjectTemplate = {
   prompt: string
   platform: 'web' | 'mobile' | 'data'
   category: string
-  icon: string
+  icon: any
 }
 
 export const projectTemplates: ProjectTemplate[] = [
@@ -16,7 +18,7 @@ export const projectTemplates: ProjectTemplate[] = [
     prompt: 'Build a modern e-commerce store with product grid showing images and prices, shopping cart with add/remove items, checkout form, and responsive design. Use Next.js with Tailwind CSS and shadcn components.',
     platform: 'web',
     category: 'Business',
-    icon: '🛍️',
+    icon: ShoppingBag,
   },
   {
     id: 'fitness-tracker',
@@ -25,7 +27,7 @@ export const projectTemplates: ProjectTemplate[] = [
     prompt: 'Build a fitness tracker mobile app with workout logging, progress charts showing weekly stats, daily goals tracker, and bottom tab navigator. Use cards for workouts with exercise name, sets, and reps.',
     platform: 'mobile',
     category: 'Health',
-    icon: '💪',
+    icon: Dumbbell,
   },
   {
     id: 'social-feed',
@@ -34,7 +36,7 @@ export const projectTemplates: ProjectTemplate[] = [
     prompt: 'Create a social media feed app with post cards showing images, captions, likes and comments. Include a create post form, user profiles, and infinite scroll. Modern design with gradients.',
     platform: 'web',
     category: 'Social',
-    icon: '📱',
+    icon: Users,
   },
   {
     id: 'recipe-finder',
@@ -43,7 +45,7 @@ export const projectTemplates: ProjectTemplate[] = [
     prompt: 'Build a recipe finder app with search bar, ingredient filters, recipe cards with images and cooking time, detailed recipe view with ingredients list and step-by-step instructions. Clean modern design.',
     platform: 'web',
     category: 'Lifestyle',
-    icon: '🍳',
+    icon: ChefHat,
   },
   {
     id: 'task-manager',
@@ -52,7 +54,7 @@ export const projectTemplates: ProjectTemplate[] = [
     prompt: 'Create a task manager mobile app with todo lists, categories, priority levels, due dates, and swipe to complete. Include bottom navigation and clean card-based design.',
     platform: 'mobile',
     category: 'Productivity',
-    icon: '✅',
+    icon: CheckSquare,
   },
   {
     id: 'quiz-app',
@@ -61,7 +63,7 @@ export const projectTemplates: ProjectTemplate[] = [
     prompt: 'Build a quiz app mobile game with multiple choice questions, timer, score tracking, progress bar, and results screen with leaderboard. Use colorful cards and smooth animations.',
     platform: 'mobile',
     category: 'Education',
-    icon: '🎯',
+    icon: Trophy,
   },
 ]
 

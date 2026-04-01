@@ -31,8 +31,8 @@ export default function TemplatesPage() {
                 href={`/chat?template=${template.id}`}
                 className="group relative rounded-2xl border border-border/60 bg-card p-6 hover:border-primary/50 hover:bg-card/80 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-1"
               >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                  {template.icon}
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                  <template.icon className="w-6 h-6 text-primary" />
                 </div>
 
                 <div className="mb-3">
