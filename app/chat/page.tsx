@@ -409,6 +409,7 @@ function ChatContent() {
         // Create a project for the template
         const createTemplateProject = async () => {
           try {
+            if (!supabase) return
             const { data: { session: currentSession } } = await supabase.auth.getSession()
             const response = await fetch('/api/projects', {
               method: 'POST',
