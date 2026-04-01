@@ -141,6 +141,7 @@ function ChatContent() {
       backendEnabled: currentProject.backend_enabled || false,
       backendStatus: currentProject.backend_status || 'inactive',
     })
+    setChatInput('')
     setCurrentTab('code')
   }, [pendingPrompt, currentProject, session])
 
