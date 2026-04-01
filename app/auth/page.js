@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { ViewType } from '@/components/auth'
 import { AuthDialog } from '@/components/auth-dialog'
@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 import Logo from '@/components/logo'
 import { Button } from '@/components/ui/button'
 
-export default function AuthPage() {
+function AuthContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
@@ -135,5 +135,17 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <Logo style="fragments" className="w-12 h-12 animate-pulse" />
+      </div>
+    }>
+      <AuthContent />
+    </Suspense>
   )
 }
