@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { ViewType } from '@/components/auth'
 import { AuthDialog } from '@/components/auth-dialog'
 import { supabase } from '@/lib/supabase'
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 
 export default function AuthPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [isAuthDialogOpen, setAuthDialog] = useState(false)
   const [authView, setAuthView] = useState('sign_in')
   const [isChecking, setIsChecking] = useState(true)
@@ -23,7 +24,8 @@ export default function AuthPage() {
         const { data: { session } } = await supabase.auth.getSession()
         if (mounted && session) {
           setIsAuthenticated(true)
-          router.push('/dashboard')
+          const redirect = searchParams.get('redirect') || '/dashboard'
+          router.push(redirect)
         } else if (mounted) {
           setIsChecking(false)
         }
@@ -40,7 +42,8 @@ export default function AuthPage() {
       if (mounted) {
         if (session) {
           setIsAuthenticated(true)
-          router.push('/dashboard')
+          const redirect = searchParams.get('redirect') || '/dashboard'
+          router.push(redirect)
         }
       }
     })
@@ -49,7 +52,7 @@ export default function AuthPage() {
       mounted = false
       subscription.unsubscribe()
     }
-  }, [router])
+  }, [router, searchParams])
 
   const handleSignIn = () => {
     setAuthView('sign_in')
