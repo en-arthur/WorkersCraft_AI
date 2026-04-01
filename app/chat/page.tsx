@@ -404,6 +404,29 @@ function ChatContent() {
           setSelectedTemplate('nextjs-developer')
         }
         router.replace('/chat')
+        
+        // Auto-submit after a brief delay to ensure state is set
+        setTimeout(() => {
+          if (!currentProject) {
+            setPendingPrompt(template.prompt)
+          } else {
+            const content: Message['content'] = [{ type: 'text', text: template.prompt }]
+            const updatedMessages = addMessage({ role: 'user', content })
+            apiEndpointRef.current = '/api/chat'
+            submit({
+              userID: session.user.id,
+              teamID: userTeam?.id,
+              messages: toAISDKMessages(updatedMessages),
+              template: currentTemplate,
+              model: currentModel,
+              config: languageModel,
+              currentFragment: fragment || undefined,
+              backendEnabled: currentProject?.backend_enabled || false,
+              backendStatus: currentProject?.backend_status || 'inactive',
+            })
+            setCurrentTab('code')
+          }
+        }, 500)
       }
     }
   }, [authChecked, session?.user?.id])
