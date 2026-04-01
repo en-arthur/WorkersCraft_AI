@@ -26,7 +26,7 @@ export default function SupportPage() {
             </span>
 
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-tight mb-6">
-              We're here to help
+              We&apos;re here to help
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Get the support you need to build amazing apps
@@ -42,7 +42,7 @@ export default function SupportPage() {
               </div>
               <h3 className="font-semibold mb-2">Email Support</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Send us an email and we'll respond within 24 hours
+                Send us an email and we&apos;ll respond within 24 hours
               </p>
               <a href="mailto:support@workerscraft.ai" className="text-sm text-primary hover:underline">
                 support@workerscraft.ai
