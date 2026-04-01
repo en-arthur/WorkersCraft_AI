@@ -29,6 +29,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/logo'
 import { useToast } from '@/components/ui/use-toast'
+import { getTemplateById } from '@/lib/project-templates'
 
 function ChatContent() {
   const { toast } = useToast()
@@ -386,9 +387,24 @@ function ChatContent() {
     if (!authChecked || !session?.user?.id) return
     
     const projectId = searchParams.get('project')
+    const templateId = searchParams.get('template')
+    
     if (projectId) {
       console.log('Loading project from URL:', projectId)
       loadProject(projectId)
+    } else if (templateId) {
+      const template = getTemplateById(templateId)
+      if (template) {
+        setChatInput(template.prompt)
+        if (template.platform === 'mobile') {
+          setSelectedTemplate('expo-developer')
+        } else if (template.platform === 'data') {
+          setSelectedTemplate('streamlit-developer')
+        } else {
+          setSelectedTemplate('nextjs-developer')
+        }
+        router.replace('/chat')
+      }
     }
   }, [authChecked, session?.user?.id])
 

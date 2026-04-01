@@ -10,6 +10,7 @@ const links = [
   { href: '/pricing', label: 'Pricing' },
   { href: '/cloud', label: 'Cloud' },
   { href: '/about', label: 'About' },
+  { href: '/support', label: 'Support' },
 ]
 
 export function LandingNav() {

@@ -3,7 +3,6 @@ import { Footer } from '@/components/landing/footer'
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import Link from 'next/link'
-import { DiscountBanner } from '@/components/discount-banner'
 
 export const metadata = {
   title: 'Pricing — WorkersCraft AI',
@@ -67,9 +66,6 @@ export default function PricingPage() {
       <LandingNav />
 
       <main className="min-h-screen bg-background">
-
-        {/* Discount Banner */}
-        <DiscountBanner variant="top" />
 
         {/* Hero */}
         <section className="relative pt-48 pb-16 px-4 overflow-hidden">

@@ -23,7 +23,7 @@ export function Footer() {
             <p className="font-semibold mb-3">Company</p>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link href="/about" className="hover:text-foreground transition-colors">About</Link></li>
-              <li><Link href="/changelog" className="hover:text-foreground transition-colors">Changelog</Link></li>
+              <li><Link href="/support" className="hover:text-foreground transition-colors">Support</Link></li>
             </ul>
           </div>
           <div>
