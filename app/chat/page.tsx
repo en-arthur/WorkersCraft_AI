@@ -392,9 +392,10 @@ function ChatContent() {
     if (projectId) {
       console.log('Loading project from URL:', projectId)
       loadProject(projectId)
-    } else if (templateId) {
+    } else if (templateId && !currentProject) {
       const template = getTemplateById(templateId)
       if (template) {
+        console.log('Loading template:', template.name)
         setChatInput(template.prompt)
         if (template.platform === 'mobile') {
           setSelectedTemplate('expo-developer')
@@ -404,10 +405,41 @@ function ChatContent() {
           setSelectedTemplate('nextjs-developer')
         }
         router.replace('/chat')
-        setPendingPrompt(template.prompt)
+        
+        // Create a project for the template
+        const createTemplateProject = async () => {
+          try {
+            const { data: { session: currentSession } } = await supabase.auth.getSession()
+            const response = await fetch('/api/projects', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${currentSession?.access_token}`
+              },
+              body: JSON.stringify({
+                user_id: session.user.id,
+                name: template.name,
+                description: template.description,
+                user_prompt: template.prompt,
+                platform: template.platform,
+                tech_stack: template.platform === 'mobile' ? 'expo-developer' : 'nextjs-developer',
+                backend_enabled: false
+              })
+            })
+            const data = await response.json()
+            if (data.project) {
+              setCurrentProject(data.project)
+              setPendingPrompt(template.prompt)
+            }
+          } catch (error) {
+            console.error('Error creating template project:', error)
+          }
+        }
+        
+        createTemplateProject()
       }
     }
-  }, [authChecked, session?.user?.id])
+  }, [authChecked, session?.user?.id, currentProject])
 
   // Auto-save when fragment or messages change
   useEffect(() => {
