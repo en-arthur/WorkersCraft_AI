@@ -74,7 +74,6 @@ export function Templates() {
           <p className="text-sm text-muted-foreground mb-4">
             Or start from scratch with your own idea
           </p>
-          </p>
           <Link href="/auth">
             <Button size="lg" variant="outline" className="gap-2">
               Start Building
