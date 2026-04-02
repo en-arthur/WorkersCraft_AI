@@ -102,17 +102,64 @@ export default function BillingPage() {
 
   const [inlineCheckout, setInlineCheckout] = useState(null) // { priceId, planId }
 
+  // Initialize Paddle.js and capture referral
+  useEffect(() => {
+    // Capture Endorsely referral ID
+    if (typeof window !== 'undefined' && window.endorsely_referral) {
+      localStorage.setItem('endorsely_referral', window.endorsely_referral)
+    }
+
+    const initPaddle = () => {
+      if (window.Paddle) {
+        // Only set environment for sandbox, production is default
+        if (process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox') {
+          window.Paddle.Environment.set('sandbox')
+        }
+        window.Paddle.Initialize({
+          token: process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN
+        })
+      }
+    }
+
+    // If Paddle is already loaded, initialize immediately
+    if (window.Paddle) {
+      initPaddle()
+    } else {
+      // Otherwise wait for script to load
+      window.addEventListener('paddleLoaded', initPaddle)
+      // Fallback: check every 100ms for up to 5 seconds
+      const checkInterval = setInterval(() => {
+        if (window.Paddle) {
+          initPaddle()
+          clearInterval(checkInterval)
+        }
+      }, 100)
+      setTimeout(() => clearInterval(checkInterval), 5000)
+      
+      return () => {
+        window.removeEventListener('paddleLoaded', initPaddle)
+        clearInterval(checkInterval)
+      }
+    }
+  }, [])
+
   async function handleCheckout(priceId, planId) {
     setCheckoutError(null)
     setCheckoutLoading(planId)
     try {
-      const res = await fetch(`/api/checkout?priceId=${priceId}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      })
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-      else setCheckoutError('Failed to start checkout. Please try again.')
-    } catch {
+      if (window.Paddle) {
+        const referralId = localStorage.getItem('endorsely_referral')
+        window.Paddle.Checkout.open({
+          items: [{ priceId, quantity: 1 }],
+          customer: { email: session?.user?.email },
+          customData: referralId ? { endorsely_referral: referralId } : undefined,
+          settings: { successUrl: `${window.location.origin}/billing?success=true` }
+        })
+      } else {
+        throw new Error('Paddle not loaded')
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
       setCheckoutError('Failed to start checkout. Please try again.')
     } finally {
       setCheckoutLoading(null)

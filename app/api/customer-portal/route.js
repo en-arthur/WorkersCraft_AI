@@ -41,21 +41,29 @@ export async function GET(request) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { data: sub } = await supabase
+    const { data: sub, error: subError } = await supabase
       .from('user_subscriptions')
-      .select('paddle_customer_id, paddle_subscription_id')
+      .select('paddle_customer_id, paddle_subscription_id, status')
       .eq('user_id', user.id)
+      .eq('status', 'active')
       .single()
 
-    console.log('[customer-portal] Subscription data:', sub)
+    console.log('[customer-portal] Subscription data:', sub, 'Error:', subError)
 
-    if (!sub?.paddle_customer_id) return Response.json({ error: 'No subscription found' }, { status: 404 })
+    if (!sub?.paddle_customer_id) {
+      return Response.json({ error: 'No active subscription found' }, { status: 404 })
+    }
 
     const url = await getCustomerPortalUrl(sub.paddle_customer_id, sub.paddle_subscription_id)
     console.log('[customer-portal] Portal URL:', url)
+    
+    if (!url) {
+      return Response.json({ error: 'Failed to generate portal URL' }, { status: 500 })
+    }
+    
     return Response.json({ url })
   } catch (err) {
     console.error('[customer-portal] Error:', err)
-    return Response.json({ error: 'Failed to create portal session' }, { status: 500 })
+    return Response.json({ error: err.message || 'Failed to create portal session' }, { status: 500 })
   }
 }
