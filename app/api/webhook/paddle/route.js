@@ -31,8 +31,17 @@ async function upsertSubscription(sub, status) {
     return
   }
   const priceId = sub.items?.[0]?.price?.id
+  
+  // Debug logging
+  console.log('[paddle-webhook] Incoming priceId:', priceId)
+  console.log('[paddle-webhook] PADDLE_STARTER_PRICE_ID:', process.env.PADDLE_STARTER_PRICE_ID)
+  console.log('[paddle-webhook] PADDLE_PRO_PRICE_ID:', process.env.PADDLE_PRO_PRICE_ID)
+  console.log('[paddle-webhook] PADDLE_MAX_PRICE_ID:', process.env.PADDLE_MAX_PRICE_ID)
+  console.log('[paddle-webhook] PLAN_MAP:', PLAN_MAP)
+  
   const plan = PLAN_MAP[priceId] || 'starter'
-  console.log('[paddle-webhook] priceId:', priceId, 'plan:', plan)
+  console.log('[paddle-webhook] Mapped to plan:', plan)
+  
   const { error } = await supabase.from('user_subscriptions').upsert({
     user_id: userId,
     paddle_customer_id: sub.customer_id,
@@ -43,6 +52,8 @@ async function upsertSubscription(sub, status) {
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
   if (error) console.error('[paddle-webhook] Supabase upsert error:', error)
+  else console.log('[paddle-webhook] Successfully saved subscription with plan:', plan)
+}
 }
 
 async function handleTransactionCompleted(txn) {
