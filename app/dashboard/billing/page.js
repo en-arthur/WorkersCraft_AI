@@ -92,7 +92,6 @@ export default function DashboardBillingPage() {
       .from('user_subscriptions')
       .select('*')
       .eq('user_id', sess.user.id)
-      .eq('status', 'active')
       .single()
     setSubscription(data)
     setLoading(false)
@@ -234,14 +233,23 @@ export default function DashboardBillingPage() {
       <UsageCard />
 
       {subscription && (
-        <div className="mb-10 p-5 rounded-xl border bg-muted/40 flex items-center justify-between">
+        <div className={`mb-10 p-5 rounded-xl border flex items-center justify-between ${
+          subscription.status === 'canceled' ? 'bg-orange-500/10 border-orange-500' : 'bg-muted/40'
+        }`}>
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
+            <div className={`w-2 h-2 rounded-full ${
+              subscription.status === 'canceled' ? 'bg-orange-500' : 'bg-green-500'
+            }`} />
             <div>
-              <p className="font-semibold capitalize">{subscription.plan} Plan — Active</p>
+              <p className="font-semibold capitalize">
+                {subscription.plan} Plan — {subscription.status === 'canceled' ? 'Canceled' : 'Active'}
+              </p>
               {subscription.current_period_end && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Renews {new Date(subscription.current_period_end).toLocaleDateString()}
+                  {subscription.status === 'canceled' 
+                    ? `Access until ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                    : `Renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                  }
                 </p>
               )}
             </div>
@@ -303,12 +311,12 @@ export default function DashboardBillingPage() {
 
               <Button
                 className="w-full"
-                variant={isCurrent ? 'outline' : plan.popular ? 'default' : 'outline'}
-                disabled={isCurrent || checkoutLoading === plan.id}
-                onClick={() => !isCurrent && handleCheckout(plan.priceId, plan.id)}
+                variant={isCurrent && subscription?.status === 'active' ? 'outline' : plan.popular ? 'default' : 'outline'}
+                disabled={(isCurrent && subscription?.status === 'active') || checkoutLoading === plan.id}
+                onClick={() => handleCheckout(plan.priceId, plan.id)}
               >
                 {checkoutLoading === plan.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                {isCurrent ? 'Current Plan' : 'Get Started'}
+                {isCurrent && subscription?.status === 'active' ? 'Current Plan' : isCurrent && subscription?.status === 'canceled' ? 'Reactivate' : 'Get Started'}
               </Button>
             </div>
           )
