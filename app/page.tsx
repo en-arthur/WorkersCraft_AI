@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth'
 import { LandingNav } from '@/components/landing/landing-nav'
 import { Hero } from '@/components/landing/hero'
-import { Templates } from '@/components/landing/templates'
 import { Features } from '@/components/landing/features'
 import { Demo } from '@/components/landing/demo'
 import { FAQ } from '@/components/landing/faq'
@@ -26,8 +25,7 @@ export default function LandingPage() {
       <LandingNav />
       <main className="pt-16">
         <Hero />
-        <Reveal><Templates /></Reveal>
-        <Reveal delay={80}><Features /></Reveal>
+        <Reveal><Features /></Reveal>
         <Reveal delay={80}><Demo /></Reveal>
         <Reveal delay={80}><FAQ /></Reveal>
         <Reveal delay={80}><CTA /></Reveal>

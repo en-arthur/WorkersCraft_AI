@@ -29,7 +29,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Logo from '@/components/logo'
 import { useToast } from '@/components/ui/use-toast'
-import { getTemplateById } from '@/lib/project-templates'
 
 function ChatContent() {
   const { toast } = useToast()
@@ -388,60 +387,11 @@ function ChatContent() {
     if (!authChecked || !session?.user?.id) return
     
     const projectId = searchParams.get('project')
-    const templateId = searchParams.get('template')
-    
     if (projectId) {
       console.log('Loading project from URL:', projectId)
       loadProject(projectId)
-    } else if (templateId && !currentProject) {
-      const template = getTemplateById(templateId)
-      if (template) {
-        console.log('Loading template:', template.name)
-        setChatInput(template.prompt)
-        if (template.platform === 'mobile') {
-          setSelectedTemplate('expo-developer')
-        } else if (template.platform === 'data') {
-          setSelectedTemplate('streamlit-developer')
-        } else {
-          setSelectedTemplate('nextjs-developer')
-        }
-        router.replace('/chat')
-        
-        // Create a project for the template
-        const createTemplateProject = async () => {
-          try {
-            if (!supabase) return
-            const { data: { session: currentSession } } = await supabase.auth.getSession()
-            const response = await fetch('/api/projects', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${currentSession?.access_token}`
-              },
-              body: JSON.stringify({
-                user_id: session.user.id,
-                name: template.name,
-                description: template.description,
-                user_prompt: template.prompt,
-                platform: template.platform,
-                tech_stack: template.platform === 'mobile' ? 'expo-developer' : 'nextjs-developer',
-                backend_enabled: false
-              })
-            })
-            const data = await response.json()
-            if (data.project) {
-              setCurrentProject(data.project)
-              setPendingPrompt(template.prompt)
-            }
-          } catch (error) {
-            console.error('Error creating template project:', error)
-          }
-        }
-        
-        createTemplateProject()
-      }
     }
-  }, [authChecked, session?.user?.id, currentProject])
+  }, [authChecked, session?.user?.id])
 
   // Auto-save when fragment or messages change
   useEffect(() => {
