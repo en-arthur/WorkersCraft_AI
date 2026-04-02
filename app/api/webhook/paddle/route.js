@@ -54,7 +54,6 @@ async function upsertSubscription(sub, status) {
   if (error) console.error('[paddle-webhook] Supabase upsert error:', error)
   else console.log('[paddle-webhook] Successfully saved subscription with plan:', plan)
 }
-}
 
 async function handleTransactionCompleted(txn) {
   const userId = txn.custom_data?.user_id
