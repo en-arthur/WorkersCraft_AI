@@ -152,7 +152,10 @@ export default function BillingPage() {
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
           customer: { email: session?.user?.email },
-          customData: referralId ? { endorsely_referral: referralId } : undefined,
+          customData: { 
+            user_id: session.user.id,
+            ...(referralId && { endorsely_referral: referralId })
+          },
           settings: { successUrl: `${window.location.origin}/billing?success=true` }
         })
       } else {
