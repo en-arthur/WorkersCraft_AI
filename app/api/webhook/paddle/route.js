@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -91,50 +92,67 @@ async function handleTransactionCompleted(txn) {
 }
 
 export async function POST(request) {
-  const rawBody = await request.text()
-  const signature = request.headers.get('paddle-signature') ?? ''
+  try {
+    const rawBody = await request.text()
+    const signature = request.headers.get('paddle-signature')
 
-  if (!verifySignature(rawBody, signature)) {
-    console.error('[paddle-webhook] Invalid signature')
-    return new Response('Invalid signature', { status: 403 })
-  }
+    console.log('[paddle-webhook] Received request, has signature:', !!signature)
 
-  const payload = JSON.parse(rawBody)
-  console.log('[paddle-webhook] event_type:', payload.event_type)
-
-  const { event_type, data } = payload
-
-  switch (event_type) {
-    case 'subscription.created':
-    case 'subscription.activated':
-      await upsertSubscription(data, 'active')
-      break
-    case 'subscription.updated':
-      await upsertSubscription(data, data.status === 'active' ? 'active' : data.status)
-      break
-    case 'subscription.paused':
-      await upsertSubscription(data, 'paused')
-      break
-    case 'subscription.resumed':
-      await upsertSubscription(data, 'active')
-      break
-    case 'subscription.canceled':
-      await upsertSubscription(data, 'inactive')
-      break
-    case 'transaction.completed':
-      await handleTransactionCompleted(data)
-      break
-    case 'transaction.payment_failed': {
-      const userId = data.custom_data?.user_id
-      if (userId) {
-        await supabase.from('user_subscriptions')
-          .update({ payment_failed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-          .eq('user_id', userId)
-        console.log('[paddle-webhook] payment failed for user:', userId)
-      }
-      break
+    if (!signature) {
+      console.error('[paddle-webhook] Missing paddle-signature header')
+      return Response.json({ error: 'Missing signature' }, { status: 400 })
     }
-  }
 
-  return new Response(null, { status: 200 })
+    if (!process.env.PADDLE_WEBHOOK_SECRET) {
+      console.error('[paddle-webhook] PADDLE_WEBHOOK_SECRET not set')
+      return Response.json({ error: 'Webhook not configured' }, { status: 500 })
+    }
+
+    if (!verifySignature(rawBody, signature)) {
+      console.error('[paddle-webhook] Signature verification failed')
+      return Response.json({ error: 'Invalid signature' }, { status: 403 })
+    }
+
+    const payload = JSON.parse(rawBody)
+    const { event_type, data } = payload
+    
+    console.log('[paddle-webhook] Event:', event_type, 'user_id:', data?.custom_data?.user_id)
+
+    switch (event_type) {
+      case 'subscription.created':
+      case 'subscription.activated':
+        await upsertSubscription(data, 'active')
+        break
+      case 'subscription.updated':
+        await upsertSubscription(data, data.status === 'active' ? 'active' : data.status)
+        break
+      case 'subscription.paused':
+        await upsertSubscription(data, 'paused')
+        break
+      case 'subscription.resumed':
+        await upsertSubscription(data, 'active')
+        break
+      case 'subscription.canceled':
+        await upsertSubscription(data, 'inactive')
+        break
+      case 'transaction.completed':
+        await handleTransactionCompleted(data)
+        break
+      case 'transaction.payment_failed': {
+        const userId = data.custom_data?.user_id
+        if (userId) {
+          await supabase.from('user_subscriptions')
+            .update({ payment_failed_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+            .eq('user_id', userId)
+        }
+        break
+      }
+    }
+
+    console.log('[paddle-webhook] Successfully processed')
+    return Response.json({ received: true }, { status: 200 })
+  } catch (error) {
+    console.error('[paddle-webhook] Error:', error)
+    return Response.json({ error: error.message }, { status: 500 })
+  }
 }

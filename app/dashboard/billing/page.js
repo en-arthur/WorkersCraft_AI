@@ -150,13 +150,17 @@ export default function DashboardBillingPage() {
     try {
       if (window.Paddle) {
         const referralId = localStorage.getItem('endorsely_referral')
+        const customData = {
+          user_id: session.user.id
+        }
+        if (referralId) {
+          customData.endorsely_referral = referralId
+        }
+        
         window.Paddle.Checkout.open({
           items: [{ priceId, quantity: 1 }],
           customer: { email: session?.user?.email },
-          customData: { 
-            user_id: session.user.id,
-            ...(referralId && { endorsely_referral: referralId })
-          },
+          customData: customData,
           settings: { successUrl: `${window.location.origin}/dashboard/billing?success=true` }
         })
       } else {
