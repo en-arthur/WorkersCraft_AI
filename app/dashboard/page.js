@@ -473,14 +473,14 @@ export default function DashboardPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project) => (
-                <Card
-                  key={project.id}
-                  className="group relative overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-br from-card to-card/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-primary/20 hover:border-primary/50 hover:-translate-y-1 hover:scale-[1.02]"
-                  onClick={() => router.push(`/chat?project=${project.id}`)}
-                >
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity duration-300 -z-10" />
+                <div key={project.id} className="group">
+                  <Card
+                    className="relative overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-primary/20 hover:border-primary hover:-translate-y-1 hover:scale-[1.02]"
+                    onClick={() => router.push(`/chat?project=${project.id}`)}
+                  >
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity duration-300 -z-10" />
                   
                   <CardHeader className="relative">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -528,6 +528,7 @@ export default function DashboardPage() {
                     </Button>
                   </CardFooter>
                 </Card>
+                </div>
               ))}
             </div>
           )}
