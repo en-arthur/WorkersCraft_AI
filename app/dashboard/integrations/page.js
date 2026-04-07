@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react'
 // import { TelegramIntegration } from '@/components/telegram-integration'
 // import { SlackIntegration } from '@/components/slack-integration'
 
@@ -20,6 +20,8 @@ export default function IntegrationsPage() {
   const [testing, setTesting] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
   const [dialogMessage, setDialogMessage] = useState({ title: '', description: '', success: false })
+  const [isDisconnectDialogOpen, setIsDisconnectDialogOpen] = useState(false)
+  const [disconnecting, setDisconnecting] = useState(false)
 
   const loadIntegrations = async () => {
     if (!session?.access_token) return
@@ -112,8 +114,7 @@ export default function IntegrationsPage() {
   async function disconnect() {
     if (!integration?.id) return
     
-    if (!confirm('Disconnect Vercel integration?')) return
-    
+    setDisconnecting(true)
     try {
       const res = await fetch(`/api/integrations/${integration.id}`, {
         method: 'DELETE',
@@ -123,14 +124,18 @@ export default function IntegrationsPage() {
       if (res.ok) {
         setIntegration(null)
         setVercelToken('')
+        setIsDisconnectDialogOpen(false)
         setDialogMessage({ title: 'Success', description: 'Disconnected successfully', success: true })
+        setDialogOpen(true)
       } else {
         setDialogMessage({ title: 'Error', description: 'Failed to disconnect', success: false })
+        setDialogOpen(true)
       }
-      setDialogOpen(true)
     } catch (error) {
       setDialogMessage({ title: 'Error', description: 'Failed to disconnect', success: false })
       setDialogOpen(true)
+    } finally {
+      setDisconnecting(false)
     }
   }
 
@@ -205,7 +210,7 @@ export default function IntegrationsPage() {
                 Save Token
               </Button>
               {integration && (
-                <Button onClick={disconnect} variant="destructive" className="ml-auto">
+                <Button onClick={() => setIsDisconnectDialogOpen(true)} variant="destructive" className="ml-auto">
                   Disconnect
                 </Button>
               )}
@@ -237,6 +242,30 @@ export default function IntegrationsPage() {
                 {dialogMessage.description}
               </DialogDescription>
             </DialogHeader>
+          </DialogContent>
+        </Dialog>
+
+        {/* Disconnect Confirmation Dialog */}
+        <Dialog open={isDisconnectDialogOpen} onOpenChange={setIsDisconnectDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-orange-500" />
+                Disconnect Vercel Integration?
+              </DialogTitle>
+              <DialogDescription>
+                This will remove your Vercel token and disable automatic deployments for all projects. You can reconnect anytime.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDisconnectDialogOpen(false)} disabled={disconnecting}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={disconnect} disabled={disconnecting}>
+                {disconnecting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Disconnect
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

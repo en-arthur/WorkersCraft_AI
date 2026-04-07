@@ -24,6 +24,7 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -249,7 +250,7 @@ export default function DashboardPage() {
               {/* <ImportGitHubDialog disabled={saving} onImport={(project) => {
                 router.push(`/chat?project=${project.id}`)
               }} /> */}
-              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setCurrentStep(1) }}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="px-8 py-6 text-base">
                     + New Project
@@ -259,77 +260,158 @@ export default function DashboardPage() {
                   <DialogHeader>
                     <DialogTitle>Create New Project</DialogTitle>
                     <DialogDescription>
-                      Describe what you want to build and we&apos;ll help you create it
+                      Step {currentStep} of 3
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Project Name *</Label>
-                      <Input
-                        id="name"
-                        value={newProject.name}
-                        onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
-                        placeholder="My Awesome App"
+                  
+                  {/* Progress indicator */}
+                  <div className="flex gap-2 justify-center py-2">
+                    {[1, 2, 3].map((step) => (
+                      <div
+                        key={step}
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          step === currentStep ? 'w-8 bg-primary' : step < currentStep ? 'w-2 bg-primary/50' : 'w-2 bg-muted'
+                        }`}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="prompt">What do you want to build? *</Label>
-                      <Textarea
-                        id="prompt"
-                        value={newProject.user_prompt}
-                        onChange={(e) => setNewProject({ ...newProject, user_prompt: e.target.value })}
-                        placeholder="Build a todo app with dark mode, add/delete tasks, and local storage..."
-                        rows={5}
-                      />
-                      <p className="text-xs text-muted-foreground">Describe your project in detail.</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Platform *</Label>
-                      <RadioGroup
-                        value={newProject.platform}
-                        onValueChange={(value) => {
-                          const defaultStack = value === 'web' ? 'nextjs-developer' : 'expo-developer'
-                          setNewProject({ ...newProject, platform: value, tech_stack: defaultStack })
-                        }}
-                        className="flex flex-row gap-4"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="web" id="web" />
-                          <Label htmlFor="web" className="cursor-pointer">Web App</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="mobile" id="mobile" />
-                          <Label htmlFor="mobile" className="cursor-pointer">Mobile App</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id="backend"
-                          checked={newProject.backend_enabled}
-                          onChange={(e) => setNewProject({ ...newProject, backend_enabled: e.target.checked })}
-                          className="w-4 h-4"
-                        />
-                        <Label htmlFor="backend" className="cursor-pointer">
-                          Enable Backend (Authentication & Database)
-                        </Label>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Adds user authentication, data storage, and file uploads to your app
-                      </p>
-                    </div>
+                    ))}
                   </div>
+
+                  <div className="py-4 min-h-[300px]">
+                    {/* Step 1: Project Basics */}
+                    {currentStep === 1 && (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-2">
+                          <Label htmlFor="name">Project Name *</Label>
+                          <Input
+                            id="name"
+                            value={newProject.name}
+                            onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                            placeholder="My Awesome App"
+                            autoFocus
+                          />
+                        </div>
+                        <div className="space-y-3">
+                          <Label>Platform *</Label>
+                          <div className="grid grid-cols-2 gap-4">
+                            <button
+                              type="button"
+                              onClick={() => setNewProject({ ...newProject, platform: 'web', tech_stack: 'nextjs-developer' })}
+                              className={`p-6 rounded-lg border-2 transition-all hover:scale-105 ${
+                                newProject.platform === 'web' 
+                                  ? 'border-primary bg-primary/5 shadow-lg' 
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <Globe className="w-8 h-8 mx-auto mb-3 text-primary" />
+                              <h3 className="font-semibold mb-1">Web App</h3>
+                              <p className="text-xs text-muted-foreground">Next.js</p>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setNewProject({ ...newProject, platform: 'mobile', tech_stack: 'expo-developer' })}
+                              className={`p-6 rounded-lg border-2 transition-all hover:scale-105 ${
+                                newProject.platform === 'mobile' 
+                                  ? 'border-primary bg-primary/5 shadow-lg' 
+                                  : 'border-border hover:border-primary/50'
+                              }`}
+                            >
+                              <Smartphone className="w-8 h-8 mx-auto mb-3 text-primary" />
+                              <h3 className="font-semibold mb-1">Mobile App</h3>
+                              <p className="text-xs text-muted-foreground">Expo (React Native)</p>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 2: Features */}
+                    {currentStep === 2 && (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-4">
+                          <Label>Features</Label>
+                          <div 
+                            onClick={() => setNewProject({ ...newProject, backend_enabled: !newProject.backend_enabled })}
+                            className={`p-6 rounded-lg border-2 cursor-pointer transition-all hover:scale-[1.02] ${
+                              newProject.backend_enabled 
+                                ? 'border-primary bg-primary/5 shadow-lg' 
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="flex items-start gap-4">
+                              <div className="shrink-0">
+                                <Database className="w-6 h-6 text-primary" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-semibold">Backend Services</h3>
+                                  <input
+                                    type="checkbox"
+                                    checked={newProject.backend_enabled}
+                                    onChange={() => {}}
+                                    className="w-4 h-4"
+                                  />
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  Adds user authentication, database storage, and file uploads to your app
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Step 3: Describe Your App */}
+                    {currentStep === 3 && (
+                      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-2">
+                          <Label htmlFor="prompt">What do you want to build? *</Label>
+                          <Textarea
+                            id="prompt"
+                            value={newProject.user_prompt}
+                            onChange={(e) => setNewProject({ ...newProject, user_prompt: e.target.value })}
+                            placeholder="Build a todo app with dark mode, add/delete tasks, and local storage..."
+                            rows={8}
+                            autoFocus
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            {newProject.user_prompt.length} characters • Be specific about features, design, and functionality
+                          </p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-muted/50 border">
+                          <p className="text-xs font-medium mb-2">💡 Example prompts:</p>
+                          <ul className="text-xs text-muted-foreground space-y-1">
+                            <li>• A recipe app with search, favorites, and cooking timer</li>
+                            <li>• A fitness tracker with workout logging and progress charts</li>
+                            <li>• A note-taking app with markdown support and folders</li>
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                    <Button
-                      onClick={handleCreateProject}
-                      disabled={saving || !newProject.name.trim() || !newProject.user_prompt.trim() || newProject.user_prompt.length < 10}
-                    >
-                      {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                      {saving ? 'Creating...' : 'Create & Start Building →'}
-                    </Button>
+                    {currentStep > 1 && (
+                      <Button variant="outline" onClick={() => setCurrentStep(currentStep - 1)}>
+                        ← Back
+                      </Button>
+                    )}
+                    {currentStep < 3 ? (
+                      <Button
+                        onClick={() => setCurrentStep(currentStep + 1)}
+                        disabled={currentStep === 1 && !newProject.name.trim()}
+                      >
+                        Next →
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleCreateProject}
+                        disabled={saving || !newProject.name.trim() || !newProject.user_prompt.trim() || newProject.user_prompt.length < 10}
+                      >
+                        {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        {saving ? 'Creating...' : 'Create Project'}
+                      </Button>
+                    )}
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -393,11 +475,12 @@ export default function DashboardPage() {
               {filteredProjects.map((project) => (
                 <Card
                   key={project.id}
-                  className="group relative overflow-hidden hover:shadow-lg transition-all hover:border-primary/50 hover:-translate-y-0.5 cursor-pointer bg-gradient-to-br from-card to-card/50"
+                  className="group relative overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-br from-card to-card/50 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-primary/20 hover:border-primary/50 hover:-translate-y-1 hover:scale-[1.02]"
                   onClick={() => router.push(`/chat?project=${project.id}`)}
                 >
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity duration-300 -z-10" />
                   
                   <CardHeader className="relative">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -434,7 +517,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter className="flex justify-end relative opacity-0 group-hover:opacity-100 transition-opacity">
+                  <CardFooter className="flex justify-end relative translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                     <Button
                       variant="ghost"
                       size="sm"

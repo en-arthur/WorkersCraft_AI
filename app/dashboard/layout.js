@@ -26,7 +26,14 @@ export default function DashboardLayout({ children }) {
     const active = pathname === href
     return (
       <Link href={href}>
-        <Button variant={active ? 'secondary' : 'ghost'} className="w-full justify-start h-8 px-1.5">
+        <Button 
+          variant={active ? 'secondary' : 'ghost'} 
+          className={`w-full justify-start h-8 px-1.5 transition-all duration-200 ${
+            active 
+              ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-l-2 border-primary' 
+              : 'hover:scale-105 hover:bg-accent/50 hover:border-l-2 hover:border-primary/50'
+          }`}
+        >
           {icon}
           {sidebarOpen && <span className="text-xs">{label}</span>}
         </Button>
