@@ -25,18 +25,17 @@ export default function DashboardLayout({ children }) {
   const navItem = (href, icon, label) => {
     const active = pathname === href
     return (
-      <Link href={href}>
-        <Button 
-          variant={active ? 'secondary' : 'ghost'} 
-          className={`w-full justify-start h-8 px-1.5 transition-all duration-200 ${
+      <Link href={href} className="block">
+        <div
+          className={`w-full flex items-center gap-2 h-8 px-1.5 rounded-md transition-all duration-200 cursor-pointer ${
             active 
-              ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-l-2 border-primary' 
-              : 'hover:scale-105 hover:bg-accent/50 hover:border-l-2 hover:border-primary/50'
+              ? 'bg-gradient-to-r from-primary/10 to-primary/5 border-l-2 border-primary text-foreground' 
+              : 'hover:scale-[1.02] hover:bg-accent/50 hover:border-l-2 hover:border-primary/50 border-l-2 border-transparent'
           }`}
         >
           {icon}
           {sidebarOpen && <span className="text-xs">{label}</span>}
-        </Button>
+        </div>
       </Link>
     )
   }
