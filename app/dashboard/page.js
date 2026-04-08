@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
 import { useAuth } from '@/lib/auth'
 import { ImportGitHubDialog } from '@/components/import-github-dialog'
 import Logo from '@/components/logo'
@@ -330,31 +330,28 @@ export default function DashboardPage() {
                         <div className="space-y-4">
                           <Label>Features</Label>
                           <div 
-                            onClick={() => setNewProject({ ...newProject, backend_enabled: !newProject.backend_enabled })}
-                            className={`p-6 rounded-lg border-2 cursor-pointer transition-all hover:scale-[1.02] ${
+                            className={`p-6 rounded-lg border-2 transition-all ${
                               newProject.backend_enabled 
                                 ? 'border-primary bg-primary/5 shadow-lg' 
-                                : 'border-border hover:border-primary/50'
+                                : 'border-border'
                             }`}
                           >
-                            <div className="flex items-start gap-4">
-                              <div className="shrink-0">
-                                <Database className="w-6 h-6 text-primary" />
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="font-semibold">Backend Services</h3>
-                                  <input
-                                    type="checkbox"
-                                    checked={newProject.backend_enabled}
-                                    onChange={() => {}}
-                                    className="w-4 h-4"
-                                  />
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex items-start gap-4 flex-1">
+                                <div className="shrink-0">
+                                  <Database className="w-6 h-6 text-primary" />
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                  Adds user authentication, database storage, and file uploads to your app
-                                </p>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold mb-2">Backend Services</h3>
+                                  <p className="text-sm text-muted-foreground">
+                                    Adds user authentication, database storage, and file uploads to your app
+                                  </p>
+                                </div>
                               </div>
+                              <Switch
+                                checked={newProject.backend_enabled}
+                                onCheckedChange={(checked) => setNewProject({ ...newProject, backend_enabled: checked })}
+                              />
                             </div>
                           </div>
                         </div>
