@@ -113,6 +113,25 @@ export async function GET(request, { params }) {
           completed_at: ['success', 'failed'].includes(newStatus) ? new Date().toISOString() : null
         })
         .eq('id', params.id)
+
+      // Update project deployed_url when ready
+      if (newStatus === 'success' && deployment.project_id) {
+        await supabase
+          .from('projects')
+          .update({ deployed_url: deploymentUrl, updated_at: new Date().toISOString() })
+          .eq('id', deployment.project_id)
+
+        // Send success notification
+        try {
+          const { sendNotification } = await import('@/lib/bot/notifications')
+          const { data: project } = await supabase.from('projects').select('name').eq('id', deployment.project_id).single()
+          await sendNotification(deployment.user_id, 'deployment_success', {
+            projectName: project?.name || 'Project',
+            projectId: deployment.project_id,
+            url: deploymentUrl,
+          })
+        } catch {}
+      }
     }
 
     return Response.json({

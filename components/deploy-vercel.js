@@ -71,6 +71,8 @@ export function DeployVercel({ fragment, sandboxId, isPreviewLoading, isChatLoad
 
       // Start polling if we have a DB deployment ID
       if (data.dbDeploymentId) {
+        // Show queued toast
+        toast({ title: '⏳ Deployment queued', description: 'Building your app on Vercel...' })
         pollDeploymentStatus(data.dbDeploymentId, session.access_token)
       } else {
         // Fallback: show URL immediately

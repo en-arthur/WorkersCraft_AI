@@ -281,45 +281,31 @@ export async function POST(request) {
       )
     }
 
-    // Update project with deployment URL
+    // Update project with deployment URL (optimistic - will be confirmed by polling)
     if (projectId) {
       await supabase
         .from('projects')
-        .update({
-          deployed_url: `https://${data.url}`,
-          updated_at: new Date().toISOString()
-        })
+        .update({ deployed_url: `https://${data.url}`, updated_at: new Date().toISOString() })
         .eq('id', projectId)
-      
-      // Update deployment record
-      if (deployment) {
-        await supabase
-          .from('deployments')
-          .update({
-            status: 'success',
-            deployment_url: `https://${data.url}`,
-            vercel_deployment_id: data.id,
-            completed_at: new Date().toISOString()
-          })
-          .eq('id', deployment.id)
-      }
-      
-      // Send success notification
-      const { sendNotification } = await import('@/lib/bot/notifications')
-      await sendNotification(actualUserId, 'deployment_success', {
-        projectName,
-        projectId,
-        url: `https://${data.url}`,
-        buildTime: Math.floor((Date.now() - Date.parse(data.createdAt)) / 1000),
-        deploymentId: data.id
-      })
+    }
+
+    // Update deployment record with vercel ID - keep status as 'building' for polling
+    if (deployment) {
+      await supabase
+        .from('deployments')
+        .update({
+          vercel_deployment_id: data.id,
+          deployment_url: `https://${data.url}`,
+          status: 'building',
+        })
+        .eq('id', deployment.id)
     }
 
     // Return the deployment URL and deployment record ID
     return NextResponse.json({
       url: `https://${data.url}`,
       deploymentId: data.id,
-      status: data.status,
+      status: data.readyState || data.status,
       inspectorUrl: data.inspectorUrl,
       dbDeploymentId: deployment?.id,
     })
