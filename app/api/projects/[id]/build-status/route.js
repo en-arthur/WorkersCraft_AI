@@ -109,8 +109,18 @@ export async function GET(request, { params }) {
       status: newStatus, artifact_id: artifactId, error: errorMsg, updated_at: new Date().toISOString(),
     }).eq('id', buildId)
 
+    // Sync deployments table
+    const deploymentStatus = newStatus === 'completed' ? 'success' : newStatus === 'failed' ? 'failed' : 'building'
     const repoMatch = project.github_repo_url?.match(/github\.com[/:]([^/]+\/[^/.]+)/)
     const repoPath = repoMatch?.[1] || ''
+    
+    await supabase.from('deployments').update({
+      status: deploymentStatus,
+      artifact_url: artifactId ? `https://github.com/${repoPath}/actions/runs/${build.run_id}` : null,
+      error_message: errorMsg,
+      completed_at: ['completed', 'failed'].includes(newStatus) ? new Date().toISOString() : null
+    }).eq('github_run_id', build.run_id.toString())
+
     return Response.json({
       status: newStatus,
       artifactId,
