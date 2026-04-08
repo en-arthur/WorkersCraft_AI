@@ -198,7 +198,7 @@ export async function POST(request) {
         user_id: actualUserId,
         type: 'web',
         platform: 'vercel',
-        status: 'pending',
+        status: 'building',
         branch: 'main'
       })
       .select()
@@ -315,12 +315,13 @@ export async function POST(request) {
       })
     }
 
-    // Return the deployment URL
+    // Return the deployment URL and deployment record ID
     return NextResponse.json({
       url: `https://${data.url}`,
       deploymentId: data.id,
       status: data.status,
       inspectorUrl: data.inspectorUrl,
+      dbDeploymentId: deployment?.id,
     })
   } catch (error) {
     console.error('Deploy error:', error)
