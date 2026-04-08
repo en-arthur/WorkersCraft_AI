@@ -21,12 +21,14 @@ export default function DeploymentsPage() {
   useEffect(() => {
     if (session) {
       syncAndFetch()
-      const interval = setInterval(() => {
-        fetchDeployments(true)
-      }, 10000)
-      return () => clearInterval(interval)
     }
-  }, [session, typeFilter, statusFilter])
+  }, [session])
+
+  useEffect(() => {
+    if (session) {
+      fetchDeployments()
+    }
+  }, [typeFilter, statusFilter])
 
   async function syncAndFetch() {
     await syncVercelDeployments()

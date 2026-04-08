@@ -75,7 +75,7 @@ export async function POST(request) {
         .single()
 
       if (existing) {
-        // Update if status changed
+        // Update if status changed (preserve project_id)
         if (existing.status !== status) {
           await supabase
             .from('deployments')
