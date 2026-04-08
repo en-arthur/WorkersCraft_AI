@@ -13,19 +13,40 @@ export default function DeploymentsPage() {
   const { session } = useAuth()
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
 
   useEffect(() => {
     if (session) {
-      fetchDeployments()
+      syncAndFetch()
       const interval = setInterval(() => {
         fetchDeployments(true)
       }, 10000)
       return () => clearInterval(interval)
     }
   }, [session, typeFilter, statusFilter])
+
+  async function syncAndFetch() {
+    await syncVercelDeployments()
+    await fetchDeployments()
+  }
+
+  async function syncVercelDeployments() {
+    setSyncing(true)
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      await fetch('/api/deployments/sync-vercel', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${currentSession?.access_token}` }
+      })
+    } catch (error) {
+      console.error('Sync error:', error)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   async function fetchDeployments(silent = false) {
     if (!silent) setLoading(true)
@@ -106,7 +127,10 @@ export default function DeploymentsPage() {
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Deployments</h1>
-          <p className="text-muted-foreground">Track all your web and mobile deployments</p>
+          <p className="text-muted-foreground">
+            Track all your web and mobile deployments
+            {syncing && <span className="ml-2 text-sm">• Syncing...</span>}
+          </p>
         </div>
 
         {/* Filters */}
