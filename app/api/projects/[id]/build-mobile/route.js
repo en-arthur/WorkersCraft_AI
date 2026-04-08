@@ -267,6 +267,19 @@ export async function POST(request, { params }) {
       workflow_file: workflowFile,
     }).select().single()
 
+    // Create deployment record
+    await supabase.from('deployments').insert({
+      project_id: id,
+      user_id: user.id,
+      type: platform,
+      platform: 'github-actions',
+      build_type: buildType,
+      status: 'building',
+      github_run_id: runId,
+      branch: project.github_branch,
+      started_at: new Date().toISOString()
+    })
+
     ingestEvent(user.id, 'mobile_build', { platform, build_type: buildType })
     return Response.json({ buildId: build.id, runId })
   } catch (error) {

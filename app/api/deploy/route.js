@@ -190,6 +190,20 @@ export async function POST(request) {
 
     const vercelToken = decrypt(integration.access_token)
 
+    // Create deployment record
+    const { data: deployment } = await supabase
+      .from('deployments')
+      .insert({
+        project_id: projectId,
+        user_id: actualUserId,
+        type: 'web',
+        platform: 'vercel',
+        status: 'pending',
+        branch: 'main'
+      })
+      .select()
+      .single()
+
     // Only add next.config if missing (sandbox may not have it)
     const template = projectData?.template || fragment?.template
     if ((template?.includes('nextjs') || template === 'nextjs-developer') && !files['next.config.js'] && !files['next.config.mjs']) {
@@ -238,6 +252,18 @@ export async function POST(request) {
     if (!response.ok) {
       console.error('Vercel deploy error:', data)
       
+      // Update deployment record
+      if (deployment) {
+        await supabase
+          .from('deployments')
+          .update({
+            status: 'failed',
+            error_message: data.error?.message || 'Deployment failed',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', deployment.id)
+      }
+      
       // Send failure notification
       if (projectId) {
         const { sendNotification } = await import('@/lib/bot/notifications')
@@ -264,6 +290,19 @@ export async function POST(request) {
           updated_at: new Date().toISOString()
         })
         .eq('id', projectId)
+      
+      // Update deployment record
+      if (deployment) {
+        await supabase
+          .from('deployments')
+          .update({
+            status: 'success',
+            deployment_url: `https://${data.url}`,
+            vercel_deployment_id: data.id,
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', deployment.id)
+      }
       
       // Send success notification
       const { sendNotification } = await import('@/lib/bot/notifications')
