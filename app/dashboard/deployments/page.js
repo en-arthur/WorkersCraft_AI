@@ -17,20 +17,22 @@ export default function DeploymentsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [hasLoaded, setHasLoaded] = useState(false)
+
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   useEffect(() => {
-    if (session) {
+    if (session && !hasLoaded) {
       syncAndFetch()
+      setHasLoaded(true)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session])
+  }, [session, hasLoaded])
 
   useEffect(() => {
-    if (session) {
+    if (session && hasLoaded) {
       fetchDeployments()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typeFilter, statusFilter, session])
+  }, [typeFilter, statusFilter])
 
   async function syncAndFetch() {
     await syncVercelDeployments()
