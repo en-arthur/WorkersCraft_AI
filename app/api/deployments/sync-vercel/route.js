@@ -67,45 +67,26 @@ export async function POST(request) {
         status = 'failed'
       }
 
-      // Check if deployment already exists
-      const { data: existing } = await supabase
+      // Upsert to prevent duplicates
+      const { error: upsertError } = await supabase
         .from('deployments')
-        .select('id, status')
-        .eq('vercel_deployment_id', deployment.uid)
-        .single()
-
-      if (existing) {
-        // Update if status changed (preserve project_id)
-        if (existing.status !== status) {
-          await supabase
-            .from('deployments')
-            .update({
-              status,
-              deployment_url: deployment.url ? `https://${deployment.url}` : null,
-              completed_at: status === 'success' || status === 'failed' ? new Date().toISOString() : null
-            })
-            .eq('id', existing.id)
-          updated++
-        }
-      } else {
-        // Insert new deployment
-        await supabase
-          .from('deployments')
-          .insert({
-            user_id: user.id,
-            project_id: null,
-            type: 'web',
-            platform: 'vercel',
-            status,
-            vercel_deployment_id: deployment.uid,
-            deployment_url: deployment.url ? `https://${deployment.url}` : null,
-            created_at: new Date(parseInt(deployment.createdAt || deployment.created)).toISOString(),
-            started_at: deployment.buildingAt ? new Date(parseInt(deployment.buildingAt)).toISOString() : null,
-            completed_at: deployment.ready && (status === 'success' || status === 'failed') ? new Date(parseInt(deployment.ready)).toISOString() : null,
-            error_message: deployment.errorMessage || null
-          })
-        synced++
-      }
+        .upsert({
+          user_id: user.id,
+          vercel_deployment_id: deployment.uid,
+          type: 'web',
+          platform: 'vercel',
+          status,
+          deployment_url: deployment.url ? `https://${deployment.url}` : null,
+          created_at: new Date(deployment.created).toISOString(),
+          started_at: deployment.buildingAt ? new Date(deployment.buildingAt).toISOString() : null,
+          completed_at: deployment.ready && (status === 'success' || status === 'failed') ? new Date(deployment.ready).toISOString() : null,
+          error_message: deployment.errorMessage || null
+        }, {
+          onConflict: 'vercel_deployment_id',
+          ignoreDuplicates: false
+        })
+      
+      if (!upsertError) synced++
     }
 
     return Response.json({ synced, updated, total: vercelData.deployments?.length || 0 })
