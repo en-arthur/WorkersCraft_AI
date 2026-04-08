@@ -22,13 +22,15 @@ export default function DeploymentsPage() {
     if (session) {
       syncAndFetch()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session])
 
   useEffect(() => {
     if (session) {
       fetchDeployments()
     }
-  }, [typeFilter, statusFilter])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [typeFilter, statusFilter, session])
 
   async function syncAndFetch() {
     await syncVercelDeployments()
