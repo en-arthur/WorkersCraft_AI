@@ -135,14 +135,14 @@ export default function DeploymentsPage() {
               <Smartphone className="w-4 h-4 mr-1" />
               Android
             </Button>
-            <Button
+            {/* <Button
               variant={typeFilter === 'ios' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setTypeFilter('ios')}
             >
               <Apple className="w-4 h-4 mr-1" />
               iOS
-            </Button>
+            </Button> */}
           </div>
           
           <div className="relative flex-1">
