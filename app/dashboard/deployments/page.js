@@ -183,7 +183,7 @@ export default function DeploymentsPage() {
                       {getTypeIcon(deployment.type)}
                       <div>
                         <CardTitle className="text-lg">
-                          {deployment.projects?.name || 'Unknown Project'}
+                          {deployment.projects?.name || deployment.project_id || 'Unknown Project'}
                         </CardTitle>
                         <CardDescription className="flex items-center gap-2 mt-1">
                           {getStatusIcon(deployment.status)}
