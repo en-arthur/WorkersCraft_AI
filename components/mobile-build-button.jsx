@@ -247,6 +247,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
               <DropdownMenuItem onClick={() => triggerBuild('android', 'release')}>
                 Android Release (AAB)
               </DropdownMenuItem>
+              {/* iOS builds coming soon
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled className="opacity-50 cursor-not-allowed flex items-center justify-between">
                 <span>iOS Debug (unsigned)</span>
@@ -256,6 +257,7 @@ export function MobileBuildButton({ projectId, hasGitHubRepo, githubRepoUrl, onN
                 <span>iOS Release (signed)</span>
                 <span className="text-xs bg-muted text-muted-foreground rounded px-1.5 py-0.5 ml-2">Soon</span>
               </DropdownMenuItem>
+              */}
             </DropdownMenuContent>
           </DropdownMenu>
         )}

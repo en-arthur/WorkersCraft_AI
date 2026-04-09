@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { GitBranch, Loader2, Search, Plus } from 'lucide-react'
+import { GitBranch, Loader2, Search, Plus, RefreshCw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/ui/use-toast'
 
@@ -176,13 +176,20 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to create repository')
 
-      // Wait briefly for GitHub to register the new repo, then refresh list
       setShowCreateRepo(false)
       setNewRepoName('')
-      await new Promise(r => setTimeout(r, 1500))
-      const updatedRepos = await fetchRepos()
-      const created = updatedRepos.find(r => r.cloneUrl === data.repoUrl)
-      if (created) handleRepoSelect(created)
+
+      // Poll until the new repo appears in the list (GitHub takes a moment to register it)
+      let updatedRepos = []
+      for (let i = 0; i < 8; i++) {
+        await new Promise(r => setTimeout(r, 1000))
+        updatedRepos = await fetchRepos()
+        const created = updatedRepos.find(r => r.cloneUrl === data.repoUrl)
+        if (created) {
+          handleRepoSelect(created)
+          break
+        }
+      }
     } catch (err) {
       toast({ variant: 'destructive', title: 'Error', description: err.message })
     } finally {
@@ -261,8 +268,15 @@ export function ConnectGitHubDialog({ projectId, platform, onConnect, forceOpen,
                 placeholder="Search repositories..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
+                className="pl-9 pr-10"
               />
+              <button
+                onClick={fetchRepos}
+                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                title="Refresh repositories"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+              </button>
             </div>
 
             {loading ? (
