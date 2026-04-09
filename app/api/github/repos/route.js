@@ -31,7 +31,7 @@ export async function GET(request) {
     }
 
     console.log('[/api/github/repos] Fetching repos for user:', user.id)
-    const repos = await fetchGitHubRepos(githubToken)
+    const repos = await fetchGitHubRepos(githubToken, { sort: 'updated' })
 
     const formattedRepos = repos.map(repo => ({
       id: repo.id,

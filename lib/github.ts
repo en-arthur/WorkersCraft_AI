@@ -34,6 +34,7 @@ export async function fetchGitHubRepos(token: string, options: any = {}) {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache',
       },
     }
   )
