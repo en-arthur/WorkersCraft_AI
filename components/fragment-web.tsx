@@ -6,6 +6,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
+import { QRPopover } from './qr-popover'
 import { ExecutionResultWeb } from '@/lib/types'
 import { FragmentSchema } from '@/lib/schema'
 import { ExternalLink, RotateCw } from 'lucide-react'

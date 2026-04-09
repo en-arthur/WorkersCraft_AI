@@ -18,6 +18,7 @@ import { useAuth } from '@/lib/auth'
 import { ImportGitHubDialog } from '@/components/import-github-dialog'
 import Logo from '@/components/logo'
 import { Skeleton } from '@/components/ui/skeleton'
+import { QRPopover } from '@/components/qr-popover'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -514,6 +515,11 @@ export default function DashboardPage() {
                         </Badge>
                       )}
                     </div>
+                    {project.deployed_url && (
+                      <div onClick={e => e.stopPropagation()}>
+                        <QRPopover url={project.deployed_url} />
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter className="flex justify-end relative translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                     <Button

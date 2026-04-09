@@ -4,6 +4,7 @@ import { DeployVercel } from './deploy-vercel'
 import { PushGitHubDialog } from './push-github-dialog'
 import { BackendPanel } from './backend-panel'
 import { DeviceSelector, DEVICES } from './device-selector'
+import { QRPopover } from './qr-popover'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -251,6 +252,7 @@ export function Preview({
                         <TooltipContent>Open in new tab</TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                    <QRPopover url={previewUrl} />
                   </>
                 )}
                 {projectId && fragment.github_repo_url && fragment.github_branch && (
