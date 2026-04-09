@@ -26,8 +26,20 @@ export async function GET(request) {
     let query = supabase
       .from('deployments')
       .select(`
-        *,
-        projects (
+        id,
+        project_id,
+        user_id,
+        type,
+        platform,
+        status,
+        deployment_url,
+        artifact_url,
+        build_type,
+        created_at,
+        started_at,
+        completed_at,
+        error_message,
+        projects!inner (
           id,
           name,
           platform
