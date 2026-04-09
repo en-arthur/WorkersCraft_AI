@@ -13,49 +13,24 @@ export default function DeploymentsPage() {
   const { session } = useAuth()
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [hasLoaded, setHasLoaded] = useState(false)
-
-  const [hasLoaded, setHasLoaded] = useState(false)
 
   useEffect(() => {
-    if (session && !hasLoaded) {
-      syncAndFetch()
-      setHasLoaded(true)
+    if (session) {
+      fetchDeployments()
     }
-  }, [session, hasLoaded])
+  }, [])
 
   useEffect(() => {
-    if (session && hasLoaded) {
+    if (session) {
       fetchDeployments()
     }
   }, [typeFilter, statusFilter])
 
-  async function syncAndFetch() {
-    await syncVercelDeployments()
-    await fetchDeployments()
-  }
-
-  async function syncVercelDeployments() {
-    setSyncing(true)
-    try {
-      const { data: { session: currentSession } } = await supabase.auth.getSession()
-      await fetch('/api/deployments/sync-vercel', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${currentSession?.access_token}` }
-      })
-    } catch (error) {
-      console.error('Sync error:', error)
-    } finally {
-      setSyncing(false)
-    }
-  }
-
-  async function fetchDeployments(silent = false) {
-    if (!silent) setLoading(true)
+  async function fetchDeployments() {
+    setLoading(true)
     try {
       const { data: { session: currentSession } } = await supabase.auth.getSession()
       
@@ -135,7 +110,6 @@ export default function DeploymentsPage() {
           <h1 className="text-3xl font-bold mb-2">Deployments</h1>
           <p className="text-muted-foreground">
             Track all your web and mobile deployments
-            {syncing && <span className="ml-2 text-sm">• Syncing...</span>}
           </p>
         </div>
 
