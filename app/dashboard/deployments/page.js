@@ -16,15 +16,17 @@ export default function DeploymentsPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [hasLoaded, setHasLoaded] = useState(false)
 
   useEffect(() => {
-    if (session) {
+    if (session && !hasLoaded) {
       fetchDeployments()
+      setHasLoaded(true)
     }
-  }, [])
+  }, [session, hasLoaded])
 
   useEffect(() => {
-    if (session) {
+    if (session && hasLoaded) {
       fetchDeployments()
     }
   }, [typeFilter, statusFilter])
