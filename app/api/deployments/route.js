@@ -34,6 +34,7 @@ export async function GET(request) {
         )
       `)
       .eq('user_id', user.id)
+      .not('project_id', 'is', null)
       .order('created_at', { ascending: false })
 
     if (type) query = query.eq('type', type)
