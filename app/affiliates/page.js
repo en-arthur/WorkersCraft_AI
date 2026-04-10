@@ -53,7 +53,7 @@ export default function AffiliatesPage() {
           <p className="text-xl text-muted-foreground mb-8">
             Join the WorkersCraft affiliate program and earn for every paying customer you refer.
           </p>
-          <Button size="lg" onClick={() => setShowForm(true)}>
+          <Button size="lg" onClick={() => { setShowForm(true); setTimeout(() => document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' }), 100) }}>
             Apply Now &mdash; It&apos;s Free
           </Button>
         </div>
@@ -84,10 +84,9 @@ export default function AffiliatesPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-16 text-center">
+        <div className="grid grid-cols-2 gap-4 mb-16 text-center max-w-xs mx-auto">
           {[
             { label: 'Commission', value: '25%' },
-            { label: 'Cookie Duration', value: '30 days' },
             { label: 'Min. Payout', value: '$20' },
           ].map(({ label, value }) => (
             <div key={label} className="p-4 border rounded-lg">
@@ -99,7 +98,7 @@ export default function AffiliatesPage() {
 
         {/* Apply form */}
         {showForm && (
-          <Card className="max-w-lg mx-auto">
+          <Card className="max-w-lg mx-auto" id="apply-form">
             <CardHeader>
               <CardTitle>Apply to the Affiliate Program</CardTitle>
             </CardHeader>
