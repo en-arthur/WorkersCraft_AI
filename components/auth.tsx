@@ -404,10 +404,17 @@ function MagicLink({
     e.preventDefault()
     clearMessages()
     setLoading(true)
+    
+    // Check for affiliate ref cookie before signup
+    const ref = document.cookie.split('; ').find(r => r.startsWith('affiliate_ref='))?.split('=')[1]
+    
     const { error } = await supabaseClient.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: redirectTo,
+        data: {
+          affiliate_ref: ref || null
+        }
       },
     })
     if (error) setError(error.message)

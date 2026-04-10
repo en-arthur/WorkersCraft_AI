@@ -85,8 +85,11 @@ export function useAuth(
         })
         posthog.capture('sign_in')
 
-        // Track affiliate referral from cookie
-        const ref = document.cookie.split('; ').find(r => r.startsWith('affiliate_ref='))?.split('=')[1]
+        // Track affiliate referral from cookie or user metadata
+        const cookieRef = document.cookie.split('; ').find(r => r.startsWith('affiliate_ref='))?.split('=')[1]
+        const metadataRef = session?.user?.user_metadata?.affiliate_ref
+        const ref = cookieRef || metadataRef
+        
         if (ref && session?.access_token) {
           fetch('/api/affiliates/track', {
             method: 'POST',
