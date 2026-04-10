@@ -120,20 +120,25 @@ export function Preview({
     const isMobileTemplate = templateId === 'expo-developer'
     
     if (isMobileTemplate) {
-      setDevice('mobile-large')
-      localStorage.setItem('workerscraft_preview_device', 'mobile-large')
+      // Set mobile device in state only - don't persist to localStorage
+      setDevice('mobile')
     } else {
+      // Load saved web preference from localStorage
       const saved = localStorage.getItem('workerscraft_preview_device')
-      if (saved && saved in DEVICES) {
+      if (saved && saved in DEVICES && saved !== 'mobile' && saved !== 'mobile-large') {
         setDevice(saved as keyof typeof DEVICES)
+      } else {
+        setDevice('desktop')
       }
     }
   }, [result?.template])
 
-  // Save device preference
+  // Save device preference (only for non-mobile devices)
   const handleDeviceChange = (newDevice: keyof typeof DEVICES) => {
     setDevice(newDevice)
-    localStorage.setItem('workerscraft_preview_device', newDevice)
+    if (newDevice !== 'mobile' && newDevice !== 'mobile-large') {
+      localStorage.setItem('workerscraft_preview_device', newDevice)
+    }
   }
 
   if (!fragment) {
