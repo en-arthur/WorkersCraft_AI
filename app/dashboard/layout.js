@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/lib/auth'
 import Logo from '@/components/logo'
-import { FolderOpen, LogOut, CreditCard, Menu, X, Plug, Rocket } from 'lucide-react'
+import { FolderOpen, LogOut, CreditCard, Menu, X, Plug, Rocket, DollarSign } from 'lucide-react'
 import { Avatar, AvatarImage } from '@/components/ui/avatar'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import Link from 'next/link'
@@ -60,6 +60,7 @@ export default function DashboardLayout({ children }) {
             {navItem('/dashboard/deployments', <Rocket className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Deployments')}
             {navItem('/dashboard/integrations', <Plug className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Integrations')}
             {navItem('/dashboard/billing', <CreditCard className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Billing')}
+            {navItem('/dashboard/affiliates', <DollarSign className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Affiliates')}
           </nav>
         </div>
         
