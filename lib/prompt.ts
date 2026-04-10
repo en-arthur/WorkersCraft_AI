@@ -123,8 +123,22 @@ export function getBackendPrompt(backendEnabled: boolean, backendStatus: string)
     4. NEVER call storage or file methods without the user being logged in first.
     5. Use backend.create/list/update/delete for data persistence
     6. Store data in logical collections (e.g., 'todos', 'posts', 'products')
-    7. Handle errors gracefully with try/catch
+    7. ALWAYS wrap every backend call in try/catch. If the error code is 'SESSION_EXPIRED' or 'NO_REFRESH_TOKEN', call backend.logout() and show the login form.
     8. After login/register, immediately load the user's data.
+    9. Sessions expire - always handle re-authentication gracefully without crashing the app.
+
+    SESSION EXPIRY PATTERN (required in every app):
+    async function loadData() {
+      try {
+        const items = await backend.list('collection')
+        setItems(items)
+      } catch (err) {
+        if (err.code === 'SESSION_EXPIRED' || err.code === 'NO_REFRESH_TOKEN') {
+          backend.logout()
+          setIsAuthenticated(false) // show login form
+        }
+      }
+    }
     
     REQUIRED APP STRUCTURE:
     - If not authenticated → show Login/Register form
