@@ -266,16 +266,12 @@ export default function DashboardPage() {
                     </DialogDescription>
                   </DialogHeader>
                   
-                  {/* Progress indicator */}
-                  <div className="flex gap-2 justify-center py-2">
-                    {[1, 2, 3].map((step) => (
-                      <div
-                        key={step}
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          step === currentStep ? 'w-8 bg-primary' : step < currentStep ? 'w-2 bg-primary/50' : 'w-2 bg-muted'
-                        }`}
-                      />
-                    ))}
+                  {/* Progress bar */}
+                  <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary rounded-full transition-all duration-300"
+                      style={{ width: `${(currentStep / 3) * 100}%` }}
+                    />
                   </div>
 
                   <div className="py-4 min-h-[300px]">
