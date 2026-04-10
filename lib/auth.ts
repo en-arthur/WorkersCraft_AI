@@ -84,6 +84,16 @@ export function useAuth(
           supabase_id: session?.user.id,
         })
         posthog.capture('sign_in')
+
+        // Track affiliate referral from cookie
+        const ref = document.cookie.split('; ').find(r => r.startsWith('affiliate_ref='))?.split('=')[1]
+        if (ref && session?.access_token) {
+          fetch('/api/affiliates/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+            body: JSON.stringify({ ref_code: ref })
+          }).catch(() => {})
+        }
       }
 
       if (_event === 'SIGNED_OUT') {

@@ -73,6 +73,47 @@ async function handleTransactionCompleted(txn) {
   const { data: sub } = await res.json()
   await upsertSubscription({ ...sub, custom_data: txn.custom_data }, 'active')
 
+  // Track internal affiliate conversion (25% commission)
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('referred_by')
+      .eq('id', userId)
+      .single()
+
+    if (profile?.referred_by) {
+      const { data: affiliate } = await supabase
+        .from('affiliates')
+        .select('id')
+        .eq('ref_code', profile.referred_by)
+        .eq('status', 'approved')
+        .single()
+
+      if (affiliate) {
+        const amountCents = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
+        const commissionCents = Math.round(amountCents * 0.25)
+
+        await supabase.from('affiliate_conversions').insert({
+          affiliate_id: affiliate.id,
+          referred_user_id: userId,
+          plan: sub.items?.[0]?.price?.name || 'unknown',
+          amount_cents: amountCents,
+          commission_cents: commissionCents,
+          status: 'pending',
+          paddle_transaction_id: txn.id,
+        })
+
+        // Update affiliate total_earnings
+        await supabase
+          .from('affiliates')
+          .update({ total_earnings: supabase.raw(`total_earnings + ${commissionCents / 100}`) })
+          .eq('id', affiliate.id)
+      }
+    }
+  } catch (err) {
+    console.error('[affiliate] Failed to track conversion:', err)
+  }
+
   // Track referral with Endorsely
   const referralId = txn.custom_data?.endorsely_referral
   if (referralId && process.env.ENDORSELY_API_SECRET) {
