@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/ui/use-toast'
@@ -53,7 +54,7 @@ export default function AffiliatesPage() {
           <p className="text-xl text-muted-foreground mb-8">
             Join the WorkersCraft affiliate program and earn for every paying customer you refer.
           </p>
-          <Button size="lg" onClick={() => { setShowForm(true); setTimeout(() => document.getElementById('apply-form')?.scrollIntoView({ behavior: 'smooth' }), 100) }}>
+          <Button size="lg" onClick={() => setShowForm(true)}>
             Apply Now &mdash; It&apos;s Free
           </Button>
         </div>
@@ -95,43 +96,41 @@ export default function AffiliatesPage() {
             </div>
           ))}
         </div>
-
-        {/* Apply form */}
-        {showForm && (
-          <Card className="max-w-lg mx-auto" id="apply-form">
-            <CardHeader>
-              <CardTitle>Apply to the Affiliate Program</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleApply} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>PayPal / Payout Email</Label>
-                  <Input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={form.payout_email}
-                    onChange={e => setForm(f => ({ ...f, payout_email: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>How will you promote WorkersCraft?</Label>
-                  <Textarea
-                    placeholder="e.g. YouTube channel, Twitter audience, blog, newsletter..."
-                    value={form.how_promote}
-                    onChange={e => setForm(f => ({ ...f, how_promote: e.target.value }))}
-                    required
-                    rows={3}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={applying}>
-                  {applying ? 'Submitting...' : 'Submit Application'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        )}
       </div>
+
+      {/* Apply Dialog */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Apply to the Affiliate Program</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleApply} className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>PayPal / Payout Email</Label>
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={form.payout_email}
+                onChange={e => setForm(f => ({ ...f, payout_email: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>How will you promote WorkersCraft?</Label>
+              <Textarea
+                placeholder="e.g. YouTube channel, Twitter audience, blog, newsletter..."
+                value={form.how_promote}
+                onChange={e => setForm(f => ({ ...f, how_promote: e.target.value }))}
+                required
+                rows={3}
+              />
+            </div>
+            <Button type="submit" className="w-full" disabled={applying}>
+              {applying ? 'Submitting...' : 'Submit Application'}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
