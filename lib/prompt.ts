@@ -55,6 +55,12 @@ export function toPrompt(template: Templates) {
     - Styling: Use StyleSheet.create() for styles
     - Structure: app/index.tsx for home screen, add app/about.tsx for other screens
     - Web preview limitations: Avoid Camera, Sensors, native-only APIs
+    - BOTTOM NAVIGATION (tabs): If the app needs a bottom nav bar:
+      * Always generate app/(tabs)/_layout.tsx from scratch with ONLY the tabs the user requested
+      * Always fully replace app/(tabs)/index.tsx with the user's actual home screen content
+      * NEVER include an "Explore" tab or any default Expo template tab unless the user explicitly asked for it
+      * NEVER reference or import default Expo components like ParallaxScrollView, HelloWave, ThemedText, ThemedView
+      * The _layout.tsx must only contain <Tabs.Screen> entries for tabs the user described
     - Example:
       import { View, Text, StyleSheet } from 'react-native';
       export default function Index() {

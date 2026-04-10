@@ -60,6 +60,14 @@ export async function POST(req: Request) {
     )
   }
 
+  // Clean up default Expo boilerplate before writing AI-generated files
+  if (fragment.template.includes('expo-developer')) {
+    await sbx.commands.run(
+      'cd /home/user && rm -f "app/(tabs)/explore.tsx" "app/(tabs)/+not-found.tsx"',
+      { onStderr: () => {} }
+    )
+  }
+
   // Copy files to sandbox filesystem
   // Handle multi-file format
   if (fragment.files && Array.isArray(fragment.files) && fragment.files.length > 0) {
