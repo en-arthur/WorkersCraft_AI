@@ -118,7 +118,10 @@ export function FragmentWeb({
   }
 
   const isFullWidth = !device || device.width === '100%'
-  const isMobile = device?.label?.toLowerCase().includes('mobile')
+  const isMobile = device?.label?.toLowerCase().includes('mobile') ||
+    device?.label?.toLowerCase().includes('iphone') ||
+    device?.label?.toLowerCase().includes('pixel') ||
+    device?.label?.toLowerCase().includes('galaxy')
   const containerStyle = isFullWidth ? {} : {
     width: typeof device.width === 'number' ? `${device.width}px` : device.width,
     height: typeof device.height === 'number' ? `${device.height}px` : device.height,
@@ -129,15 +132,15 @@ export function FragmentWeb({
   return (
     <div className="flex flex-col w-full h-full items-center justify-center bg-gray-50">
       <div 
-        className={`flex flex-col transition-all duration-300 ${isMobile ? 'bg-gray-900 rounded-[40px] p-2 shadow-2xl border-4 border-gray-800' : 'bg-white'}`}
+        className={`flex flex-col transition-all duration-300 ${isMobile ? 'bg-gray-900 rounded-[32px] p-1 shadow-2xl border border-gray-700' : 'bg-white'}`}
         style={isFullWidth ? { width: '100%', height: '100%' } : containerStyle}
       >
         {isMobile && (
-          <div className="flex justify-center items-center py-2 shrink-0">
-            <div className="w-20 h-5 bg-gray-800 rounded-full" />
+          <div className="flex justify-center items-center pt-2 pb-1 shrink-0">
+            <div className="w-16 h-1 bg-gray-700 rounded-full" />
           </div>
         )}
-        <div className={`flex-1 overflow-hidden ${isMobile ? 'rounded-[28px]' : ''} relative`}>
+        <div className={`flex-1 overflow-hidden ${isMobile ? 'rounded-[26px]' : ''} relative`}>
           {isRestarting && (
             <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-10 rounded-[28px]">
               <div className="text-white text-center">

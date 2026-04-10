@@ -121,11 +121,12 @@ export function Preview({
     
     if (isMobileTemplate) {
       // Set mobile device in state only - don't persist to localStorage
-      setDevice('mobile')
+      setDevice('pixel-7a')
     } else {
       // Load saved web preference from localStorage
       const saved = localStorage.getItem('workerscraft_preview_device')
-      if (saved && saved in DEVICES && saved !== 'mobile' && saved !== 'mobile-large') {
+      const mobileKeys = ['mobile', 'mobile-large', 'iphone-se', 'iphone-15-pro', 'pixel-7a', 'galaxy-s24-ultra']
+      if (saved && saved in DEVICES && !mobileKeys.includes(saved)) {
         setDevice(saved as keyof typeof DEVICES)
       } else {
         setDevice('desktop')
@@ -136,7 +137,8 @@ export function Preview({
   // Save device preference (only for non-mobile devices)
   const handleDeviceChange = (newDevice: keyof typeof DEVICES) => {
     setDevice(newDevice)
-    if (newDevice !== 'mobile' && newDevice !== 'mobile-large') {
+    const mobileKeys = ['mobile', 'mobile-large', 'iphone-se', 'iphone-15-pro', 'pixel-7a', 'galaxy-s24-ultra']
+    if (!mobileKeys.includes(newDevice)) {
       localStorage.setItem('workerscraft_preview_device', newDevice)
     }
   }
