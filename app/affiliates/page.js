@@ -18,7 +18,7 @@ export default function AffiliatesPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [applying, setApplying] = useState(false)
-  const [form, setForm] = useState({ payout_email: '', how_promote: '' })
+  const [form, setForm] = useState({ how_promote: '' })
   const [showForm, setShowForm] = useState(false)
 
   async function handleApply(e) {
@@ -32,7 +32,7 @@ export default function AffiliatesPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify({ payout_email: session.user.email, how_promote: form.how_promote })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
@@ -105,16 +105,6 @@ export default function AffiliatesPage() {
             <DialogTitle>Apply to the Affiliate Program</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleApply} className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>PayPal / Payout Email</Label>
-              <Input
-                type="email"
-                placeholder="your@email.com"
-                value={form.payout_email}
-                onChange={e => setForm(f => ({ ...f, payout_email: e.target.value }))}
-                required
-              />
-            </div>
             <div className="space-y-2">
               <Label>How will you promote WorkersCraft?</Label>
               <Textarea
