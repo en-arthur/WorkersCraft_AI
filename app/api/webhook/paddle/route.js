@@ -78,7 +78,7 @@ async function handleTransactionCompleted(txn) {
     const { data: profile } = await supabase
       .from('user_referrals')
       .select('referred_by')
-      .eq('id', userId)
+      .eq('user_id', userId)
       .single()
 
     if (profile?.referred_by) {

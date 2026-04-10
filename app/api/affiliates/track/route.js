@@ -19,7 +19,7 @@ export async function POST(request) {
   const { data: existing } = await supabase
     .from('user_referrals')
     .select('referred_by')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (existing?.referred_by) return Response.json({ ok: true })
@@ -37,7 +37,7 @@ export async function POST(request) {
   // Save ref_code to user profile
   await supabase
     .from('user_referrals')
-    .upsert({ id: user.id, referred_by: ref_code }, { onConflict: 'id' })
+    .upsert({ user_id: user.id, referred_by: ref_code }, { onConflict: 'user_id' })
 
   // Track click as conversion-ready
   await supabase
