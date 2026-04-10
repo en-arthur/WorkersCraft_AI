@@ -40,4 +40,9 @@ CREATE INDEX IF NOT EXISTS idx_affiliate_conversions_affiliate_id ON affiliate_c
 CREATE INDEX IF NOT EXISTS idx_affiliates_ref_code ON affiliates(ref_code);
 
 -- Store ref_code on users (to track who referred them)
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS referred_by TEXT;
+-- Using user_integrations table to store referral info
+CREATE TABLE IF NOT EXISTS user_referrals (
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  referred_by TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);

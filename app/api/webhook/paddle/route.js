@@ -76,7 +76,7 @@ async function handleTransactionCompleted(txn) {
   // Track internal affiliate conversion (25% commission)
   try {
     const { data: profile } = await supabase
-      .from('profiles')
+      .from('user_referrals')
       .select('referred_by')
       .eq('id', userId)
       .single()
