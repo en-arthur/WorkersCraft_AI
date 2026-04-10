@@ -29,8 +29,7 @@ export async function middleware(req: NextRequest) {
       supabase
         .from('affiliate_clicks')
         .insert({ ref_code: ref, ip_hash: ipHash })
-        .then(() => {})
-        .catch(() => {})
+        .then(() => {}, () => {})
     }
   }
 
