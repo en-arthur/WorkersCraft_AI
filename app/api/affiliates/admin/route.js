@@ -28,10 +28,21 @@ export async function GET(request) {
   const adminCheck = await isAdmin({ username, password })
   if (!adminCheck) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { data: affiliates } = await supabase
+  const { data: affiliates, error } = await supabase
     .from('affiliates')
-    .select(`*, profiles(full_name, email:id)`)
+    .select('*')
     .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching affiliates:', error)
+    return Response.json({ error: error.message }, { status: 500 })
+  }
+
+  // Get user emails from auth.users
+  const userIds = affiliates?.map(a => a.user_id) || []
+  const { data: users } = await supabase.auth.admin.listUsers()
+  const userMap = {}
+  users?.users?.forEach(u => { userMap[u.id] = u.email })
 
   // Get clicks and conversions for each
   const enriched = await Promise.all((affiliates || []).map(async (a) => {
@@ -47,6 +58,7 @@ export async function GET(request) {
 
     return {
       ...a,
+      email: userMap[a.user_id] || a.payout_email,
       clicks: clicks || 0,
       conversions: conversions?.length || 0,
       pending_earnings: conversions?.filter(c => c.status === 'pending').reduce((s, c) => s + c.commission_cents / 100, 0) || 0,
