@@ -42,7 +42,7 @@ export default function AffiliateDashboard() {
   if (!data?.affiliate) {
     return (
       <div className="p-8 text-center">
-        <h2 className="text-xl font-semibold mb-2">You're not an affiliate yet</h2>
+        <h2 className="text-xl font-semibold mb-2">You are not an affiliate yet</h2>
         <p className="text-muted-foreground mb-4">Apply to join our affiliate program and earn 25% commission.</p>
         <Button onClick={() => router.push('/affiliates')}>Apply Now</Button>
       </div>
@@ -63,7 +63,7 @@ export default function AffiliateDashboard() {
 
       {affiliate.status === 'pending' && (
         <div className="p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg text-sm text-yellow-800 dark:text-yellow-200">
-          Your application is under review. We'll approve you within 24 hours.
+          Your application is under review. We will approve you within 24 hours.
         </div>
       )}
 
