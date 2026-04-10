@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/lib/auth'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/ui/use-toast'
-import { DollarSign, Users, Link, BarChart3 } from 'lucide-react'
+import { DollarSign, Users, LinkIcon, BarChart3 } from 'lucide-react'
 
 export default function AffiliatesPage() {
   const { session } = useAuth()
@@ -60,19 +60,27 @@ export default function AffiliatesPage() {
 
         {/* How it works */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {[
-            { icon: Link, title: '1. Get your link', desc: 'Get a unique referral link after approval' },
-            { icon: Users, title: '2. Share it', desc: 'Share with your audience, community, or clients' },
-            { icon: DollarSign, title: '3. Earn 25%', desc: 'Earn 25% of every payment from referred users' },
-          ].map(({ icon: Icon, title, desc }) => (
-            <Card key={title}>
-              <CardContent className="pt-6 text-center">
-                <Icon className="w-8 h-8 mx-auto mb-3 text-primary" />
-                <h3 className="font-semibold mb-1">{title}</h3>
-                <p className="text-sm text-muted-foreground">{desc}</p>
-              </CardContent>
-            </Card>
-          ))}
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <LinkIcon className="w-8 h-8 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">1. Get your link</h3>
+              <p className="text-sm text-muted-foreground">Get a unique referral link after approval</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <Users className="w-8 h-8 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">2. Share it</h3>
+              <p className="text-sm text-muted-foreground">Share with your audience, community, or clients</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <DollarSign className="w-8 h-8 mx-auto mb-3 text-primary" />
+              <h3 className="font-semibold mb-1">3. Earn 25%</h3>
+              <p className="text-sm text-muted-foreground">Earn 25% of every payment from referred users</p>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Stats */}
