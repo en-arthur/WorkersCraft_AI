@@ -15,6 +15,7 @@ export async function GET(request) {
   if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { data: { user } } = await supabase.auth.getUser(token)
+  console.log('Admin check:', { userEmail: user?.email, adminEmail: process.env.ADMIN_EMAIL, isAdmin: user?.email === process.env.ADMIN_EMAIL })
   if (!user || !isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: affiliates } = await supabase
