@@ -35,7 +35,7 @@ export default function AffiliatesPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: 'Application submitted!', description: "We'll review and approve you within 24 hours." })
+      toast({ title: 'Application submitted!', description: "We will review and approve you within 24 hours." })
       router.push('/dashboard/affiliates')
     } catch (err) {
       toast({ variant: 'destructive', title: 'Error', description: err.message })
@@ -54,7 +54,7 @@ export default function AffiliatesPage() {
             Join the WorkersCraft affiliate program and earn for every paying customer you refer.
           </p>
           <Button size="lg" onClick={() => setShowForm(true)}>
-            Apply Now — It's Free
+            Apply Now &mdash; It&apos;s Free
           </Button>
         </div>
 
