@@ -5,18 +5,28 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-function isAdmin(user) {
-  return user.email === process.env.ADMIN_EMAIL
+async function isAdmin(credentials) {
+  // Simple hardcoded admin check
+  const adminUsername = process.env.ADMIN_USERNAME || 'admin'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123'
+  
+  return credentials?.username === adminUsername && credentials?.password === adminPassword
 }
 
 // GET - list all affiliates (admin only)
 export async function GET(request) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: { user } } = await supabase.auth.getUser(token)
-  console.log('Admin check:', { userEmail: user?.email, adminEmail: process.env.ADMIN_EMAIL, isAdmin: user?.email === process.env.ADMIN_EMAIL })
-  if (!user || !isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 })
+  const authHeader = request.headers.get('authorization')
+  if (!authHeader) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  
+  // Expect "Basic base64(username:password)"
+  const [type, encoded] = authHeader.split(' ')
+  if (type !== 'Basic') return Response.json({ error: 'Invalid auth type' }, { status: 401 })
+  
+  const decoded = Buffer.from(encoded, 'base64').toString()
+  const [username, password] = decoded.split(':')
+  
+  const adminCheck = await isAdmin({ username, password })
+  if (!adminCheck) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
   const { data: affiliates } = await supabase
     .from('affiliates')
@@ -48,11 +58,17 @@ export async function GET(request) {
 
 // PATCH - approve/reject affiliate or mark conversion paid (admin only)
 export async function PATCH(request) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const { data: { user } } = await supabase.auth.getUser(token)
-  if (!user || !isAdmin(user)) return Response.json({ error: 'Forbidden' }, { status: 403 })
+  const authHeader = request.headers.get('authorization')
+  if (!authHeader) return Response.json({ error: 'Unauthorized' }, { status: 401 })
+  
+  const [type, encoded] = authHeader.split(' ')
+  if (type !== 'Basic') return Response.json({ error: 'Invalid auth type' }, { status: 401 })
+  
+  const decoded = Buffer.from(encoded, 'base64').toString()
+  const [username, password] = decoded.split(':')
+  
+  const adminCheck = await isAdmin({ username, password })
+  if (!adminCheck) return Response.json({ error: 'Forbidden' }, { status: 403 })
 
   const { affiliate_id, status, conversion_id, mark_paid } = await request.json()
 
