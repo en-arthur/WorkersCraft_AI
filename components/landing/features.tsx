@@ -1,43 +1,43 @@
 import Image from 'next/image'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Code2, Zap, Shield, Box, Wand2, Globe } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
+import { Reveal } from './reveal'
 
 const features = [
   {
-    icon: Wand2,
-    title: 'Natural Language',
+    title: 'Build with Natural Language',
     description: 'Describe what you want to build in plain English and watch WorkersCraft AI create it instantly.',
-    image: '/workerscraft-images/natural-language.png'
+    image: '/workerscraft-images/natural-language.png',
+    bullets: ['AI-powered generation', 'Instant prototyping', 'Iterative refinement']
   },
   {
-    icon: Code2,
-    title: 'Multiple Frameworks',
+    title: 'Multiple Frameworks Supported',
     description: 'Support for Next.js and Expo (React Native) for web and mobile applications.',
-    image: '/workerscraft-images/multiple-frameworks.png'
+    image: '/workerscraft-images/multiple-frameworks.png',
+    bullets: ['React & Next.js', 'Expo & React Native', 'Full TypeScript support']
   },
   {
-    icon: Zap,
     title: 'Real-time Preview',
     description: 'See your application being built in real-time with live streaming updates.',
-    image: '/workerscraft-images/realtime-preview.png'
+    image: '/workerscraft-images/realtime-preview.png',
+    bullets: ['Live hot reload', 'Mobile device preview', 'Instant feedback loop']
   },
   {
-    icon: Box,
-    title: 'Any Package',
+    title: 'Any NPM Package',
     description: 'Install and use any npm or Python package on the fly without any setup.',
-    image: '/workerscraft-images/any-package.png'
+    image: '/workerscraft-images/any-package.png',
+    bullets: ['Full NPM ecosystem', 'Auto-install dependencies', 'Version management']
   },
   {
-    icon: Shield,
-    title: 'Secure Execution',
+    title: 'Secure Sandbox Environment',
     description: 'Code runs in isolated secure sandboxes ensuring safety and reliability.',
-    image: '/workerscraft-images/secure-sandbox.png'
+    image: '/workerscraft-images/secure-sandbox.png',
+    bullets: ['Isolated execution', 'Resource limits', 'DDoS protection']
   },
   {
-    icon: Globe,
-    title: 'Instant Deploy',
+    title: 'One-Click Deployment',
     description: 'Deploy your applications instantly with shareable links for easy collaboration.',
-    image: '/workerscraft-images/deploy.png'
+    image: '/workerscraft-images/deploy.png',
+    bullets: ['Global CDN', 'Automatic SSL', 'Zero-downtime deploys']
   },
 ]
 
@@ -45,7 +45,7 @@ export function Features() {
   return (
     <section className="py-24 px-4 relative">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-16">
+        <div className="text-center mb-20">
           <h2 className="text-3xl md:text-5xl font-bold mb-4">
             Everything You Need
           </h2>
@@ -54,28 +54,45 @@ export function Features() {
           </p>
         </div>
         
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <Card key={feature.title} className="group hover:shadow-lg transition-all duration-300 border-muted overflow-hidden">
-              <div className="relative w-full h-48 overflow-hidden">
-                <Image
-                  src={feature.image}
-                  alt={feature.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <CardHeader>
-                <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                  <feature.icon className="w-6 h-6 text-primary" />
+        <div className="space-y-32">
+          {features.map((feature, i) => {
+            const isEven = i % 2 === 0
+            return (
+              <div key={feature.title} className="relative">
+                <div className={`absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_${isEven ? '20%' : '80%'}_50%,rgba(${isEven ? '59,130,246' : '139,92,246'},0.08),transparent)]`} />
+                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${isEven ? '' : 'lg:grid-flow-dense'}`}>
+                  <Reveal delay={100}>
+                    <div className={isEven ? '' : 'lg:col-start-2'}>
+                      <Image
+                        src={feature.image}
+                        alt={feature.title}
+                        width={1920}
+                        height={1080}
+                        className="rounded-2xl shadow-2xl border border-white/10 hover:scale-[1.02] transition-transform duration-300"
+                      />
+                    </div>
+                  </Reveal>
+                  <Reveal delay={200}>
+                    <div className={`space-y-6 ${isEven ? '' : 'lg:col-start-1 lg:row-start-1'}`}>
+                      <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-white/10">
+                        <span className="text-2xl font-bold text-primary">{String(i + 1).padStart(2, '0')}</span>
+                      </div>
+                      <h3 className="text-3xl md:text-4xl font-bold">{feature.title}</h3>
+                      <p className="text-lg text-muted-foreground leading-relaxed">{feature.description}</p>
+                      <ul className="space-y-3">
+                        {feature.bullets.map((bullet, j) => (
+                          <li key={j} className="flex items-center gap-3">
+                            <CheckCircle className="w-5 h-5 text-primary shrink-0" />
+                            <span className="text-muted-foreground">{bullet}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </Reveal>
                 </div>
-                <CardTitle className="text-xl">{feature.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="text-base">{feature.description}</CardDescription>
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>
