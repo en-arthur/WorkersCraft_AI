@@ -56,13 +56,13 @@ export function Features() {
         
         <div className="space-y-32">
           {features.map((feature, i) => {
-            const isEven = i % 2 === 0
+            const isLeft = i % 2 === 0
             return (
               <div key={feature.title} className="relative">
-                <div className={`absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_${isEven ? '20%' : '80%'}_50%,rgba(${isEven ? '59,130,246' : '139,92,246'},0.08),transparent)]`} />
-                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${isEven ? '' : 'lg:grid-flow-dense'}`}>
+                <div className={`absolute inset-0 -z-10 bg-[radial-gradient(ellipse_60%_50%_at_${isLeft ? '20%' : '80%'}_50%,rgba(${isLeft ? '59,130,246' : '139,92,246'},0.08),transparent)]`} />
+                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center`}>
                   <Reveal delay={100}>
-                    <div className={isEven ? '' : 'lg:col-start-2'}>
+                    <div className={isLeft ? 'lg:order-1' : 'lg:order-2'}>
                       <Image
                         src={feature.image}
                         alt={feature.title}
@@ -73,7 +73,7 @@ export function Features() {
                     </div>
                   </Reveal>
                   <Reveal delay={200}>
-                    <div className={`space-y-6 ${isEven ? '' : 'lg:col-start-1 lg:row-start-1'}`}>
+                    <div className={`space-y-6 ${isLeft ? 'lg:order-2' : 'lg:order-1'}`}>
                       <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-white/10">
                         <span className="text-2xl font-bold text-primary">{String(i + 1).padStart(2, '0')}</span>
                       </div>
