@@ -87,7 +87,7 @@ export default function CloudPage() {
             </Link>
           </Reveal>
           <Reveal delay={400}>
-            <div className="mt-16 w-full max-w-5xl">
+            <div className="mt-24 w-full max-w-5xl">
               <Image
                 src="/workerscraft-images/The backend that powers every app.png"
                 alt="WorkersCraft Cloud Backend"
