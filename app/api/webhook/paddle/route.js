@@ -75,11 +75,14 @@ async function handleTransactionCompleted(txn) {
 
   // Track internal affiliate conversion (25% commission)
   try {
+    console.log('[affiliate] Checking conversion for user:', userId)
     const { data: profile } = await supabase
       .from('user_referrals')
       .select('referred_by')
       .eq('user_id', userId)
       .single()
+
+    console.log('[affiliate] User referral:', profile)
 
     if (profile?.referred_by) {
       const { data: affiliate } = await supabase
@@ -89,9 +92,13 @@ async function handleTransactionCompleted(txn) {
         .eq('status', 'approved')
         .single()
 
+      console.log('[affiliate] Found affiliate:', affiliate)
+
       if (affiliate) {
         const amountCents = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
         const commissionCents = Math.round(amountCents * 0.25)
+
+        console.log('[affiliate] Creating conversion:', { amountCents, commissionCents })
 
         await supabase.from('affiliate_conversions').insert({
           affiliate_id: affiliate.id,
@@ -108,6 +115,8 @@ async function handleTransactionCompleted(txn) {
           .from('affiliates')
           .update({ total_earnings: supabase.raw(`total_earnings + ${commissionCents / 100}`) })
           .eq('id', affiliate.id)
+        
+        console.log('[affiliate] Conversion tracked successfully')
       }
     }
   } catch (err) {

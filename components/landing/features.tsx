@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Code2, Zap, Shield, Box, Wand2, Globe } from 'lucide-react'
 
@@ -6,31 +7,37 @@ const features = [
     icon: Wand2,
     title: 'Natural Language',
     description: 'Describe what you want to build in plain English and watch WorkersCraft AI create it instantly.',
+    image: '/workerscraft-images/natural-language.png'
   },
   {
     icon: Code2,
     title: 'Multiple Frameworks',
     description: 'Support for Next.js and Expo (React Native) for web and mobile applications.',
+    image: '/workerscraft-images/multiple-frameworks.png'
   },
   {
     icon: Zap,
     title: 'Real-time Preview',
     description: 'See your application being built in real-time with live streaming updates.',
+    image: '/workerscraft-images/realtime-preview.png'
   },
   {
     icon: Box,
     title: 'Any Package',
     description: 'Install and use any npm or Python package on the fly without any setup.',
+    image: '/workerscraft-images/any-package.png'
   },
   {
     icon: Shield,
     title: 'Secure Execution',
     description: 'Code runs in isolated secure sandboxes ensuring safety and reliability.',
+    image: '/workerscraft-images/secure-sandbox.png'
   },
   {
     icon: Globe,
     title: 'Instant Deploy',
     description: 'Deploy your applications instantly with shareable links for easy collaboration.',
+    image: '/workerscraft-images/deploy.png'
   },
 ]
 
@@ -49,7 +56,15 @@ export function Features() {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <Card key={feature.title} className="group hover:shadow-lg transition-all duration-300 border-muted">
+            <Card key={feature.title} className="group hover:shadow-lg transition-all duration-300 border-muted overflow-hidden">
+              <div className="relative w-full h-48 overflow-hidden">
+                <Image
+                  src={feature.image}
+                  alt={feature.title}
+                  fill
+                  className="object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
               <CardHeader>
                 <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                   <feature.icon className="w-6 h-6 text-primary" />

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { LandingNav } from '@/components/landing/landing-nav'
 import { Footer } from '@/components/landing/footer'
@@ -85,6 +86,18 @@ export default function CloudPage() {
               </Button>
             </Link>
           </Reveal>
+          <Reveal delay={400}>
+            <div className="mt-16 w-full max-w-5xl">
+              <Image
+                src="/workerscraft-images/The backend that powers every app.png"
+                alt="WorkersCraft Cloud Backend"
+                width={1920}
+                height={1080}
+                className="rounded-2xl shadow-2xl border border-white/10 hover:scale-[1.02] transition-transform duration-300"
+                priority
+              />
+            </div>
+          </Reveal>
         </section>
 
         {/* Features */}
@@ -96,6 +109,17 @@ export default function CloudPage() {
               <p className="text-lg text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
                 No setup, no config files, no DevOps. Your backend is ready the moment your app is generated.
               </p>
+            </Reveal>
+            <Reveal delay={100}>
+              <div className="mb-16 max-w-5xl mx-auto">
+                <Image
+                  src="/workerscraft-images/Everything your app needs.png"
+                  alt="Everything your app needs"
+                  width={1920}
+                  height={1080}
+                  className="rounded-2xl shadow-2xl border border-white/10 hover:scale-[1.02] transition-transform duration-300"
+                />
+              </div>
             </Reveal>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {features.map(({ icon: Icon, title, description }, i) => (
