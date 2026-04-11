@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Loader2, Search, Globe, Smartphone, Database, Github, ExternalLink } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
@@ -434,17 +434,19 @@ export default function DashboardPage() {
       <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="border rounded-lg p-4 space-y-3">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-3 w-1/2" />
-                  <Skeleton className="h-4 w-full" />
+            <div className="border rounded-lg overflow-hidden">
+              <div className="grid grid-cols-[1fr_100px_140px_120px_80px] gap-0 px-4 py-3 border-b bg-muted/40">
+                {['Project', 'Platform', 'Description', 'Updated', ''].map((h, i) => (
+                  <Skeleton key={i} className="h-4 w-3/4" />
+                ))}
+              </div>
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="grid grid-cols-[1fr_100px_140px_120px_80px] gap-0 px-4 py-3 border-b last:border-0 items-center">
                   <Skeleton className="h-4 w-2/3" />
-                  <div className="flex justify-between pt-2">
-                    <Skeleton className="h-8 w-16" />
-                    <Skeleton className="h-8 w-16" />
-                  </div>
+                  <Skeleton className="h-5 w-16" />
+                  <Skeleton className="h-4 w-4/5" />
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-7 w-14" />
                 </div>
               ))}
             </div>
@@ -466,68 +468,69 @@ export default function DashboardPage() {
               <Button onClick={() => setIsDialogOpen(true)}>Create Your First Project</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <div key={project.id} className="group">
-                  <Card
-                    className="relative overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-primary/20 hover:border-primary hover:-translate-y-1 hover:scale-[1.02]"
-                    onClick={() => router.push(`/chat?project=${project.id}`)}
-                  >
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity duration-300 -z-10" />
-                  
-                  <CardHeader className="relative">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <CardTitle className="truncate flex-1 text-lg">{project.name}</CardTitle>
-                      <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        {project.platform === 'mobile' ? (
-                          <Smartphone className="w-4 h-4 text-primary" />
-                        ) : (
-                          <Globe className="w-4 h-4 text-primary" />
-                        )}
-                      </div>
-                    </div>
-                    <CardDescription>Updated {formatDate(project.updated_at)}</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3 relative">
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {project.description || 'No description'}
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
+            <div className="border rounded-lg overflow-hidden">
+              {/* Table header */}
+              <div className="grid grid-cols-[1fr_110px_200px_130px_90px] px-4 py-2.5 border-b bg-muted/40 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <span>Project</span>
+                <span>Platform</span>
+                <span>Description</span>
+                <span>Updated</span>
+                <span></span>
+              </div>
+              {/* Rows */}
+              {filteredProjects.map((project, i) => (
+                <div
+                  key={project.id}
+                  onClick={() => router.push(`/chat?project=${project.id}`)}
+                  className={`group grid grid-cols-[1fr_110px_200px_130px_90px] px-4 py-3 items-center cursor-pointer hover:bg-muted/30 transition-colors ${i !== filteredProjects.length - 1 ? 'border-b' : ''}`}
+                >
+                  {/* Name + badges */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-medium truncate">{project.name}</span>
+                    <div className="flex gap-1 shrink-0">
                       {project.github_repo_url && (
-                        <Badge variant="secondary" className="gap-1 text-xs">
-                          <Github className="w-3 h-3" />GitHub
+                        <Badge variant="secondary" className="gap-1 text-xs px-1.5 py-0">
+                          <Github className="w-3 h-3" />
                         </Badge>
                       )}
                       {project.backend_enabled && (
-                        <Badge variant="secondary" className="gap-1 text-xs">
-                          <Database className="w-3 h-3" />Backend
+                        <Badge variant="secondary" className="gap-1 text-xs px-1.5 py-0">
+                          <Database className="w-3 h-3" />
                         </Badge>
                       )}
                       {project.deployed_url && (
-                        <Badge variant="secondary" className="gap-1 text-xs">
-                          <ExternalLink className="w-3 h-3" />Deployed
+                        <Badge variant="secondary" className="gap-1 text-xs px-1.5 py-0">
+                          <ExternalLink className="w-3 h-3" />
                         </Badge>
                       )}
                     </div>
-                    {project.deployed_url && (
-                      <div onClick={e => e.stopPropagation()}>
-                        <QRPopover url={project.deployed_url} />
-                      </div>
+                  </div>
+                  {/* Platform */}
+                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                    {project.platform === 'mobile' ? (
+                      <><Smartphone className="w-3.5 h-3.5" /><span>Mobile</span></>
+                    ) : (
+                      <><Globe className="w-3.5 h-3.5" /><span>Web</span></>
                     )}
-                  </CardContent>
-                  <CardFooter className="flex justify-end relative translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                  </div>
+                  {/* Description */}
+                  <p className="text-sm text-muted-foreground truncate pr-4">
+                    {project.description || '—'}
+                  </p>
+                  {/* Updated */}
+                  <span className="text-sm text-muted-foreground">{formatDate(project.updated_at)}</span>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                    {project.deployed_url && <QRPopover url={project.deployed_url} />}
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => { e.stopPropagation(); setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2 text-xs"
                     >
                       Delete
                     </Button>
-                  </CardFooter>
-                </Card>
+                  </div>
                 </div>
               ))}
             </div>
