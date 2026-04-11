@@ -466,18 +466,18 @@ export default function DashboardPage() {
               <Button onClick={() => setIsDialogOpen(true)}>Create Your First Project</Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project) => (
-                <div key={project.id} className="group max-w-sm">
+                <div key={project.id} className="group">
                   <Card
-                    className="relative overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-primary/20 hover:border-primary hover:-translate-y-1"
+                    className="relative overflow-hidden transition-all duration-300 cursor-pointer bg-gradient-to-br from-card to-card/50 border-2 hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-primary/20 hover:border-primary hover:-translate-y-1 hover:scale-[1.02]"
                     onClick={() => router.push(`/chat?project=${project.id}`)}
                   >
                     {/* Glow effect */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                     <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/50 to-purple-500/50 rounded-lg opacity-0 group-hover:opacity-20 blur transition-opacity duration-300 -z-10" />
                   
-                  <CardHeader className="relative pb-3">
+                  <CardHeader className="relative">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <CardTitle className="truncate flex-1 text-lg">{project.name}</CardTitle>
                       <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -490,7 +490,7 @@ export default function DashboardPage() {
                     </div>
                     <CardDescription>Updated {formatDate(project.updated_at)}</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-3 relative py-3">
+                  <CardContent className="space-y-3 relative">
                     <p className="text-sm text-muted-foreground line-clamp-2">
                       {project.description || 'No description'}
                     </p>
