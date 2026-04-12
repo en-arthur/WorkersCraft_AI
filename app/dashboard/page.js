@@ -241,9 +241,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
+    <div className="flex flex-col min-h-full">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 md:px-10 py-8 mt-4 border-b bg-muted/20">
+      <div className="px-6 md:px-10 py-8 mt-4 border-b bg-muted/20">
         <div className="max-w-6xl mx-auto flex flex-col gap-6">
           {/* Top row: title + actions */}
           <div className="flex items-center justify-between gap-4 px-2">
@@ -430,25 +430,33 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6">
+      {/* Content */}
+      <div className="px-4 md:px-8 py-6">
         <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] gap-0 px-4 py-2.5 border-b bg-muted/40">
-                {['Project', 'Platform', 'Description', 'Updated', ''].map((h, i) => (
-                  <Skeleton key={i} className="h-4 w-3/4" />
-                ))}
-              </div>
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] gap-0 px-4 py-2 border-b last:border-0 items-center">
-                  <Skeleton className="h-4 w-2/3" />
-                  <Skeleton className="h-5 w-14" />
-                  <Skeleton className="h-4 w-4/5" />
-                  <Skeleton className="h-4 w-20" />
-                  <div />
-                </div>
-              ))}
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    {['Project', 'Platform', 'Description', 'Updated', ''].map((h, i) => (
+                      <th key={i} className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        <Skeleton className="h-4 w-3/4" />
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...Array(5)].map((_, i) => (
+                    <tr key={i} className="border-b last:border-0">
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-2/3" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-5 w-14" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-4/5" /></td>
+                      <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                      <td className="px-4 py-3" />
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : filteredProjects.length === 0 && searchQuery ? (
             <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
@@ -469,76 +477,82 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="border rounded-lg overflow-hidden">
-              {/* Table header */}
-              <div className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] px-4 py-2.5 border-b bg-muted/40 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                <span>Project</span>
-                <span>Platform</span>
-                <span>Description</span>
-                <span>Updated</span>
-                <span></span>
-              </div>
-              {/* Rows */}
-              {filteredProjects.map((project, i) => (
-                <div
-                  key={project.id}
-                  onClick={() => router.push(`/chat?project=${project.id}`)}
-                  className={`group grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] px-4 py-2 items-center cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors ${i !== filteredProjects.length - 1 ? 'border-b' : ''}`}
-                >
-                  {/* Name + badges */}
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-medium truncate">{project.name}</span>
-                    <div className="flex gap-1 shrink-0">
-                      {project.github_repo_url && (
-                        <div className="h-5 w-5 flex items-center justify-center">
-                          <Badge variant="secondary" className="p-0.5">
-                            <Github className="w-3 h-3" />
-                          </Badge>
-                        </div>
-                      )}
-                      {project.backend_enabled && (
-                        <div className="h-5 w-5 flex items-center justify-center">
-                          <Badge variant="secondary" className="p-0.5">
-                            <Database className="w-3 h-3" />
-                          </Badge>
-                        </div>
-                      )}
-                      {project.deployed_url && (
-                        <div className="h-5 w-5 flex items-center justify-center">
-                          <Badge variant="secondary" className="p-0.5">
-                            <ExternalLink className="w-3 h-3" />
-                          </Badge>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  {/* Platform */}
-                  <div className="flex items-center gap-1.5 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                    {project.platform === 'mobile' ? (
-                      <><Smartphone className="w-3.5 h-3.5" /><span>Mobile</span></>
-                    ) : (
-                      <><Globe className="w-3.5 h-3.5" /><span>Web</span></>
-                    )}
-                  </div>
-                  {/* Description */}
-                  <p className="text-sm text-muted-foreground truncate pr-4">
-                    {project.description || '—'}
-                  </p>
-                  {/* Updated */}
-                  <span className="text-sm text-muted-foreground">{formatDate(project.updated_at)}</span>
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                    {project.deployed_url && <QRPopover url={project.deployed_url} />}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2 text-xs"
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Project</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide w-24">Platform</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide w-28">Updated</th>
+                    <th className="px-4 py-2.5 w-32" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProjects.map((project, i) => (
+                    <tr
+                      key={project.id}
+                      onClick={() => router.push(`/chat?project=${project.id}`)}
+                      className="group border-b last:border-0 cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors"
                     >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                      {/* Name + badges */}
+                      <td className="px-4 py-3 max-w-[200px]">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-medium truncate">{project.name}</span>
+                          <div className="flex gap-1 shrink-0">
+                            {project.github_repo_url && (
+                              <Badge variant="secondary" className="p-0.5">
+                                <Github className="w-3 h-3" />
+                              </Badge>
+                            )}
+                            {project.backend_enabled && (
+                              <Badge variant="secondary" className="p-0.5">
+                                <Database className="w-3 h-3" />
+                              </Badge>
+                            )}
+                            {project.deployed_url && (
+                              <Badge variant="secondary" className="p-0.5">
+                                <ExternalLink className="w-3 h-3" />
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      {/* Platform */}
+                      <td className="px-4 py-3 w-24">
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                          {project.platform === 'mobile' ? (
+                            <><Smartphone className="w-3.5 h-3.5 shrink-0" /><span>Mobile</span></>
+                          ) : (
+                            <><Globe className="w-3.5 h-3.5 shrink-0" /><span>Web</span></>
+                          )}
+                        </div>
+                      </td>
+                      {/* Description */}
+                      <td className="px-4 py-3 max-w-xs">
+                        <p className="text-sm text-muted-foreground truncate">{project.description || '—'}</p>
+                      </td>
+                      {/* Updated */}
+                      <td className="px-4 py-3 w-28">
+                        <span className="text-sm text-muted-foreground whitespace-nowrap">{formatDate(project.updated_at)}</span>
+                      </td>
+                      {/* Actions */}
+                      <td className="px-4 py-3 w-32" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                          {project.deployed_url && <QRPopover url={project.deployed_url} />}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2 text-xs"
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
