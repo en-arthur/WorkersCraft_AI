@@ -38,10 +38,28 @@ function AuthContent() {
 
     checkSession()
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (mounted) {
         if (session) {
           setIsAuthenticated(true)
+
+          // Track affiliate referral if one was stored — await before redirecting
+          // so the fetch isn't cancelled by navigation
+          const ref = localStorage.getItem('affiliate_ref')
+          if (ref) {
+            try {
+              await fetch('/api/affiliates/track', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({ ref_code: ref }),
+              })
+            } catch (_) {}
+            localStorage.removeItem('affiliate_ref')
+          }
+
           const redirect = searchParams.get('redirect') || '/dashboard'
           router.push(redirect)
         }

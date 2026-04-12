@@ -414,7 +414,7 @@ export default function DashboardPage() {
             </div>
           </div>
           {/* Bottom row: search + count */}
-          <div className="flex flex-col sm:flex-row gap-3 items-center px-2 pb-2">
+          <div className="flex flex-col sm:flex-row gap-3 items-center px-2 pb-4">
             <div className="relative flex-1 w-full">
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -432,7 +432,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Content */}
-      <div className="px-4 md:px-8 py-6">
+      <div className="px-4 md:px-8 py-8">
         <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

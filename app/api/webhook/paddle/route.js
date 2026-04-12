@@ -97,26 +97,45 @@ async function handleTransactionCompleted(txn) {
       if (affiliate) {
         const amountCents = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
         const commissionCents = Math.round(amountCents * 0.25)
+        const priceId = sub.items?.[0]?.price?.id
+        const plan = PLAN_MAP[priceId] || sub.items?.[0]?.price?.name || 'unknown'
 
-        console.log('[affiliate] Creating conversion:', { amountCents, commissionCents })
+        console.log('[affiliate] Creating conversion:', { amountCents, commissionCents, plan })
 
-        await supabase.from('affiliate_conversions').insert({
-          affiliate_id: affiliate.id,
-          referred_user_id: userId,
-          plan: sub.items?.[0]?.price?.name || 'unknown',
-          amount_cents: amountCents,
-          commission_cents: commissionCents,
-          status: 'pending',
-          paddle_transaction_id: txn.id,
-        })
+        // Guard against duplicate conversions for the same transaction
+        const { data: existingConversion } = await supabase
+          .from('affiliate_conversions')
+          .select('id')
+          .eq('paddle_transaction_id', txn.id)
+          .single()
 
-        // Update affiliate total_earnings
-        await supabase
-          .from('affiliates')
-          .update({ total_earnings: supabase.raw(`total_earnings + ${commissionCents / 100}`) })
-          .eq('id', affiliate.id)
-        
-        console.log('[affiliate] Conversion tracked successfully')
+        if (existingConversion) {
+          console.log('[affiliate] Conversion already exists for transaction:', txn.id)
+        } else {
+          await supabase.from('affiliate_conversions').insert({
+            affiliate_id: affiliate.id,
+            referred_user_id: userId,
+            plan,
+            amount_cents: amountCents,
+            commission_cents: commissionCents,
+            status: 'pending',
+            paddle_transaction_id: txn.id,
+          })
+
+          // Update affiliate total_earnings using rpc to avoid supabase.raw()
+          const { data: currentAffiliate } = await supabase
+            .from('affiliates')
+            .select('total_earnings')
+            .eq('id', affiliate.id)
+            .single()
+
+          await supabase
+            .from('affiliates')
+            .update({ total_earnings: (currentAffiliate?.total_earnings || 0) + (commissionCents / 100) })
+            .eq('id', affiliate.id)
+
+          console.log('[affiliate] Conversion tracked successfully')
+        }
       }
     }
   } catch (err) {
