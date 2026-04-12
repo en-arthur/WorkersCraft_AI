@@ -159,14 +159,6 @@ export default function AdminAffiliatesPage() {
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
-                      disabled={actionLoading === r.id + 'approved'}
-                      onClick={() => handlePayoutAction(r.id, 'approved')}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="sm"
                       variant="destructive"
                       onClick={() => { setRejectDialog({ payout_request_id: r.id }); setRejectNotes('') }}
                     >
