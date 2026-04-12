@@ -435,17 +435,18 @@ export default function DashboardPage() {
         <div className="max-w-6xl mx-auto">
           {loading ? (
             <div className="border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px] gap-0 px-4 py-2.5 border-b bg-muted/40">
-                {['Project', 'Platform', 'Description', 'Updated'].map((h, i) => (
+              <div className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] gap-0 px-4 py-2.5 border-b bg-muted/40">
+                {['Project', 'Platform', 'Description', 'Updated', ''].map((h, i) => (
                   <Skeleton key={i} className="h-4 w-3/4" />
                 ))}
               </div>
               {[...Array(5)].map((_, i) => (
-                <div key={i} className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px] gap-0 px-4 py-2 border-b last:border-0 items-center">
+                <div key={i} className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] gap-0 px-4 py-2 border-b last:border-0 items-center">
                   <Skeleton className="h-4 w-2/3" />
                   <Skeleton className="h-5 w-14" />
                   <Skeleton className="h-4 w-4/5" />
                   <Skeleton className="h-4 w-20" />
+                  <div />
                 </div>
               ))}
             </div>
@@ -469,18 +470,19 @@ export default function DashboardPage() {
           ) : (
             <div className="border rounded-lg overflow-hidden">
               {/* Table header */}
-              <div className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px] px-4 py-2.5 border-b bg-muted/40 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              <div className="grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] px-4 py-2.5 border-b bg-muted/40 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 <span>Project</span>
                 <span>Platform</span>
                 <span>Description</span>
                 <span>Updated</span>
+                <span></span>
               </div>
               {/* Rows */}
               {filteredProjects.map((project, i) => (
                 <div
                   key={project.id}
                   onClick={() => router.push(`/chat?project=${project.id}`)}
-                  className={`group relative grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px] px-4 py-2 items-center cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors ${i !== filteredProjects.length - 1 ? 'border-b' : ''}`}
+                  className={`group grid grid-cols-[minmax(200px,1fr)_90px_1fr_110px_120px] px-4 py-2 items-center cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors ${i !== filteredProjects.length - 1 ? 'border-b' : ''}`}
                 >
                   {/* Name + badges */}
                   <div className="flex items-center gap-2 min-w-0">
@@ -523,8 +525,8 @@ export default function DashboardPage() {
                   </p>
                   {/* Updated */}
                   <span className="text-sm text-muted-foreground">{formatDate(project.updated_at)}</span>
-                  {/* Actions - absolute positioned overlay */}
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 bg-background/95 backdrop-blur-sm px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-sm" onClick={e => e.stopPropagation()}>
+                  {/* Actions */}
+                  <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
                     {project.deployed_url && <QRPopover url={project.deployed_url} />}
                     <Button
                       variant="ghost"
