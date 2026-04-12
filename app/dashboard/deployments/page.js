@@ -106,51 +106,34 @@ export default function DeploymentsPage() {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="px-6 md:px-10 py-10">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Deployments</h1>
-          <p className="text-muted-foreground">
-            Track all your web and mobile deployments
-          </p>
+          <h1 className="text-2xl font-semibold mb-1">Deployments</h1>
+          <p className="text-sm text-muted-foreground">Track all your web and mobile deployments</p>
         </div>
 
         {/* Filters */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row gap-3">
           <div className="flex gap-2">
-            <Button
-              variant={typeFilter === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTypeFilter('all')}
-            >
-              All
-            </Button>
-            <Button
-              variant={typeFilter === 'web' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTypeFilter('web')}
-            >
-              <Globe className="w-4 h-4 mr-1" />
-              Web
-            </Button>
-            <Button
-              variant={typeFilter === 'android' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTypeFilter('android')}
-            >
-              <Smartphone className="w-4 h-4 mr-1" />
-              Android
-            </Button>
-            {/* <Button
-              variant={typeFilter === 'ios' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTypeFilter('ios')}
-            >
-              <Apple className="w-4 h-4 mr-1" />
-              iOS
-            </Button> */}
+            {[
+              { key: 'all', label: 'All' },
+              { key: 'web', label: 'Web', icon: Globe },
+              { key: 'android', label: 'Android', icon: Smartphone },
+            ].map(({ key, label, icon: Icon }) => (
+              <Button
+                key={key}
+                variant={typeFilter === key ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setTypeFilter(key)}
+                className="gap-1.5"
+              >
+                {Icon && <Icon className="w-3.5 h-3.5" />}
+                {label}
+              </Button>
+            ))}
           </div>
-          
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -164,39 +147,32 @@ export default function DeploymentsPage() {
 
         {/* Deployments List */}
         {filteredDeployments.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-                <Globe className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">No deployments yet</h3>
-              <p className="text-muted-foreground mb-4">
-                Deploy your first project to see it here
-              </p>
-            </CardContent>
-          </Card>
+          <div className="text-center py-24 border-2 border-dashed rounded-xl">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+              <Globe className="w-7 h-7 text-muted-foreground" />
+            </div>
+            <h3 className="text-base font-semibold mb-1">No deployments yet</h3>
+            <p className="text-sm text-muted-foreground">Deploy your first project to see it here</p>
+          </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filteredDeployments.map((deployment) => (
-              <Card key={deployment.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3">
-                      {getTypeIcon(deployment.type)}
-                      <div>
-                        <CardTitle className="text-lg">
-                          {deployment.projects?.name || deployment.project_id || 'Unknown Project'}
+              <Card key={deployment.id} className="hover:shadow-md hover:border-primary/30 transition-all duration-150">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="shrink-0 w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                        {getTypeIcon(deployment.type)}
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-base truncate">
+                          {deployment.projects?.name || 'Unknown Project'}
                         </CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1">
+                        <CardDescription className="flex items-center gap-1.5 mt-0.5 text-xs">
                           {getStatusIcon(deployment.status)}
                           <span className="capitalize">{deployment.type}</span>
-                          {deployment.build_type && (
-                            <>
-                              <span>•</span>
-                              <span className="capitalize">{deployment.build_type}</span>
-                            </>
-                          )}
-                          <span>•</span>
+                          {deployment.build_type && <><span>·</span><span className="capitalize">{deployment.build_type}</span></>}
+                          <span>·</span>
                           <span>{formatTime(deployment.created_at)}</span>
                         </CardDescription>
                       </div>
@@ -204,55 +180,49 @@ export default function DeploymentsPage() {
                     {getStatusBadge(deployment.status)}
                   </div>
                 </CardHeader>
-                
-                <CardContent>
-                  {deployment.deployment_url && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                      <a
-                        href={deployment.deployment_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        {deployment.deployment_url}
-                      </a>
-                    </div>
-                  )}
-                  
-                  {deployment.error_message && (
-                    <div className="mt-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-                      {deployment.error_message}
-                    </div>
-                  )}
-                </CardContent>
 
-                <CardFooter className="flex gap-2">
-                  {deployment.type === 'web' && deployment.deployment_url && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={deployment.deployment_url} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4 mr-1" />
-                        View Site
-                      </a>
-                    </Button>
-                  )}
-                  
-                  {deployment.artifact_url && (
-                    <Button variant="outline" size="sm" asChild>
-                      <a href={deployment.artifact_url} target="_blank" rel="noopener noreferrer">
-                        <Download className="w-4 h-4 mr-1" />
-                        Download
-                      </a>
-                    </Button>
-                  )}
-                  
-                  {deployment.build_logs && (
-                    <Button variant="outline" size="sm">
-                      <FileText className="w-4 h-4 mr-1" />
-                      Logs
-                    </Button>
-                  )}
-                </CardFooter>
+                {(deployment.deployment_url || deployment.error_message) && (
+                  <CardContent className="pt-0 pb-3">
+                    {deployment.deployment_url && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                        <a href={deployment.deployment_url} target="_blank" rel="noopener noreferrer"
+                          className="text-primary hover:underline truncate">
+                          {deployment.deployment_url}
+                        </a>
+                      </div>
+                    )}
+                    {deployment.error_message && (
+                      <div className="mt-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs">
+                        {deployment.error_message}
+                      </div>
+                    )}
+                  </CardContent>
+                )}
+
+                {(deployment.deployment_url || deployment.artifact_url || deployment.build_logs) && (
+                  <CardFooter className="pt-0 gap-2">
+                    {deployment.type === 'web' && deployment.deployment_url && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={deployment.deployment_url} target="_blank" rel="noopener noreferrer">
+                          <ExternalLink className="w-3.5 h-3.5 mr-1.5" />View Site
+                        </a>
+                      </Button>
+                    )}
+                    {deployment.artifact_url && (
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={deployment.artifact_url} target="_blank" rel="noopener noreferrer">
+                          <Download className="w-3.5 h-3.5 mr-1.5" />Download
+                        </a>
+                      </Button>
+                    )}
+                    {deployment.build_logs && (
+                      <Button variant="outline" size="sm">
+                        <FileText className="w-3.5 h-3.5 mr-1.5" />Logs
+                      </Button>
+                    )}
+                  </CardFooter>
+                )}
               </Card>
             ))}
           </div>
