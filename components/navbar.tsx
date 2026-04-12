@@ -86,14 +86,14 @@ export function NavBar({
           <div className="h-full bg-primary w-1/2 progress-bar-indeterminate" />
         </div>
       )}
-      <nav className="w-full flex bg-background py-4">
-      <div className="flex flex-1 items-center">
-        <Link href="/" className="flex items-center gap-2">
+      <nav className="w-full flex items-center bg-background py-3 px-2 gap-2 min-w-0">
+      <div className="flex flex-1 items-center min-w-0">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           <Logo width={24} height={24} />
-          <h1 className="font-bold">WorkersCraft AI</h1>
+          <h1 className="font-bold hidden sm:block truncate">WorkersCraft AI</h1>
         </Link>
       </div>
-      <div className="flex items-center gap-1 md:gap-4">
+      <div className="flex items-center gap-1 shrink-0 overflow-x-auto">
         <TooltipProvider>
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
@@ -140,7 +140,7 @@ export function NavBar({
                   onClick={handleDownload}
                   disabled={!sandboxId || isPreviewLoading || isDownloading}
                 >
-                  <Download className="h-4 w-4 md:h-5 md:w-5" />
+                  <Download className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Download project</TooltipContent>
@@ -159,7 +159,7 @@ export function NavBar({
                 onClick={onUndo}
                 disabled={!canUndo}
               >
-                <Undo className="h-4 w-4 md:h-5 md:w-5" />
+                <Undo className="h-4 w-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>Undo</TooltipContent>
