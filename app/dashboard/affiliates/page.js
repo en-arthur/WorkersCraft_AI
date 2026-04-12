@@ -65,9 +65,14 @@ export default function AffiliateDashboard() {
 
   if (!data?.affiliate) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-xl font-semibold mb-2">You are not an affiliate yet</h2>
-        <p className="text-muted-foreground mb-4">Apply to join our affiliate program and earn 25% commission.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          <DollarSign className="w-6 h-6 text-primary" />
+        </div>
+        <h2 className="text-lg font-semibold mb-2">You are not an affiliate yet</h2>
+        <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+          Apply to join our affiliate program and earn 25% commission on every sale you refer.
+        </p>
         <Button onClick={() => router.push('/affiliates')}>Apply Now</Button>
       </div>
     )
@@ -196,18 +201,18 @@ export default function AffiliateDashboard() {
 
       {/* Payout confirm dialog */}
       <Dialog open={payoutDialogOpen} onOpenChange={setPayoutDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-sm w-full">
           <DialogHeader>
-            <DialogTitle>Request Payout</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base">Request Payout</DialogTitle>
+            <DialogDescription className="text-sm">
               We will send <span className="font-semibold text-foreground">${stats?.pending_earnings.toFixed(2)}</span> to <span className="font-semibold text-foreground">{affiliate?.payout_email}</span> within 2–3 business days.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPayoutDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleRequestPayout} disabled={requesting}>
+            <Button variant="outline" size="sm" onClick={() => setPayoutDialogOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={handleRequestPayout} disabled={requesting}>
               {requesting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Confirm Request
+              Confirm
             </Button>
           </DialogFooter>
         </DialogContent>

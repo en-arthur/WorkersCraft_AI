@@ -5,11 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/components/ui/use-toast'
-import { DollarSign, Users, LinkIcon, TrendingUp, Sparkles, CheckCircle2 } from 'lucide-react'
+import { DollarSign, Users, LinkIcon, Clock, CheckCircle2, Sparkles, TrendingUp } from 'lucide-react'
 
 export default function AffiliatesPage() {
   const { session } = useAuth()
@@ -34,7 +33,7 @@ export default function AffiliatesPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error)
-      toast({ title: 'Application submitted!', description: "We will review and approve you within 24 hours." })
+      toast({ title: 'Application submitted!', description: "We'll review and approve you within 1–2 hours." })
       router.push('/dashboard/affiliates')
     } catch (err) {
       toast({ variant: 'destructive', title: 'Error', description: err.message })
@@ -44,142 +43,117 @@ export default function AffiliatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted/20">
-      <div className="max-w-5xl mx-auto px-4 py-20">
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 py-20 space-y-20">
+
         {/* Hero */}
-        <div className="text-center mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-            <Sparkles className="w-4 h-4" />
-            Join Our Affiliate Program
+        <div className="text-center space-y-5">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
+            <Sparkles className="w-3.5 h-3.5" />
+            Affiliate Program
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Earn 25% Commission
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+            Earn 25% on every sale
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Partner with WorkersCraft and earn generous commissions for every customer you refer. Simple, transparent, and rewarding.
+          <p className="text-muted-foreground text-base max-w-xl mx-auto">
+            Partner with WorkersCraft and earn recurring commissions for every customer you refer. Simple, transparent, rewarding.
           </p>
-          <Button size="lg" className="text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow" onClick={() => setShowForm(true)}>
-            Start Earning Today
+          <Button size="lg" className="px-8" onClick={() => setShowForm(true)}>
+            Start Earning
           </Button>
         </div>
 
-        {/* Stats Highlight */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <DollarSign className="w-6 h-6 text-primary" />
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            { icon: DollarSign, value: '25%', label: 'Commission Rate' },
+            { icon: TrendingUp, value: '$20', label: 'Minimum Payout' },
+            { icon: Clock, value: '1–2h', label: 'Approval Time' },
+          ].map(({ icon: Icon, value, label }) => (
+            <div key={label} className="rounded-xl border bg-muted/30 p-5 text-center space-y-2">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mx-auto">
+                <Icon className="w-4 h-4 text-primary" />
               </div>
-              <div className="text-3xl font-bold mb-2">25%</div>
-              <p className="text-sm text-muted-foreground">Commission Rate</p>
-            </CardContent>
-          </Card>
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <TrendingUp className="w-6 h-6 text-primary" />
-              </div>
-              <div className="text-3xl font-bold mb-2">$20</div>
-              <p className="text-sm text-muted-foreground">Minimum Payout</p>
-            </CardContent>
-          </Card>
-          <Card className="border-2 hover:border-primary/50 transition-colors">
-            <CardContent className="pt-6 text-center">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Users className="w-6 h-6 text-primary" />
-              </div>
-              <div className="text-3xl font-bold mb-2">24h</div>
-              <p className="text-sm text-muted-foreground">Approval Time</p>
-            </CardContent>
-          </Card>
+              <div className="text-2xl font-bold">{value}</div>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </div>
+          ))}
         </div>
 
         {/* How it works */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mb-4">
-                  1
+        <div className="space-y-8">
+          <h2 className="text-xl font-semibold text-center">How It Works</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              { step: '1', icon: LinkIcon, title: 'Get Your Link', desc: 'Apply and receive your unique referral link within 1–2 hours.' },
+              { step: '2', icon: Users, title: 'Share & Promote', desc: 'Share with your audience through any channel you prefer.' },
+              { step: '3', icon: DollarSign, title: 'Earn Commission', desc: 'Get 25% of every monthly payment from your referred customers.' },
+            ].map(({ step, icon: Icon, title, desc }) => (
+              <div key={step} className="rounded-xl border p-5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
+                    {step}
+                  </div>
+                  <Icon className="w-4 h-4 text-primary" />
                 </div>
-                <LinkIcon className="w-8 h-8 text-primary mb-3" />
-                <h3 className="font-semibold text-lg mb-2">Get Your Link</h3>
-                <p className="text-sm text-muted-foreground">Apply and receive your unique referral link within 24 hours</p>
+                <h3 className="font-semibold text-sm">{title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
               </div>
-            </div>
-            <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mb-4">
-                  2
-                </div>
-                <Users className="w-8 h-8 text-primary mb-3" />
-                <h3 className="font-semibold text-lg mb-2">Share & Promote</h3>
-                <p className="text-sm text-muted-foreground">Share with your audience through any channel you prefer</p>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mb-4">
-                  3
-                </div>
-                <DollarSign className="w-8 h-8 text-primary mb-3" />
-                <h3 className="font-semibold text-lg mb-2">Earn Commission</h3>
-                <p className="text-sm text-muted-foreground">Get 25% of every payment from your referred customers</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Benefits */}
-        <Card className="bg-muted/50 border-2">
-          <CardContent className="pt-8 pb-8">
-            <h2 className="text-2xl font-bold text-center mb-8">Why Join?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {[
-                'Generous 25% commission on all sales',
-                'Fast approval within 24 hours',
-                'Real-time tracking dashboard',
-                'Monthly PayPal payouts',
-                'No hidden fees or charges',
-                'Dedicated affiliate support'
-              ].map((benefit, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <span className="text-sm">{benefit}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="rounded-xl border bg-muted/20 p-8 space-y-6">
+          <h2 className="text-lg font-semibold text-center">Why Join?</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
+            {[
+              '25% commission on all monthly sales',
+              'Fast approval within 1–2 hours',
+              'Real-time tracking dashboard',
+              'Monthly payouts',
+              'No hidden fees or charges',
+              'Dedicated affiliate support',
+            ].map((benefit) => (
+              <div key={benefit} className="flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                <span className="text-sm">{benefit}</span>
+              </div>
+            ))}
+          </div>
+          <div className="text-center pt-2">
+            <Button onClick={() => setShowForm(true)} className="px-8">Apply Now</Button>
+          </div>
+        </div>
       </div>
 
       {/* Apply Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-sm w-full">
           <DialogHeader>
-            <DialogTitle>Apply to the Affiliate Program</DialogTitle>
+            <DialogTitle className="text-base">Apply to Affiliate Program</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleApply} className="space-y-4 mt-2">
-            <div className="space-y-2">
-              <Label>Email Address</Label>
+          <form onSubmit={handleApply} className="space-y-4 mt-1">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Payout Email</Label>
               <input
                 type="email"
                 placeholder="your@email.com"
                 value={form.payout_email}
                 onChange={e => setForm(f => ({ ...f, payout_email: e.target.value }))}
                 required
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
               />
             </div>
-            <div className="space-y-2">
-              <Label>How will you promote WorkersCraft?</Label>
+            <div className="space-y-1.5">
+              <Label className="text-xs">How will you promote WorkersCraft?</Label>
               <Textarea
-                placeholder="e.g. YouTube channel, Twitter audience, blog, newsletter..."
+                placeholder="e.g. YouTube, Twitter, blog, newsletter..."
                 value={form.how_promote}
                 onChange={e => setForm(f => ({ ...f, how_promote: e.target.value }))}
                 required
                 rows={3}
+                className="text-sm resize-none"
               />
             </div>
             <Button type="submit" className="w-full" disabled={applying}>

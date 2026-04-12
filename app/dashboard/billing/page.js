@@ -208,88 +208,102 @@ export default function DashboardBillingPage() {
   )
 
   return (
-    <div className="px-6 md:px-10 py-10 max-w-5xl mx-auto w-full">
+    <div className="p-8 max-w-6xl mx-auto w-full">
       <div className="mb-10">
-        <h1 className="text-2xl font-semibold tracking-tight mb-1">Billing & Subscription</h1>
-        <p className="text-sm text-muted-foreground">Manage your plan. Cancel anytime.</p>
+        <h1 className="text-3xl font-bold tracking-tight mb-1">Billing & Subscription</h1>
+        <p className="text-muted-foreground">Manage your plan. Cancel anytime.</p>
       </div>
 
       {processingPayment && (
-        <div className="mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500/40 text-blue-600 text-sm text-center flex items-center justify-center gap-2">
+        <div className="mb-8 p-4 rounded-xl bg-blue-500/10 border border-blue-500 text-blue-600 text-sm text-center flex items-center justify-center gap-2">
           <Loader2 className="w-4 h-4 animate-spin" /> Processing your subscription… this may take a few seconds.
         </div>
       )}
-      {(checkoutError || portalError) && (
-        <div className="mb-6 p-3 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm text-center">
-          {checkoutError || portalError}
+      {checkoutError && (
+        <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500 text-red-600 text-sm text-center">
+          {checkoutError}
+        </div>
+      )}
+      {portalError && (
+        <div className="mb-6 p-3 rounded-xl bg-red-500/10 border border-red-500 text-red-600 text-sm text-center">
+          {portalError}
         </div>
       )}
 
       <UsageCard />
 
       {subscription && (
-        <div className={`my-6 p-4 rounded-xl border flex items-center justify-between gap-4 ${
-          subscription.status === 'canceled' ? 'bg-orange-500/10 border-orange-500/40' : 'bg-muted/40 border-border'
+        <div className={`mb-10 p-5 rounded-xl border flex items-center justify-between ${
+          subscription.status === 'canceled' ? 'bg-orange-500/10 border-orange-500' : 'bg-muted/40'
         }`}>
           <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full shrink-0 ${subscription.status === 'canceled' ? 'bg-orange-500' : 'bg-green-500'}`} />
+            <div className={`w-2 h-2 rounded-full ${
+              subscription.status === 'canceled' ? 'bg-orange-500' : 'bg-green-500'
+            }`} />
             <div>
-              <p className="font-medium text-sm capitalize">
+              <p className="font-semibold capitalize">
                 {subscription.plan} Plan — {subscription.status === 'canceled' ? 'Canceled' : 'Active'}
               </p>
               {subscription.current_period_end && (
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {subscription.status === 'canceled'
+                  {subscription.status === 'canceled' 
                     ? `Access until ${new Date(subscription.current_period_end).toLocaleDateString()}`
-                    : `Renews ${new Date(subscription.current_period_end).toLocaleDateString()}`}
+                    : `Renews ${new Date(subscription.current_period_end).toLocaleDateString()}`
+                  }
                 </p>
               )}
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={handlePortal} disabled={portalLoading}>
             {portalLoading && <Loader2 className="w-3 h-3 animate-spin mr-2" />}
-            Manage
+            Manage Subscription
           </Button>
         </div>
       )}
 
+      {/* Discount Banner */}
       <DiscountBanner />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mt-8">
+      <div className="grid grid-cols-3 gap-6">
         {PLANS.map((plan) => {
-          const isCurrent = subscription?.plan === plan.id && subscription?.status === 'active'
+          const isCurrent = subscription?.plan === plan.id
           return (
             <div
               key={plan.id}
-              className={`relative rounded-2xl border p-6 flex flex-col transition-all duration-150 hover:shadow-lg hover:-translate-y-0.5 ${
-                plan.popular && !isCurrent ? 'border-primary shadow-md' : 'border-border'
+              className={`relative rounded-2xl border p-6 flex flex-col transition-shadow hover:shadow-lg ${
+                plan.popular ? 'border-primary shadow-md' : ''
               } ${isCurrent ? 'border-green-500' : ''}`}
             >
-              {(plan.popular || isCurrent) && (
+              {plan.popular && !isCurrent && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                    isCurrent ? 'bg-green-500 text-white' : 'bg-primary text-primary-foreground'
-                  }`}>
-                    {isCurrent ? 'Current Plan' : 'Most Popular'}
+                  <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                    Most Popular
+                  </span>
+                </div>
+              )}
+              {isCurrent && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="bg-green-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                    Current Plan
                   </span>
                 </div>
               )}
 
-              <div className="mb-5">
-                <h2 className="text-lg font-bold mb-1">{plan.name}</h2>
-                <p className="text-xs text-muted-foreground mb-4">{plan.description}</p>
+              <div className="mb-6">
+                <h2 className="text-xl font-bold mb-1">{plan.name}</h2>
+                <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 <div className="flex items-end gap-1">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground mb-0.5">/mo</span>
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground mb-1">/month</span>
                 </div>
               </div>
 
-              <div className="border-t mb-5" />
+              <div className="border-t mb-6" />
 
-              <ul className="space-y-2.5 flex-1 mb-6">
+              <ul className="space-y-3 flex-1 mb-8">
                 {plan.features.map(({ text, icon: Icon }) => (
-                  <li key={text} className="flex items-center gap-2.5 text-sm">
-                    <Icon className="w-3.5 h-3.5 text-primary shrink-0" />
+                  <li key={text} className="flex items-center gap-3 text-sm">
+                    <Icon className="w-4 h-4 text-primary shrink-0" />
                     {text}
                   </li>
                 ))}
@@ -297,21 +311,22 @@ export default function DashboardBillingPage() {
 
               <Button
                 className="w-full"
-                variant={isCurrent ? 'outline' : plan.popular ? 'default' : 'outline'}
-                disabled={isCurrent || checkoutLoading === plan.id}
+                variant={isCurrent && subscription?.status === 'active' ? 'outline' : plan.popular ? 'default' : 'outline'}
+                disabled={(isCurrent && subscription?.status === 'active') || checkoutLoading === plan.id}
                 onClick={() => handleCheckout(plan.priceId, plan.id)}
               >
                 {checkoutLoading === plan.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                {isCurrent ? 'Current Plan' : subscription?.plan === plan.id && subscription?.status === 'canceled' ? 'Reactivate' : 'Get Started'}
+                {isCurrent && subscription?.status === 'active' ? 'Current Plan' : isCurrent && subscription?.status === 'canceled' ? 'Reactivate' : 'Get Started'}
               </Button>
             </div>
           )
         })}
       </div>
 
-      <p className="text-center text-xs text-muted-foreground mt-8">
+      <p className="text-center text-sm text-muted-foreground mt-10">
         All plans billed monthly. No hidden fees. Cancel anytime.
       </p>
+
     </div>
   )
 }
