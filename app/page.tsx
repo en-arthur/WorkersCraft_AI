@@ -27,7 +27,20 @@ function LandingContent() {
   }, [searchParams])
 
   useEffect(() => {
-    if (session) router.push('/dashboard')
+    if (!session) return
+    // If already logged in and visiting a ref link, track immediately
+    const ref = localStorage.getItem('affiliate_ref')
+    if (ref) {
+      fetch('/api/affiliates/track', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ ref_code: ref }),
+      }).then(() => localStorage.removeItem('affiliate_ref')).catch(() => {})
+    }
+    router.push('/dashboard')
   }, [session, router])
 
   return (

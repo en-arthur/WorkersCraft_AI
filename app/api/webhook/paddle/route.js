@@ -15,6 +15,10 @@ const PLAN_MAP = {
   [process.env.PADDLE_MAX_PRICE_ID]: 'max',
 }
 
+const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'production'
+  ? 'https://api.paddle.com'
+  : 'https://sandbox-api.paddle.com'
+
 function verifySignature(rawBody, header) {
   const parts = Object.fromEntries(header.split(';').map(p => p.split('=')))
   const computed = crypto.createHmac('sha256', process.env.PADDLE_WEBHOOK_SECRET)
@@ -25,23 +29,13 @@ function verifySignature(rawBody, header) {
 
 async function upsertSubscription(sub, status) {
   const userId = sub.custom_data?.user_id
-  console.log('[paddle-webhook] upsertSubscription userId:', userId, 'status:', status)
   if (!userId) {
-    console.error('[paddle-webhook] No user_id in custom_data:', JSON.stringify(sub.custom_data))
+    console.error('[webhook] upsertSubscription: no user_id in custom_data')
     return
   }
   const priceId = sub.items?.[0]?.price?.id
-  
-  // Debug logging
-  console.log('[paddle-webhook] Incoming priceId:', priceId)
-  console.log('[paddle-webhook] PADDLE_STARTER_PRICE_ID:', process.env.PADDLE_STARTER_PRICE_ID)
-  console.log('[paddle-webhook] PADDLE_PRO_PRICE_ID:', process.env.PADDLE_PRO_PRICE_ID)
-  console.log('[paddle-webhook] PADDLE_MAX_PRICE_ID:', process.env.PADDLE_MAX_PRICE_ID)
-  console.log('[paddle-webhook] PLAN_MAP:', PLAN_MAP)
-  
   const plan = PLAN_MAP[priceId] || 'starter'
-  console.log('[paddle-webhook] Mapped to plan:', plan)
-  
+
   const { error } = await supabase.from('user_subscriptions').upsert({
     user_id: userId,
     paddle_customer_id: sub.customer_id,
@@ -51,104 +45,126 @@ async function upsertSubscription(sub, status) {
     current_period_end: sub.current_billing_period?.ends_at,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' })
-  if (error) console.error('[paddle-webhook] Supabase upsert error:', error)
-  else console.log('[paddle-webhook] Successfully saved subscription with plan:', plan)
+
+  if (error) console.error('[webhook] upsertSubscription error:', error)
+  else console.log('[webhook] subscription upserted — user:', userId, 'plan:', plan, 'status:', status)
+}
+
+async function trackAffiliateConversion(txn, planName) {
+  const userId = txn.custom_data?.user_id
+  if (!userId) return
+
+  // Check if this user was referred
+  const { data: referral, error: refError } = await supabase
+    .from('user_referrals')
+    .select('referred_by')
+    .eq('user_id', userId)
+    .single()
+
+  if (refError || !referral?.referred_by) {
+    console.log('[affiliate] No referral found for user:', userId)
+    return
+  }
+
+  console.log('[affiliate] Referral found:', referral.referred_by, 'for user:', userId)
+
+  // Find the approved affiliate
+  const { data: affiliate, error: affError } = await supabase
+    .from('affiliates')
+    .select('id, total_earnings')
+    .eq('ref_code', referral.referred_by)
+    .eq('status', 'approved')
+    .single()
+
+  if (affError || !affiliate) {
+    console.log('[affiliate] Affiliate not found or not approved for ref_code:', referral.referred_by)
+    return
+  }
+
+  // Dedup — skip if conversion already recorded for this transaction
+  const { data: existing } = await supabase
+    .from('affiliate_conversions')
+    .select('id')
+    .eq('paddle_transaction_id', txn.id)
+    .single()
+
+  if (existing) {
+    console.log('[affiliate] Conversion already exists for transaction:', txn.id)
+    return
+  }
+
+  const amountCents = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
+  const commissionCents = Math.round(amountCents * 0.25)
+
+  const { error: insertError } = await supabase.from('affiliate_conversions').insert({
+    affiliate_id: affiliate.id,
+    referred_user_id: userId,
+    plan: planName,
+    amount_cents: amountCents,
+    commission_cents: commissionCents,
+    status: 'pending',
+    paddle_transaction_id: txn.id,
+  })
+
+  if (insertError) {
+    console.error('[affiliate] Failed to insert conversion:', insertError)
+    return
+  }
+
+  // Increment total_earnings
+  await supabase
+    .from('affiliates')
+    .update({ total_earnings: (affiliate.total_earnings || 0) + (commissionCents / 100) })
+    .eq('id', affiliate.id)
+
+  console.log('[affiliate] Conversion tracked — affiliate:', affiliate.id, 'commission: $' + (commissionCents / 100).toFixed(2))
 }
 
 async function handleTransactionCompleted(txn) {
   const userId = txn.custom_data?.user_id
-  if (!userId || !txn.subscription_id) return
-
-  const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'production'
-    ? 'https://api.paddle.com'
-    : 'https://sandbox-api.paddle.com'
-
-  const res = await fetch(`${PADDLE_API_BASE}/subscriptions/${txn.subscription_id}`, {
-    headers: { Authorization: `Bearer ${process.env.PADDLE_API_KEY}` },
-  })
-  if (!res.ok) {
-    console.error('[paddle-webhook] Failed to fetch subscription:', txn.subscription_id)
+  if (!userId) {
+    console.error('[webhook] transaction.completed: no user_id in custom_data')
     return
   }
-  const { data: sub } = await res.json()
-  await upsertSubscription({ ...sub, custom_data: txn.custom_data }, 'active')
 
-  // Track internal affiliate conversion (25% commission)
-  try {
-    console.log('[affiliate] Checking conversion for user:', userId)
-    const { data: profile } = await supabase
-      .from('user_referrals')
-      .select('referred_by')
-      .eq('user_id', userId)
-      .single()
+  let planName = 'unknown'
 
-    console.log('[affiliate] User referral:', profile)
-
-    if (profile?.referred_by) {
-      const { data: affiliate } = await supabase
-        .from('affiliates')
-        .select('id')
-        .eq('ref_code', profile.referred_by)
-        .eq('status', 'approved')
-        .single()
-
-      console.log('[affiliate] Found affiliate:', affiliate)
-
-      if (affiliate) {
-        const amountCents = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
-        const commissionCents = Math.round(amountCents * 0.25)
+  // Fetch and upsert subscription if present
+  if (txn.subscription_id) {
+    try {
+      const res = await fetch(`${PADDLE_API_BASE}/subscriptions/${txn.subscription_id}`, {
+        headers: { Authorization: `Bearer ${process.env.PADDLE_API_KEY}` },
+      })
+      if (res.ok) {
+        const { data: sub } = await res.json()
+        await upsertSubscription({ ...sub, custom_data: txn.custom_data }, 'active')
+        // Resolve plan name from the fetched subscription
         const priceId = sub.items?.[0]?.price?.id
-        const plan = PLAN_MAP[priceId] || sub.items?.[0]?.price?.name || 'unknown'
-
-        console.log('[affiliate] Creating conversion:', { amountCents, commissionCents, plan })
-
-        // Guard against duplicate conversions for the same transaction
-        const { data: existingConversion } = await supabase
-          .from('affiliate_conversions')
-          .select('id')
-          .eq('paddle_transaction_id', txn.id)
-          .single()
-
-        if (existingConversion) {
-          console.log('[affiliate] Conversion already exists for transaction:', txn.id)
-        } else {
-          await supabase.from('affiliate_conversions').insert({
-            affiliate_id: affiliate.id,
-            referred_user_id: userId,
-            plan,
-            amount_cents: amountCents,
-            commission_cents: commissionCents,
-            status: 'pending',
-            paddle_transaction_id: txn.id,
-          })
-
-          // Update affiliate total_earnings using rpc to avoid supabase.raw()
-          const { data: currentAffiliate } = await supabase
-            .from('affiliates')
-            .select('total_earnings')
-            .eq('id', affiliate.id)
-            .single()
-
-          await supabase
-            .from('affiliates')
-            .update({ total_earnings: (currentAffiliate?.total_earnings || 0) + (commissionCents / 100) })
-            .eq('id', affiliate.id)
-
-          console.log('[affiliate] Conversion tracked successfully')
-        }
+        planName = PLAN_MAP[priceId] || sub.items?.[0]?.price?.name || 'unknown'
+      } else {
+        console.error('[webhook] Failed to fetch subscription:', txn.subscription_id, res.status)
       }
+    } catch (err) {
+      console.error('[webhook] Error fetching subscription:', err)
     }
-  } catch (err) {
-    console.error('[affiliate] Failed to track conversion:', err)
+  } else {
+    // No subscription_id — derive plan from transaction items directly
+    const priceId = txn.items?.[0]?.price?.id
+    planName = PLAN_MAP[priceId] || txn.items?.[0]?.price?.name || 'unknown'
   }
 
-  // Track referral with Endorsely
+  // Track affiliate conversion — always runs regardless of subscription fetch outcome
+  try {
+    await trackAffiliateConversion(txn, planName)
+  } catch (err) {
+    console.error('[affiliate] Unexpected error in trackAffiliateConversion:', err)
+  }
+
+  // Track with Endorsely
   const referralId = txn.custom_data?.endorsely_referral
   if (referralId && process.env.ENDORSELY_API_SECRET) {
     try {
-      const amount = txn.details?.totals?.subtotal
-        ? parseInt(txn.details.totals.subtotal)
-        : 0
+      const amount = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
       await fetch('https://app.endorsely.com/api/public/refer', {
         method: 'POST',
         headers: {
@@ -163,7 +179,6 @@ async function handleTransactionCompleted(txn) {
           customerId: userId,
         }),
       })
-      console.log('[endorsely] Referral tracked for referralId:', referralId)
     } catch (err) {
       console.error('[endorsely] Failed to track referral:', err)
     }
@@ -175,27 +190,12 @@ export async function POST(request) {
     const rawBody = await request.text()
     const signature = request.headers.get('paddle-signature')
 
-    console.log('[paddle-webhook] Received request, has signature:', !!signature)
+    if (!signature) return Response.json({ error: 'Missing signature' }, { status: 400 })
+    if (!process.env.PADDLE_WEBHOOK_SECRET) return Response.json({ error: 'Webhook not configured' }, { status: 500 })
+    if (!verifySignature(rawBody, signature)) return Response.json({ error: 'Invalid signature' }, { status: 403 })
 
-    if (!signature) {
-      console.error('[paddle-webhook] Missing paddle-signature header')
-      return Response.json({ error: 'Missing signature' }, { status: 400 })
-    }
-
-    if (!process.env.PADDLE_WEBHOOK_SECRET) {
-      console.error('[paddle-webhook] PADDLE_WEBHOOK_SECRET not set')
-      return Response.json({ error: 'Webhook not configured' }, { status: 500 })
-    }
-
-    if (!verifySignature(rawBody, signature)) {
-      console.error('[paddle-webhook] Signature verification failed')
-      return Response.json({ error: 'Invalid signature' }, { status: 403 })
-    }
-
-    const payload = JSON.parse(rawBody)
-    const { event_type, data } = payload
-    
-    console.log('[paddle-webhook] Event:', event_type, 'user_id:', data?.custom_data?.user_id)
+    const { event_type, data } = JSON.parse(rawBody)
+    console.log('[webhook] event:', event_type, '| user_id:', data?.custom_data?.user_id)
 
     switch (event_type) {
       case 'subscription.created':
@@ -228,10 +228,9 @@ export async function POST(request) {
       }
     }
 
-    console.log('[paddle-webhook] Successfully processed')
     return Response.json({ received: true }, { status: 200 })
   } catch (error) {
-    console.error('[paddle-webhook] Error:', error)
+    console.error('[webhook] Unhandled error:', error)
     return Response.json({ error: error.message }, { status: 500 })
   }
 }

@@ -75,6 +75,21 @@ export default function DashboardPage() {
     }
   }, [authChecked, session, router])
 
+  // Fire affiliate track if a ref was stored but never sent (e.g. user was already logged in)
+  useEffect(() => {
+    if (!session?.access_token) return
+    const ref = localStorage.getItem('affiliate_ref')
+    if (!ref) return
+    fetch('/api/affiliates/track', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ ref_code: ref }),
+    }).then(() => localStorage.removeItem('affiliate_ref')).catch(() => {})
+  }, [session?.access_token])
+
   useEffect(() => {
     async function fetchProjects() {
       if (!session?.user?.id) return
