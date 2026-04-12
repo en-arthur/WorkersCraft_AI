@@ -32,6 +32,15 @@ export async function GET(request) {
     .select('*')
     .eq('affiliate_id', affiliate.id)
 
+  // Get latest payout request
+  const { data: payoutRequest } = await supabase
+    .from('payout_requests')
+    .select('*')
+    .eq('affiliate_id', affiliate.id)
+    .order('requested_at', { ascending: false })
+    .limit(1)
+    .single()
+
   return Response.json({
     affiliate,
     stats: {
@@ -40,7 +49,8 @@ export async function GET(request) {
       pending_earnings: conversions?.filter(c => c.status === 'pending').reduce((sum, c) => sum + (c.commission_cents / 100), 0) || 0,
       paid_earnings: conversions?.filter(c => c.status === 'paid').reduce((sum, c) => sum + (c.commission_cents / 100), 0) || 0,
     },
-    conversions: conversions || []
+    conversions: conversions || [],
+    payoutRequest: payoutRequest || null,
   })
 }
 

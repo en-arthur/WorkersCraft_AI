@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
+import { createConversionIfMissing } from '@/app/api/affiliates/track/route'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -10,9 +11,9 @@ const supabase = createClient(
 )
 
 const PLAN_MAP = {
-  [process.env.PADDLE_STARTER_PRICE_ID]: 'starter',
-  [process.env.PADDLE_PRO_PRICE_ID]: 'pro',
-  [process.env.PADDLE_MAX_PRICE_ID]: 'max',
+  [process.env.PADDLE_STARTER_PRICE_ID || process.env.NEXT_PUBLIC_PADDLE_STARTER_PRICE_ID]: 'starter',
+  [process.env.PADDLE_PRO_PRICE_ID || process.env.NEXT_PUBLIC_PADDLE_PRO_PRICE_ID]: 'pro',
+  [process.env.PADDLE_MAX_PRICE_ID || process.env.NEXT_PUBLIC_PADDLE_MAX_PRICE_ID]: 'max',
 }
 
 const PADDLE_API_BASE = process.env.NEXT_PUBLIC_PADDLE_ENV === 'production'
@@ -54,70 +55,38 @@ async function trackAffiliateConversion(txn, planName) {
   const userId = txn.custom_data?.user_id
   if (!userId) return
 
-  // Check if this user was referred
-  const { data: referral, error: refError } = await supabase
+  const { data: referral } = await supabase
     .from('user_referrals')
     .select('referred_by')
     .eq('user_id', userId)
     .single()
 
-  if (refError || !referral?.referred_by) {
+  if (!referral?.referred_by) {
     console.log('[affiliate] No referral found for user:', userId)
     return
   }
 
-  console.log('[affiliate] Referral found:', referral.referred_by, 'for user:', userId)
-
-  // Find the approved affiliate
-  const { data: affiliate, error: affError } = await supabase
+  const { data: affiliate } = await supabase
     .from('affiliates')
     .select('id, total_earnings')
     .eq('ref_code', referral.referred_by)
     .eq('status', 'approved')
     .single()
 
-  if (affError || !affiliate) {
-    console.log('[affiliate] Affiliate not found or not approved for ref_code:', referral.referred_by)
-    return
-  }
-
-  // Dedup — skip if conversion already recorded for this transaction
-  const { data: existing } = await supabase
-    .from('affiliate_conversions')
-    .select('id')
-    .eq('paddle_transaction_id', txn.id)
-    .single()
-
-  if (existing) {
-    console.log('[affiliate] Conversion already exists for transaction:', txn.id)
+  if (!affiliate) {
+    console.log('[affiliate] Affiliate not found or not approved:', referral.referred_by)
     return
   }
 
   const amountCents = txn.details?.totals?.subtotal ? parseInt(txn.details.totals.subtotal) : 0
-  const commissionCents = Math.round(amountCents * 0.25)
 
-  const { error: insertError } = await supabase.from('affiliate_conversions').insert({
-    affiliate_id: affiliate.id,
-    referred_user_id: userId,
-    plan: planName,
-    amount_cents: amountCents,
-    commission_cents: commissionCents,
-    status: 'pending',
-    paddle_transaction_id: txn.id,
-  })
-
-  if (insertError) {
-    console.error('[affiliate] Failed to insert conversion:', insertError)
-    return
-  }
-
-  // Increment total_earnings
-  await supabase
-    .from('affiliates')
-    .update({ total_earnings: (affiliate.total_earnings || 0) + (commissionCents / 100) })
-    .eq('id', affiliate.id)
-
-  console.log('[affiliate] Conversion tracked — affiliate:', affiliate.id, 'commission: $' + (commissionCents / 100).toFixed(2))
+  await createConversionIfMissing(
+    affiliate.id,
+    userId,
+    planName,
+    amountCents,
+    txn.id
+  )
 }
 
 async function handleTransactionCompleted(txn) {
