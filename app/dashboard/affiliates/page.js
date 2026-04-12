@@ -126,7 +126,7 @@ export default function AffiliateDashboard() {
             ))}
           </div>
 
-          {/* Payout section */}
+         
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
