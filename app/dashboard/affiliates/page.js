@@ -65,12 +65,12 @@ export default function AffiliateDashboard() {
 
   if (!data?.affiliate) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-          <DollarSign className="w-6 h-6 text-primary" />
+      <div className="flex flex-col items-center justify-center h-full min-h-[70vh] text-center px-6">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+          <DollarSign className="w-5 h-5 text-primary" />
         </div>
         <h2 className="text-lg font-semibold mb-2">You are not an affiliate yet</h2>
-        <p className="text-sm text-muted-foreground mb-6 max-w-xs">
+        <p className="text-sm text-muted-foreground mb-6 max-w-xs leading-relaxed">
           Apply to join our affiliate program and earn 25% commission on every sale you refer.
         </p>
         <Button onClick={() => router.push('/affiliates')}>Apply Now</Button>

@@ -44,10 +44,10 @@ export default function AffiliatesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-20 space-y-20">
+      <div className="max-w-3xl mx-auto px-6 py-24 space-y-24">
 
         {/* Hero */}
-        <div className="text-center space-y-5">
+        <div className="text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
             <Sparkles className="w-3.5 h-3.5" />
             Affiliate Program
@@ -55,12 +55,14 @@ export default function AffiliatesPage() {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
             Earn 25% on every sale
           </h1>
-          <p className="text-muted-foreground text-base max-w-xl mx-auto">
+          <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed">
             Partner with WorkersCraft and earn recurring commissions for every customer you refer. Simple, transparent, rewarding.
           </p>
-          <Button size="lg" className="px-8" onClick={() => setShowForm(true)}>
-            Start Earning
-          </Button>
+          <div className="pt-2">
+            <Button size="lg" className="px-10" onClick={() => setShowForm(true)}>
+              Start Earning
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -81,23 +83,25 @@ export default function AffiliatesPage() {
         </div>
 
         {/* How it works */}
-        <div className="space-y-8">
+        <div className="space-y-10">
           <h2 className="text-xl font-semibold text-center">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               { step: '1', icon: LinkIcon, title: 'Get Your Link', desc: 'Apply and receive your unique referral link within 1–2 hours.' },
               { step: '2', icon: Users, title: 'Share & Promote', desc: 'Share with your audience through any channel you prefer.' },
               { step: '3', icon: DollarSign, title: 'Earn Commission', desc: 'Get 25% of every monthly payment from your referred customers.' },
             ].map(({ step, icon: Icon, title, desc }) => (
-              <div key={step} className="rounded-xl border p-5 space-y-3">
+              <div key={step} className="rounded-xl border p-6 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">
                     {step}
                   </div>
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
-                <h3 className="font-semibold text-sm">{title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                <div>
+                  <h3 className="font-semibold text-sm mb-1.5">{title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                </div>
               </div>
             ))}
           </div>
