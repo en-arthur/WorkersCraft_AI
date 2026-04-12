@@ -1,6 +1,6 @@
 import crypto from 'crypto'
 import { createClient } from '@supabase/supabase-js'
-import { createConversionIfMissing } from '@/app/api/affiliates/track/route'
+import { createConversionIfMissing } from '@/lib/affiliate-conversion'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
