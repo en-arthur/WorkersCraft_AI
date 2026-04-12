@@ -19,6 +19,7 @@ import { ImportGitHubDialog } from '@/components/import-github-dialog'
 import Logo from '@/components/logo'
 import { Skeleton } from '@/components/ui/skeleton'
 import { QRPopover } from '@/components/qr-popover'
+import { Card, CardContent } from '@/components/ui/card'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -434,29 +435,19 @@ export default function DashboardPage() {
       <div className="px-4 md:px-8 py-6">
         <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="border rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    {['Project', 'Platform', 'Description', 'Updated', ''].map((h, i) => (
-                      <th key={i} className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                        <Skeleton className="h-4 w-3/4" />
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...Array(5)].map((_, i) => (
-                    <tr key={i} className="border-b last:border-0">
-                      <td className="px-4 py-3"><Skeleton className="h-4 w-2/3" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-5 w-14" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-4 w-4/5" /></td>
-                      <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
-                      <td className="px-4 py-3" />
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i}>
+                  <CardContent className="p-4 space-y-3">
+                    <Skeleton className="h-5 w-2/3" />
+                    <Skeleton className="h-4 w-full" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-4 w-16" />
+                      <Skeleton className="h-4 w-20" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           ) : filteredProjects.length === 0 && searchQuery ? (
             <div className="text-center py-20 px-8 border-2 border-dashed rounded-lg mx-2">
@@ -476,83 +467,65 @@ export default function DashboardPage() {
               <Button onClick={() => setIsDialogOpen(true)}>Create Your First Project</Button>
             </div>
           ) : (
-            <div className="border rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/40">
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Project</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide w-24">Platform</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Description</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide w-28">Updated</th>
-                    <th className="px-4 py-2.5 w-32" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProjects.map((project, i) => (
-                    <tr
-                      key={project.id}
-                      onClick={() => router.push(`/chat?project=${project.id}`)}
-                      className="group border-b last:border-0 cursor-pointer hover:bg-muted/30 active:bg-muted/50 transition-colors"
-                    >
-                      {/* Name + badges */}
-                      <td className="px-4 py-3 max-w-[200px]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-medium truncate">{project.name}</span>
-                          <div className="flex gap-1 shrink-0">
-                            {project.github_repo_url && (
-                              <Badge variant="secondary" className="p-0.5">
-                                <Github className="w-3 h-3" />
-                              </Badge>
-                            )}
-                            {project.backend_enabled && (
-                              <Badge variant="secondary" className="p-0.5">
-                                <Database className="w-3 h-3" />
-                              </Badge>
-                            )}
-                            {project.deployed_url && (
-                              <Badge variant="secondary" className="p-0.5">
-                                <ExternalLink className="w-3 h-3" />
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      {/* Platform */}
-                      <td className="px-4 py-3 w-24">
-                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                          {project.platform === 'mobile' ? (
-                            <><Smartphone className="w-3.5 h-3.5 shrink-0" /><span>Mobile</span></>
-                          ) : (
-                            <><Globe className="w-3.5 h-3.5 shrink-0" /><span>Web</span></>
-                          )}
-                        </div>
-                      </td>
-                      {/* Description */}
-                      <td className="px-4 py-3 max-w-xs">
-                        <p className="text-sm text-muted-foreground truncate">{project.description || '—'}</p>
-                      </td>
-                      {/* Updated */}
-                      <td className="px-4 py-3 w-28">
-                        <span className="text-sm text-muted-foreground whitespace-nowrap">{formatDate(project.updated_at)}</span>
-                      </td>
-                      {/* Actions */}
-                      <td className="px-4 py-3 w-32" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                          {project.deployed_url && <QRPopover url={project.deployed_url} />}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-7 px-2 text-xs"
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProjects.map((project) => (
+                <Card
+                  key={project.id}
+                  onClick={() => router.push(`/chat?project=${project.id}`)}
+                  className="group cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200"
+                >
+                  <CardContent className="p-4 flex flex-col gap-3">
+                    {/* Top row: name + platform badge */}
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-semibold text-sm leading-tight line-clamp-2 flex-1">{project.name}</span>
+                      <Badge variant="secondary" className="shrink-0 flex items-center gap-1 text-xs">
+                        {project.platform === 'mobile'
+                          ? <><Smartphone className="w-3 h-3" />Mobile</>
+                          : <><Globe className="w-3 h-3" />Web</>
+                        }
+                      </Badge>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs text-muted-foreground line-clamp-2 flex-1">
+                      {project.description || 'No description'}
+                    </p>
+
+                    {/* Bottom row: feature badges + updated + actions */}
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t">
+                      <div className="flex items-center gap-1">
+                        {project.github_repo_url && (
+                          <Badge variant="outline" className="p-1 h-5 w-5">
+                            <Github className="w-3 h-3" />
+                          </Badge>
+                        )}
+                        {project.backend_enabled && (
+                          <Badge variant="outline" className="p-1 h-5 w-5">
+                            <Database className="w-3 h-3" />
+                          </Badge>
+                        )}
+                        {project.deployed_url && (
+                          <Badge variant="outline" className="p-1 h-5 w-5">
+                            <ExternalLink className="w-3 h-3" />
+                          </Badge>
+                        )}
+                        <span className="text-xs text-muted-foreground ml-1">{formatDate(project.updated_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
+                        {project.deployed_url && <QRPopover url={project.deployed_url} />}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setProjectToDelete(project); setIsDeleteDialogOpen(true) }}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-6 px-2 text-xs"
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           )}
         </div>
