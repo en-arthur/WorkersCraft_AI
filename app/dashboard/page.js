@@ -472,7 +472,7 @@ export default function DashboardPage() {
                 <Card
                   key={project.id}
                   onClick={() => router.push(`/chat?project=${project.id}`)}
-                  className="group cursor-pointer hover:border-primary/50 hover:shadow-md transition-all duration-200"
+                  className="group cursor-pointer hover:border-primary/60 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.98] active:shadow-sm active:translate-y-0 transition-all duration-150"
                 >
                   <CardContent className="p-4 flex flex-col gap-3">
                     {/* Top row: name + platform badge */}
@@ -512,7 +512,7 @@ export default function DashboardPage() {
                         <span className="text-xs text-muted-foreground ml-1">{formatDate(project.updated_at)}</span>
                       </div>
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={e => e.stopPropagation()}>
-                        {project.deployed_url && <QRPopover url={project.deployed_url} />}
+                        {/* {project.deployed_url && <QRPopover url={project.deployed_url} />} */}
                         <Button
                           variant="ghost"
                           size="sm"
