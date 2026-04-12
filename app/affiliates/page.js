@@ -59,7 +59,7 @@ export default function AffiliatesPage() {
             Partner with WorkersCraft and earn recurring commissions for every customer you refer. Simple, transparent, rewarding.
           </p>
           <div className="pt-2">
-            <Button size="lg" className="px-10" onClick={() => setShowForm(true)}>
+            <Button size="lg" className="px-10 whitespace-nowrap" onClick={() => setShowForm(true)}>
               Start Earning
             </Button>
           </div>
