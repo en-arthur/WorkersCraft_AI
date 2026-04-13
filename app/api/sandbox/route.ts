@@ -117,14 +117,16 @@ export async function POST(req: Request) {
     }
   }
 
-  // For imported projects (cloned from GitHub), restart dev server with new files
-  const isImportedProject = !!fragment.github_repo_url
+  // Start dev server only for imported projects (GitHub or ZIP imports).
+  // AI-generated projects use E2B templates that already have the dev server running.
+  // An imported project has github_repo_url set, OR has no commentary (ZIP import).
+  const isImportedProject = !!fragment.github_repo_url || (!fragment.commentary && !fragment.code && fragment.files && fragment.files.length > 0)
   if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
     const startCommands: Record<string, string> = {
-      'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev -- --port 3000',
-      'vue-developer': 'cd /home/user && npm install --legacy-peer-deps && npm run dev',
-      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true',
-      'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py',
+      'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps --silent && npm run dev -- --port 3000 2>&1',
+      'vue-developer': 'cd /home/user && npm install --legacy-peer-deps --silent && npm run dev 2>&1',
+      'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true 2>&1',
+      'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py 2>&1',
     }
     const killCommands: Record<string, string> = {
       'nextjs-developer': 'pkill -f "next" 2>/dev/null; true',
@@ -135,13 +137,11 @@ export async function POST(req: Request) {
     const killCmd = killCommands[fragment.template]
     const startCmd = startCommands[fragment.template]
     if (killCmd && startCmd) {
-      console.log(`Restarting dev server for imported project template: ${fragment.template}`)
+      console.log(`Starting dev server for template: ${fragment.template}`)
       await sbx.commands.run(killCmd).catch(() => {})
-      sbx.commands.run(startCmd, { 
+      sbx.commands.run(startCmd, {
         background: true,
-        onStderr: (data) => {
-          stderrBuffer += data + '\n'
-        }
+        onStderr: (data) => { stderrBuffer += data + '\n' }
       })
 
       // Poll until the port is ready (max 60s)
@@ -187,7 +187,7 @@ export async function POST(req: Request) {
     JSON.stringify({
       sbxId: sbx?.sandboxId,
       template: fragment.template,
-      url: `https://${sbx?.getHost(fragment.port ?? 80)}`,
+      url: `https://${sbx?.getHost(fragment.port ?? 3000)}`,
       stderr: stderrBuffer.trim() || undefined,
     } as ExecutionResultWeb),
   )

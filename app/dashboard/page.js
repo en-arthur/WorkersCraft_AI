@@ -428,8 +428,8 @@ export default function DashboardPage() {
                             rows={8}
                             autoFocus
                           />
-                          <p className="text-xs text-muted-foreground">
-                            {newProject.user_prompt.length} characters • Be specific about features, design, and functionality
+                          <p className={`text-xs ${newProject.user_prompt.length < 30 ? 'text-orange-500' : 'text-muted-foreground'}`}>
+                            {newProject.user_prompt.length}/30 min characters{newProject.user_prompt.length >= 30 ? ' ✓' : ' — be more descriptive'}
                           </p>
                         </div>
                         <div className="p-4 rounded-lg bg-muted/50 border">
