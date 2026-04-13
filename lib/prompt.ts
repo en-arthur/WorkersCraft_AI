@@ -110,9 +110,25 @@ export function getBackendPrompt(backendEnabled: boolean, backendStatus: string)
       await backend.login(email, password)
     } catch (err) {
       if (err.code === 'INVALID_CREDENTIALS') {
-        // Handle wrong password
-      } else if (err.code === 'NETWORK_ERROR') {
-        // Handle network issues
+        setError('Incorrect email or password.')
+      } else if (err.code === 'USER_NOT_FOUND') {
+        setError('No account found with this email.')
+      } else {
+        setError(err.message || 'Login failed. Please try again.')
+      }
+    }
+
+    try {
+      await backend.register(email, password)
+    } catch (err) {
+      if (err.code === 'USER_ALREADY_EXISTS') {
+        setError('An account with this email already exists. Please sign in instead.')
+      } else if (err.code === 'INVALID_EMAIL') {
+        setError('Please enter a valid email address.')
+      } else if (err.code === 'WEAK_PASSWORD') {
+        setError('Password must be at least 6 characters.')
+      } else {
+        setError(err.message || 'Registration failed. Please try again.')
       }
     }
     
@@ -123,9 +139,11 @@ export function getBackendPrompt(backendEnabled: boolean, backendStatus: string)
     4. NEVER call storage or file methods without the user being logged in first.
     5. Use backend.create/list/update/delete for data persistence
     6. Store data in logical collections (e.g., 'todos', 'posts', 'products')
-    7. ALWAYS wrap every backend call in try/catch. If the error code is 'SESSION_EXPIRED' or 'NO_REFRESH_TOKEN', call backend.logout() and show the login form.
-    8. After login/register, immediately load the user's data.
-    9. Sessions expire - always handle re-authentication gracefully without crashing the app.
+    7. ALWAYS wrap every backend call in try/catch. NEVER show generic "Request failed" — always show the specific err.message or a human-readable message based on err.code.
+    8. If the error code is 'SESSION_EXPIRED' or 'NO_REFRESH_TOKEN', call backend.logout() and show the login form.
+    9. After login/register, immediately load the user's data.
+    10. Sessions expire - always handle re-authentication gracefully without crashing the app.
+    11. ALWAYS show inline error messages in the UI (e.g., below the form field or in a red alert box) — never use alert() or console.log() for user-facing errors.
 
     SESSION EXPIRY PATTERN (required in every app):
     async function loadData() {
