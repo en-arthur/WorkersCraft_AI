@@ -318,7 +318,6 @@ export default function DashboardPage() {
                             >
                               <Globe className="w-8 h-8 mx-auto mb-3 text-primary" />
                               <h3 className="font-semibold mb-1">Web App</h3>
-                              <p className="text-xs text-muted-foreground">Next.js</p>
                             </button>
                             <button
                               type="button"
@@ -331,7 +330,6 @@ export default function DashboardPage() {
                             >
                               <Smartphone className="w-8 h-8 mx-auto mb-3 text-primary" />
                               <h3 className="font-semibold mb-1">Mobile App</h3>
-                              <p className="text-xs text-muted-foreground">Expo (React Native)</p>
                             </button>
                           </div>
                         </div>
