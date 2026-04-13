@@ -40,8 +40,39 @@ export function FragmentWeb({
   const [isRestarting, setIsRestarting] = useState(false)
   const [currentUrl, setCurrentUrl] = useState(result.url)
   const isRestartingRef = useRef(false)
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const isExpo = currentUrl?.includes('8081')
+  const isImported = !!(fragment as any)?.imported
+
+  // For imported projects: poll until the dev server is ready, then refresh iframe
+  useEffect(() => {
+    if (!isImported || !currentUrl || !result.sbxId) return
+
+    let attempts = 0
+    const maxAttempts = 40 // 40 * 5s = 200s max
+
+    pollIntervalRef.current = setInterval(async () => {
+      attempts++
+      if (attempts > maxAttempts) {
+        clearInterval(pollIntervalRef.current!)
+        return
+      }
+      try {
+        // Use the check-vercel-status pattern — proxy through our own API to avoid CORS
+        const res = await fetch(`/api/sandbox/check-port?sbxId=${result.sbxId}&port=${currentUrl.includes('8501') ? 8501 : 3000}`)
+        if (res.ok) {
+          const data = await res.json()
+          if (data.ready) {
+            clearInterval(pollIntervalRef.current!)
+            setIframeKey(k => k + 1)
+          }
+        }
+      } catch {}
+    }, 5000)
+
+    return () => { if (pollIntervalRef.current) clearInterval(pollIntervalRef.current) }
+  }, [isImported, currentUrl, result.sbxId])
 
   // Restart sandbox by calling /api/sandbox/restart or creating new
   const restartSandbox = async () => {

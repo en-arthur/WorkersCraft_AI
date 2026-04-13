@@ -121,7 +121,6 @@ export async function POST(req: Request) {
   // AI-generated projects use E2B templates that already have the dev server running.
   const isImportedProject = !!(fragment as any).imported
   if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
-    // Use npm ci if lockfile exists (faster), otherwise npm install
     const killCommands: Record<string, string> = {
       'nextjs-developer': 'pkill -f "next" 2>/dev/null; true',
       'vue-developer': 'pkill -f "nuxt|vite" 2>/dev/null; true',
@@ -133,7 +132,6 @@ export async function POST(req: Request) {
       console.log(`Starting dev server for imported project: ${fragment.template}`)
       await sbx.commands.run(killCmd).catch(() => {})
 
-      // For Node.js projects: install deps synchronously first, then start server in background
       const isNode = ['nextjs-developer', 'vue-developer'].includes(fragment.template)
       const isPython = ['streamlit-developer', 'gradio-developer'].includes(fragment.template)
 
@@ -142,20 +140,15 @@ export async function POST(req: Request) {
           f.file_path === 'package-lock.json' || f.file_path === 'yarn.lock'
         )
         const installCmd = hasLockfile ? 'npm ci --silent' : 'npm install --legacy-peer-deps --silent'
-        console.log(`Running ${installCmd}...`)
-        const installResult = await sbx.commands.run(`cd /home/user && ${installCmd}`, {
-          timeoutMs: 90000,
-          onStderr: (data) => { stderrBuffer += data + '\n' }
-        }).catch((err) => { console.error('npm install failed:', err) })
-        console.log(`npm install done, exit code: ${(installResult as any)?.exitCode}`)
-
         const devCmd = fragment.template === 'nextjs-developer'
-          ? 'cd /home/user && npm run dev -- --port 3000'
-          : 'cd /home/user && npm run dev'
+          ? `cd /home/user && ${installCmd} && npm run dev -- --port 3000`
+          : `cd /home/user && ${installCmd} && npm run dev`
+        // Run install + dev as single background command — don't block the serverless function
         sbx.commands.run(devCmd, {
           background: true,
           onStderr: (data) => { stderrBuffer += data + '\n' }
         })
+        console.log(`[import] install + dev server starting in background`)
       } else if (isPython) {
         const pyCmd = fragment.template === 'streamlit-developer'
           ? 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true'
@@ -165,23 +158,8 @@ export async function POST(req: Request) {
           onStderr: (data) => { stderrBuffer += data + '\n' }
         })
       }
-
-      // Poll until the port is ready (max 90s)
-      const port = fragment.port ?? 3000
-      const host = sbx.getHost(port)
-      const pollUrl = `https://${host}`
-      const maxWait = 90000
-      const interval = 3000
-      const pollStart = Date.now()
-      let ready = false
-      while (Date.now() - pollStart < maxWait) {
-        try {
-          const res = await fetch(pollUrl, { signal: AbortSignal.timeout(4000) })
-          if (res.status < 500) { ready = true; break }
-        } catch {}
-        await new Promise(r => setTimeout(r, interval))
-      }
-      console.log(`Dev server ready: ${ready} after ${Date.now() - pollStart}ms, stderr: ${stderrBuffer.slice(0, 200)}`)
+      // Return immediately — the iframe in fragment-web will show the port error
+      // until the server is ready, then the user can refresh
     }
   }
 
