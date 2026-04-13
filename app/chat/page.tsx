@@ -82,6 +82,8 @@ function ChatContent() {
   const [saving, setSaving] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null)
+  const [chatMode, setChatMode] = useState<'build' | 'ask'>('build')
+  const [isAskLoading, setIsAskLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -323,6 +325,66 @@ function ChatContent() {
 
     if (!session) {
       return setAuthDialog(true)
+    }
+
+    // Ask mode — conversational, never touches fragment/preview
+    if (chatMode === 'ask') {
+      if (isAskLoading) return
+      const userText = chatInput.trim()
+      if (!userText) return
+
+      const userMsg: Message = { role: 'user', content: [{ type: 'text', text: userText }] }
+      const updatedMessages = addMessage(userMsg)
+      setChatInput('')
+      setIsAskLoading(true)
+
+      try {
+        // Build code context from current fragment
+        const codeContext = fragment?.files?.length
+          ? fragment.files.map((f: any) => `// ${f.file_path}\n${f.file_content}`).join('\n\n')
+          : fragment?.code || ''
+
+        const res = await fetch('/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: updatedMessages.map(m => ({
+              role: m.role,
+              content: typeof m.content === 'string'
+                ? m.content
+                : (m.content as any[]).filter((c: any) => c.type === 'text').map((c: any) => c.text).join(' ')
+            })),
+            codeContext,
+            projectName: currentProject?.name,
+          }),
+        })
+
+        if (!res.ok || !res.body) throw new Error('Ask failed')
+
+        // Stream plain text chunks from Groq
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let assistantText = ''
+
+        setMessages(prev => [...prev, { role: 'assistant', content: [{ type: 'text', text: '' }] }])
+
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          assistantText += decoder.decode(value, { stream: true })
+          setMessages(prev => {
+            const updated = [...prev]
+            updated[updated.length - 1] = { role: 'assistant', content: [{ type: 'text', text: assistantText }] }
+            return updated
+          })
+        }
+      } catch (err) {
+        console.error('Ask error:', err)
+        setMessages(prev => [...prev, { role: 'assistant', content: [{ type: 'text', text: 'Sorry, something went wrong. Please try again.' }] }])
+      } finally {
+        setIsAskLoading(false)
+      }
+      return
     }
 
     if (isLoading) {
@@ -798,7 +860,7 @@ function ChatContent() {
             retry={retry}
             isErrored={error !== undefined}
             errorMessage={errorMessage}
-            isLoading={isLoading}
+            isLoading={isLoading || isAskLoading}
             isRateLimited={isRateLimited}
             stop={stop}
             input={chatInput}
@@ -807,6 +869,8 @@ function ChatContent() {
             isMultiModal={currentModel?.multiModal || false}
             files={files}
             handleFileChange={handleFileChange}
+            mode={chatMode}
+            onModeChange={setChatMode}
           >
             {!process.env.NEXT_PUBLIC_HIDE_MODEL_SELECTOR && (
               <ChatPicker

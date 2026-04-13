@@ -26,6 +26,8 @@ export function ChatInput({
   files,
   handleFileChange,
   children,
+  mode,
+  onModeChange,
 }: {
   retry: () => void
   isErrored: boolean
@@ -40,6 +42,8 @@ export function ChatInput({
   files: File[]
   handleFileChange: (change: SetStateAction<File[]>) => void
   children: React.ReactNode
+  mode?: 'build' | 'ask'
+  onModeChange?: (mode: 'build' | 'ask') => void
 }) {
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     handleFileChange((prev) => {
@@ -187,7 +191,7 @@ export function ChatInput({
             maxLength={4000}
             className="text-normal px-3 resize-none ring-0 bg-inherit w-full m-0 outline-none"
             required={true}
-            placeholder="Describe your app..."
+            placeholder={mode === 'ask' ? 'Ask anything about your project...' : 'Describe your app...'}
             disabled={isErrored}
             value={input}
             onChange={handleInputChange}
@@ -225,6 +229,33 @@ export function ChatInput({
                 </Tooltip>
               </TooltipProvider>
               {files.length > 0 && filePreview}
+              {/* Mode toggle */}
+              {onModeChange && (
+                <div className="flex items-center rounded-lg border bg-muted/40 p-0.5 gap-0.5 ml-1">
+                  <button
+                    type="button"
+                    onClick={() => onModeChange('build')}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                      mode !== 'ask'
+                        ? 'bg-background shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Build
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onModeChange('ask')}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                      mode === 'ask'
+                        ? 'bg-background shadow-sm text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Ask
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               {!isLoading ? (
