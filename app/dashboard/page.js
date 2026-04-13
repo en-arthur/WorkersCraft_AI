@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
-import { Loader2, Search, Globe, Smartphone, Database, Github, ExternalLink } from 'lucide-react'
+import { Loader2, Search, Globe, Smartphone, Database, Github, ExternalLink, Upload } from 'lucide-react'
 
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
@@ -42,6 +42,33 @@ export default function DashboardPage() {
   const [isLimitDialogOpen, setIsLimitDialogOpen] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [importingZip, setImportingZip] = useState(false)
+
+  async function handleZipImport(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImportingZip(true)
+    try {
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('name', file.name.replace(/\.zip$/i, ''))
+      const res = await fetch('/api/projects/import-zip', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${currentSession?.access_token}` },
+        body: formData,
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Import failed')
+      router.push(`/chat?project=${data.project.id}`)
+    } catch (err) {
+      console.error('ZIP import error:', err)
+      alert(err.message)
+    } finally {
+      setImportingZip(false)
+      e.target.value = ''
+    }
+  }
 
   const filteredProjects = useMemo(() => {
     if (!searchQuery.trim()) return projects
@@ -265,9 +292,27 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between gap-4 px-2">
             <h1 className="text-xl font-semibold">My Projects</h1>
             <div className="flex gap-2">
-              {/* <ImportGitHubDialog disabled={saving} onImport={(project) => {
-                router.push(`/chat?project=${project.id}`)
-              }} /> */}
+              {/* Hidden file input for ZIP import */}
+              <input
+                type="file"
+                id="zip-import"
+                accept=".zip"
+                className="hidden"
+                onChange={handleZipImport}
+              />
+              <Button
+                size="lg"
+                variant="outline"
+                className="px-4 py-6"
+                disabled={importingZip}
+                onClick={() => document.getElementById('zip-import').click()}
+              >
+                {importingZip
+                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                  : <Upload className="w-4 h-4" />
+                }
+                <span className="ml-2 hidden sm:inline">{importingZip ? 'Importing...' : 'Import ZIP'}</span>
+              </Button>
               <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setCurrentStep(1) }}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="px-8 py-6 text-base">
