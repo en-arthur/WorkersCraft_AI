@@ -39,12 +39,12 @@ export function FragmentWeb({
   const [barVisible, setBarVisible] = useState(false)
   const [isRestarting, setIsRestarting] = useState(false)
   const [currentUrl, setCurrentUrl] = useState(result.url)
-  const [isWaitingForServer, setIsWaitingForServer] = useState(isImported)
   const isRestartingRef = useRef(false)
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   const isExpo = currentUrl?.includes('8081')
   const isImported = !!(fragment as any)?.imported
+  const [isWaitingForServer, setIsWaitingForServer] = useState(isImported)
 
   // For imported projects: poll until the dev server is ready, then refresh iframe
   useEffect(() => {
