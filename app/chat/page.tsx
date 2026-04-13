@@ -853,7 +853,7 @@ function ChatContent() {
           />
           <Chat
             messages={messages}
-            isLoading={isLoading}
+            isLoading={isLoading || isAskLoading}
             setCurrentPreview={setCurrentPreview}
           />
           <ChatInput
