@@ -118,7 +118,7 @@ export async function POST(request) {
       .insert({
         project_id: project.id,
         version_number: 1,
-        fragment_data: { template, port, files, github_repo_url: repoUrl, github_branch: branch },
+        fragment_data: { template, port, files, github_repo_url: repoUrl, github_branch: branch, imported: true },
       })
 
     if (versionError) throw new Error(`Failed to create version: ${versionError.message}`)

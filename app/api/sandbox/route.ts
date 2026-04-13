@@ -4,7 +4,7 @@ import { Sandbox } from '@e2b/code-interpreter'
 
 const sandboxTimeout = 30 * 60 * 1000 // 30 minutes in ms
 
-export const maxDuration = 60
+export const maxDuration = 120
 
 export async function POST(req: Request) {
   const {
@@ -119,12 +119,14 @@ export async function POST(req: Request) {
 
   // Start dev server only for imported projects (GitHub or ZIP imports).
   // AI-generated projects use E2B templates that already have the dev server running.
-  // An imported project has github_repo_url set, OR has no commentary (ZIP import).
-  const isImportedProject = !!fragment.github_repo_url || (!fragment.commentary && !fragment.code && fragment.files && fragment.files.length > 0)
+  const isImportedProject = !!(fragment as any).imported
   if (isImportedProject && !fragment.template.includes('expo-developer') && fragment.template !== 'code-interpreter-v1') {
+    // Use npm ci if lockfile exists (faster), otherwise npm install
+    const hasLockfile = fragment.files?.some((f: any) => f.file_path === 'package-lock.json' || f.file_path === 'yarn.lock')
+    const installCmd = hasLockfile ? 'npm ci --silent' : 'npm install --legacy-peer-deps --silent'
     const startCommands: Record<string, string> = {
-      'nextjs-developer': 'cd /home/user && npm install --legacy-peer-deps --silent && npm run dev -- --port 3000 2>&1',
-      'vue-developer': 'cd /home/user && npm install --legacy-peer-deps --silent && npm run dev 2>&1',
+      'nextjs-developer': `cd /home/user && ${installCmd} && npm run dev -- --port 3000 2>&1`,
+      'vue-developer': `cd /home/user && ${installCmd} && npm run dev 2>&1`,
       'streamlit-developer': 'cd /home/user && pip install -r requirements.txt -q && streamlit run app.py --server.port 8501 --server.headless true 2>&1',
       'gradio-developer': 'cd /home/user && pip install -r requirements.txt -q && python app.py 2>&1',
     }

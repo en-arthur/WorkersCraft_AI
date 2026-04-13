@@ -100,13 +100,13 @@ export async function POST(request) {
 
     if (projectError) throw new Error(`Failed to create project: ${projectError.message}`)
 
-    // Save version with files
+    // Save version with files — mark as imported so sandbox knows to start dev server
     const { error: versionError } = await supabase
       .from('project_versions')
       .insert({
         project_id: project.id,
         version_number: 1,
-        fragment_data: { template, port, files },
+        fragment_data: { template, port, files, imported: true },
       })
 
     if (versionError) throw new Error(`Failed to save version: ${versionError.message}`)
