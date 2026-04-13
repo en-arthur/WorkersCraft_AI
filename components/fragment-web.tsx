@@ -39,6 +39,7 @@ export function FragmentWeb({
   const [barVisible, setBarVisible] = useState(false)
   const [isRestarting, setIsRestarting] = useState(false)
   const [currentUrl, setCurrentUrl] = useState(result.url)
+  const [isWaitingForServer, setIsWaitingForServer] = useState(isImported)
   const isRestartingRef = useRef(false)
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -49,6 +50,7 @@ export function FragmentWeb({
   useEffect(() => {
     if (!isImported || !currentUrl || !result.sbxId) return
 
+    setIsWaitingForServer(true)
     let attempts = 0
     const maxAttempts = 40 // 40 * 5s = 200s max
 
@@ -56,15 +58,16 @@ export function FragmentWeb({
       attempts++
       if (attempts > maxAttempts) {
         clearInterval(pollIntervalRef.current!)
+        setIsWaitingForServer(false)
         return
       }
       try {
-        // Use the check-vercel-status pattern — proxy through our own API to avoid CORS
         const res = await fetch(`/api/sandbox/check-port?sbxId=${result.sbxId}&port=${currentUrl.includes('8501') ? 8501 : 3000}`)
         if (res.ok) {
           const data = await res.json()
           if (data.ready) {
             clearInterval(pollIntervalRef.current!)
+            setIsWaitingForServer(false)
             setIframeKey(k => k + 1)
           }
         }
@@ -177,6 +180,15 @@ export function FragmentWeb({
               <div className="text-white text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
                 <p className="text-sm">Reconnecting preview...</p>
+              </div>
+            </div>
+          )}
+          {isWaitingForServer && (
+            <div className="absolute inset-0 bg-background/95 flex items-center justify-center z-10">
+              <div className="text-center space-y-3">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto"></div>
+                <p className="text-sm font-medium">Starting dev server...</p>
+                <p className="text-xs text-muted-foreground">Installing dependencies, this may take ~30s</p>
               </div>
             </div>
           )}
