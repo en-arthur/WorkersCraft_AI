@@ -8,6 +8,13 @@ function getSupabaseWithAuth(token) {
   )
 }
 
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
+
 export async function POST(request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
   if (!token) {
@@ -21,11 +28,11 @@ export async function POST(request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Generate 6-digit code
   const code = Math.floor(100000 + Math.random() * 900000).toString()
   
-  // Store in database
-  const { error } = await supabase.from('pending_verifications').insert({
+  // Use admin client to bypass RLS for insert
+  const adminSupabase = getSupabaseAdmin()
+  const { error } = await adminSupabase.from('pending_verifications').insert({
     user_id: user.id,
     verification_code: code,
     integration_type: 'telegram',
