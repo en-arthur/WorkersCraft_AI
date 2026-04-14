@@ -196,8 +196,10 @@ export async function POST(request) {
         return Response.json({ ok: true })
       }
       
-      // Parse callback data
-      const [action, dataStr] = callbackData.split(':')
+      // Parse callback data - split only on first colon
+      const colonIndex = callbackData.indexOf(':')
+      const action = colonIndex === -1 ? callbackData : callbackData.slice(0, colonIndex)
+      const dataStr = colonIndex === -1 ? '{}' : callbackData.slice(colonIndex + 1)
       const data = JSON.parse(dataStr || '{}')
       
       const supabase = getSupabaseAdmin()
