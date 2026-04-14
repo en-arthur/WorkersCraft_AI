@@ -40,8 +40,8 @@ export async function POST(request) {
 
   return Response.json({ 
     code,
-    bot_username: 'WorkersCraftBot',
-    bot_url: `https://t.me/WorkersCraftBot?start=${code}`,
-    expires_in: 900, // seconds
+    bot_username: 'WorkersCraftAiBot',
+    bot_url: `https://t.me/WorkersCraftAiBot?start=${code}`,
+    expires_in: 900,
   })
 }
