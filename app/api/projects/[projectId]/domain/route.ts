@@ -1,6 +1,19 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { addDomainToVercelProject, getDomainConfig, removeDomainFromVercelProject, getDNSInstructions } from '@/lib/vercel-domain'
+import crypto from 'crypto'
+
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
+
+function decrypt(text) {
+  const parts = text.split(':')
+  const iv = Buffer.from(parts.shift(), 'hex')
+  const encrypted = Buffer.from(parts.join(':'), 'hex')
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv)
+  let decrypted = decipher.update(encrypted)
+  decrypted = Buffer.concat([decrypted, decipher.final()])
+  return decrypted.toString()
+}
 
 export async function POST(request, { params }) {
   try {
@@ -18,6 +31,22 @@ export async function POST(request, { params }) {
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    // Get user's Vercel token
+    const { data: integration } = await supabase
+      .from('user_integrations')
+      .select('access_token')
+      .eq('user_id', user.id)
+      .eq('integration_type', 'vercel')
+      .single()
+
+    if (!integration?.access_token) {
+      return NextResponse.json({ 
+        error: 'Vercel token not configured. Please add it in Settings > Integrations.' 
+      }, { status: 400 })
+    }
+
+    const vercelToken = decrypt(integration.access_token)
 
     // Get project and verify ownership
     const { data: project, error: projectError } = await supabase
@@ -57,10 +86,10 @@ export async function POST(request, { params }) {
     }
 
     // Add domain to Vercel project
-    await addDomainToVercelProject(vercelProjectId, domain)
+    await addDomainToVercelProject(vercelProjectId, domain, vercelToken)
 
     // Get DNS configuration
-    const domainConfig = await getDomainConfig(domain)
+    const domainConfig = await getDomainConfig(domain, vercelToken)
     const dnsInfo = getDNSInstructions(domainConfig)
 
     // Update project with custom domain
@@ -102,6 +131,22 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user's Vercel token
+    const { data: integration } = await supabase
+      .from('user_integrations')
+      .select('access_token')
+      .eq('user_id', user.id)
+      .eq('integration_type', 'vercel')
+      .single()
+
+    if (!integration?.access_token) {
+      return NextResponse.json({ 
+        error: 'Vercel token not configured.' 
+      }, { status: 400 })
+    }
+
+    const vercelToken = decrypt(integration.access_token)
+
     // Get project
     const { data: project, error: projectError } = await supabase
       .from('projects')
@@ -115,7 +160,7 @@ export async function GET(request, { params }) {
     }
 
     // Check domain configuration status
-    const domainConfig = await getDomainConfig(project.custom_domain)
+    const domainConfig = await getDomainConfig(project.custom_domain, vercelToken)
     const dnsInfo = getDNSInstructions(domainConfig)
 
     // Update verification status if changed
@@ -155,6 +200,22 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Get user's Vercel token
+    const { data: integration } = await supabase
+      .from('user_integrations')
+      .select('access_token')
+      .eq('user_id', user.id)
+      .eq('integration_type', 'vercel')
+      .single()
+
+    if (!integration?.access_token) {
+      return NextResponse.json({ 
+        error: 'Vercel token not configured.' 
+      }, { status: 400 })
+    }
+
+    const vercelToken = decrypt(integration.access_token)
+
     // Get project
     const { data: project, error: projectError } = await supabase
       .from('projects')
@@ -181,7 +242,7 @@ export async function DELETE(request, { params }) {
     if (deployment?.deployment_url) {
       const vercelProjectId = deployment.deployment_url.split('.')[0]?.split('//')[1]?.split('-').slice(0, -1).join('-')
       if (vercelProjectId) {
-        await removeDomainFromVercelProject(vercelProjectId, project.custom_domain)
+        await removeDomainFromVercelProject(vercelProjectId, project.custom_domain, vercelToken)
       }
     }
 
