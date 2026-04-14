@@ -293,7 +293,7 @@ export default function DashboardPage() {
             <h1 className="text-xl font-semibold">My Projects</h1>
             <div className="flex gap-2">
               {/* Hidden file input for ZIP import */}
-              <input
+              {/* <input
                 type="file"
                 id="zip-import"
                 accept=".zip"
@@ -312,7 +312,7 @@ export default function DashboardPage() {
                   : <Upload className="w-4 h-4" />
                 }
                 <span className="ml-2 hidden sm:inline">{importingZip ? 'Importing...' : 'Import ZIP'}</span>
-              </Button>
+              </Button> */}
               <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setCurrentStep(1) }}>
                 <DialogTrigger asChild>
                   <Button size="lg" className="px-8 py-6 text-base">
