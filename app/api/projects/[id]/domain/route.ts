@@ -5,7 +5,7 @@ import crypto from 'crypto'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
-function decrypt(text) {
+function decrypt(text: string) {
   const parts = text.split(':')
   const iv = Buffer.from(parts.shift(), 'hex')
   const encrypted = Buffer.from(parts.join(':'), 'hex')
