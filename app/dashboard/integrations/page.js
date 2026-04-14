@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { CheckCircle2, XCircle, Loader2, AlertTriangle } from 'lucide-react'
-// import { TelegramIntegration } from '@/components/telegram-integration'
+import { TelegramIntegration } from '@/components/telegram-integration'
 // import { SlackIntegration } from '@/components/slack-integration'
 
 export default function IntegrationsPage() {
@@ -217,11 +217,11 @@ export default function IntegrationsPage() {
             </CardFooter>
           </Card>
 
+          {/* Telegram Integration */}
+          <TelegramIntegration session={session} />
+
           {/* Slack Integration - coming soon */}
           {/* <SlackIntegration session={session} /> */}
-
-          {/* Telegram Integration - coming soon */}
-          {/* <TelegramIntegration session={session} /> */}
 
 
         </div>
