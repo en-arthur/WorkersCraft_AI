@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Loader2, Search, Globe, Smartphone, Apple, ExternalLink, Download, RefreshCw, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { CustomDomainDialog } from '@/components/custom-domain-dialog'
 
 export default function DeploymentsPage() {
   const { session } = useAuth()
@@ -203,11 +204,18 @@ export default function DeploymentsPage() {
                 {(deployment.deployment_url || deployment.artifact_url || deployment.build_logs) && (
                   <CardFooter className="pt-0 gap-2">
                     {deployment.type === 'web' && deployment.deployment_url && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={deployment.deployment_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-3.5 h-3.5 mr-1.5" />View Site
-                        </a>
-                      </Button>
+                      <>
+                        <Button variant="outline" size="sm" asChild>
+                          <a href={deployment.deployment_url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-3.5 h-3.5 mr-1.5" />View Site
+                          </a>
+                        </Button>
+                        <CustomDomainDialog 
+                          projectId={deployment.project_id}
+                          currentDomain={deployment.projects?.custom_domain}
+                          onDomainAdded={() => fetchDeployments()}
+                        />
+                      </>
                     )}
                     {deployment.artifact_url && (
                       <Button variant="outline" size="sm" asChild>

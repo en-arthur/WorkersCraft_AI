@@ -30,7 +30,9 @@ export async function GET(request) {
         projects (
           id,
           name,
-          platform
+          platform,
+          custom_domain,
+          domain_verified
         )
       `)
       .eq('user_id', user.id)
