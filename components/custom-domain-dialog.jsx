@@ -46,7 +46,7 @@ export function CustomDomainDialog({ projectId, currentDomain, onDomainAdded }) 
   }
 
   async function handleAddDomain() {
-    if (!domain.trim()) return
+    if (!domain.trim() || !projectId) return
 
     try {
       setIsAdding(true)
@@ -123,6 +123,8 @@ export function CustomDomainDialog({ projectId, currentDomain, onDomainAdded }) 
     navigator.clipboard.writeText(text)
     toast({ title: 'Copied to clipboard' })
   }
+
+  if (!projectId) return null
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
