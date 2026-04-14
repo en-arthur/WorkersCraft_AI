@@ -18,7 +18,7 @@ function decrypt(text: string): string {
   return decrypted.toString()
 }
 
-export async function POST(request, { params }) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id: projectId } = params
     const { domain } = await request.json()
@@ -119,7 +119,7 @@ export async function POST(request, { params }) {
   }
 }
 
-export async function GET(request, { params }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id: projectId } = params
     const authHeader = request.headers.get('authorization')
@@ -188,7 +188,7 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function DELETE(request, { params }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id: projectId } = params
     const authHeader = request.headers.get('authorization')
