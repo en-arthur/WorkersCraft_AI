@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { addDomainToVercelProject, getDomainConfig, removeDomainFromVercelProject, getDNSInstructions } from '@/lib/vercel-domain'
 import crypto from 'crypto'
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+)
+
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
-function decrypt(text: string): string {
+function decrypt(text) {
   const parts = text.split(':')
   const ivString = parts.shift()
   if (!ivString) throw new Error('Invalid encrypted text')
@@ -18,7 +23,7 @@ function decrypt(text: string): string {
   return decrypted.toString()
 }
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request, { params }) {
   try {
     const { id: projectId } = params
     const { domain } = await request.json()
@@ -119,7 +124,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 }
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(request, { params }) {
   try {
     const { id: projectId } = params
     const authHeader = request.headers.get('authorization')
@@ -188,7 +193,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request, { params }) {
   try {
     const { id: projectId } = params
     const authHeader = request.headers.get('authorization')
