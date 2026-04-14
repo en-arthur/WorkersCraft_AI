@@ -17,7 +17,7 @@ function decrypt(text) {
 
 export async function POST(request, { params }) {
   try {
-    const { projectId } = params
+    const { id: projectId } = params
     const { domain } = await request.json()
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
@@ -118,7 +118,7 @@ export async function POST(request, { params }) {
 
 export async function GET(request, { params }) {
   try {
-    const { projectId } = params
+    const { id: projectId } = params
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
 
@@ -187,7 +187,7 @@ export async function GET(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { projectId } = params
+    const { id: projectId } = params
     const authHeader = request.headers.get('authorization')
     const token = authHeader?.replace('Bearer ', '')
 
