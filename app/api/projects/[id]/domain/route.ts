@@ -5,9 +5,12 @@ import crypto from 'crypto'
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production-32b'
 
-function decrypt(text: string) {
+function decrypt(text: string): string {
   const parts = text.split(':')
-  const iv = Buffer.from(parts.shift(), 'hex')
+  const ivString = parts.shift()
+  if (!ivString) throw new Error('Invalid encrypted text')
+  
+  const iv = Buffer.from(ivString, 'hex')
   const encrypted = Buffer.from(parts.join(':'), 'hex')
   const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY.slice(0, 32)), iv)
   let decrypted = decipher.update(encrypted)
