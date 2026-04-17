@@ -130,6 +130,105 @@ export async function POST(request) {
       return Response.json({ ok: true })
     }
     
+    // Handle plain text messages (conversation state machine)
+    if (update.message?.text && !update.message.text.startsWith('/')) {
+      const chatId = update.message.chat.id
+      const text = update.message.text.trim()
+      const supabase = getSupabaseAdmin()
+
+      const { data: integration } = await supabase
+        .from('user_integrations')
+        .select('*')
+        .eq('integration_type', 'telegram')
+        .eq('platform_user_id', chatId.toString())
+        .single()
+
+      if (!integration) {
+        await sendTelegramMessage(chatId, {
+          text: '❌ Account not linked. Please visit the dashboard to connect.\n\n🌐 https://workerscraft.com/dashboard/integrations',
+          parse_mode: 'Markdown'
+        })
+        return Response.json({ ok: true })
+      }
+
+      // Check for active session
+      const { data: session } = await supabase
+        .from('bot_sessions')
+        .select('*')
+        .eq('user_id', integration.user_id)
+        .eq('integration_id', integration.id)
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!session) {
+        // No active session — show help
+        await sendTelegramMessage(chatId, {
+          text: '💡 Use /new to create a project or /list to see your projects.',
+          parse_mode: 'Markdown'
+        })
+        return Response.json({ ok: true })
+      }
+
+      if (session.state === 'awaiting_name') {
+        // Save name, move to platform selection
+        await supabase.from('bot_sessions')
+          .update({
+            state: 'awaiting_platform',
+            context: { name: text },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', session.id)
+
+        const { formatTelegramMessage } = await import('@/lib/bot/telegram-formatter')
+        const { getCreateProjectButtons } = await import('@/lib/bot/buttons')
+        await sendTelegramMessage(chatId, formatTelegramMessage({
+          text: `✅ Name: *${text}*\n\n🎨 Choose Platform:`,
+          buttons: getCreateProjectButtons('platform'),
+        }))
+        return Response.json({ ok: true })
+      }
+
+      if (session.state === 'awaiting_prompt') {
+        const ctx = session.context || {}
+        const stack = ctx.platform === 'mobile' ? 'expo-developer' : 'nextjs-developer'
+
+        // Create project
+        const { data: project, error: projectError } = await supabase
+          .from('projects')
+          .insert({
+            user_id: integration.user_id,
+            name: ctx.name || 'My App',
+            platform: ctx.platform || 'web',
+            tech_stack: stack,
+            backend_enabled: ctx.backend || false,
+            user_prompt: text,
+            description: text.slice(0, 100),
+          })
+          .select()
+          .single()
+
+        // Clean up session
+        await supabase.from('bot_sessions').delete().eq('id', session.id)
+
+        if (projectError || !project) {
+          await sendTelegramMessage(chatId, { text: '❌ Failed to create project. Please try again.' })
+          return Response.json({ ok: true })
+        }
+
+        const { formatTelegramMessage } = await import('@/lib/bot/telegram-formatter')
+        const { getCreateProjectButtons } = await import('@/lib/bot/buttons')
+        await sendTelegramMessage(chatId, formatTelegramMessage({
+          text: `✅ *Project Created!*\n\n📝 ${project.name}\nPlatform: ${ctx.platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\nBackend: ${ctx.backend ? '✅ Enabled' : '❌ Disabled'}\n\nOpen WorkersCraft to start building your app:`,
+          buttons: getCreateProjectButtons('complete', { projectId: project.id }),
+        }))
+        return Response.json({ ok: true })
+      }
+
+      return Response.json({ ok: true })
+    }
+
     // Handle regular commands
     if (update.message?.text?.startsWith('/')) {
       const chatId = update.message.chat.id

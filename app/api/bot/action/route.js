@@ -29,38 +29,82 @@ export async function POST(request) {
         break
         
       case BUTTON_ACTIONS.CREATE_PROJECT:
+        // Clean up any old sessions
+        await supabase.from('bot_sessions')
+          .delete()
+          .eq('user_id', userId)
+          .eq('integration_id', integrationId)
+
+        await supabase.from('bot_sessions').insert({
+          user_id: userId,
+          integration_id: integrationId,
+          state: 'awaiting_name',
+          context: {},
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        })
+
         response = {
-          text: '🎨 Choose Platform\n\nWhat type of app do you want to build?',
-          buttons: getCreateProjectButtons('platform'),
+          text: '📝 *Create New Project*\n\nWhat would you like to name your project?',
           update_message: true,
         }
         break
-        
+
       case BUTTON_ACTIONS.SELECT_PLATFORM: {
-        // Directly create project — web=nextjs, mobile=expo (no stack step needed)
-        const stack = data.platform === 'mobile' ? 'expo-developer' : 'nextjs-developer'
-        const projectName = `my-${data.platform}-app-${Date.now().toString().slice(-4)}`
-        
-        const { data: newProject, error: createError } = await supabase
-          .from('projects')
-          .insert({
-            user_id: userId,
-            name: projectName,
-            platform: data.platform,
-            tech_stack: stack,
-            description: 'Created via Telegram',
-          })
-          .select()
-          .single()
-        
-        if (createError || !newProject) {
-          response = { text: '❌ Failed to create project. Please try again.' }
+        const { data: pSess } = await supabase.from('bot_sessions')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('integration_id', integrationId)
+          .eq('state', 'awaiting_platform')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (!pSess) {
+          response = { text: '❌ Session expired. Please start over with /new' }
           break
         }
-        
+
+        await supabase.from('bot_sessions')
+          .update({
+            state: 'awaiting_backend',
+            context: { ...pSess.context, platform: data.platform },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', pSess.id)
+
         response = {
-          text: `✅ *Project Created!*\n\n📝 Name: ${projectName}\nPlatform: ${data.platform === 'mobile' ? '📱 Mobile (Expo)' : '🌐 Web (Next.js)'}\n\nOpen in WorkersCraft to start building:`,
-          buttons: getCreateProjectButtons('complete', { projectId: newProject.id }),
+          text: `🗄️ *Backend Services*\n\nAdd user authentication, database storage, and file uploads to your app?`,
+          buttons: getCreateProjectButtons('backend'),
+          update_message: true,
+        }
+        break
+      }
+
+      case 'set_backend': {
+        const { data: bSess } = await supabase.from('bot_sessions')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('integration_id', integrationId)
+          .eq('state', 'awaiting_backend')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        if (!bSess) {
+          response = { text: '❌ Session expired. Please start over with /new' }
+          break
+        }
+
+        await supabase.from('bot_sessions')
+          .update({
+            state: 'awaiting_prompt',
+            context: { ...bSess.context, backend: data.backend },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', bSess.id)
+
+        response = {
+          text: `💬 *What do you want to build?*\n\nDescribe your app in detail.\n\n_Example: A todo app with dark mode, add/delete tasks, and local storage_`,
           update_message: true,
         }
         break
