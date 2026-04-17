@@ -172,20 +172,23 @@ export async function POST(request) {
       }
 
       if (session.state === 'awaiting_name') {
-        // Save name, move to platform selection
+        // Save name, move to platform selection — embed name in button data to avoid session lookup
         await supabase.from('bot_sessions')
           .update({
             state: 'awaiting_platform',
             context: { name: text },
-            updated_at: new Date().toISOString(),
           })
           .eq('id', session.id)
 
         const { formatTelegramMessage } = await import('@/lib/bot/telegram-formatter')
-        const { getCreateProjectButtons } = await import('@/lib/bot/buttons')
+        // Pass name in button data so SELECT_PLATFORM doesn't need a session lookup
         await sendTelegramMessage(chatId, formatTelegramMessage({
           text: `✅ Name: *${text}*\n\n🎨 Choose Platform:`,
-          buttons: getCreateProjectButtons('platform'),
+          buttons: [
+            { type: 'action', text: '🌐 Web App', action: 'select_platform', data: { platform: 'web', name: text } },
+            { type: 'action', text: '📱 Mobile App', action: 'select_platform', data: { platform: 'mobile', name: text } },
+            { type: 'action', text: '❌ Cancel', action: 'cancel', data: {} },
+          ],
         }))
         return Response.json({ ok: true })
       }
@@ -194,7 +197,6 @@ export async function POST(request) {
         const ctx = session.context || {}
         const stack = ctx.platform === 'mobile' ? 'expo-developer' : 'nextjs-developer'
 
-        // Create project
         const { data: project, error: projectError } = await supabase
           .from('projects')
           .insert({
@@ -209,7 +211,6 @@ export async function POST(request) {
           .select()
           .single()
 
-        // Clean up session
         await supabase.from('bot_sessions').delete().eq('id', session.id)
 
         if (projectError || !project) {
@@ -218,10 +219,9 @@ export async function POST(request) {
         }
 
         const { formatTelegramMessage } = await import('@/lib/bot/telegram-formatter')
-        const { getCreateProjectButtons } = await import('@/lib/bot/buttons')
         await sendTelegramMessage(chatId, formatTelegramMessage({
-          text: `✅ *Project Created!*\n\n📝 ${project.name}\nPlatform: ${ctx.platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\nBackend: ${ctx.backend ? '✅ Enabled' : '❌ Disabled'}\n\nOpen WorkersCraft to start building your app:`,
-          buttons: getCreateProjectButtons('complete', { projectId: project.id }),
+          text: `✅ *Project Created!*\n\n📝 ${project.name}\nPlatform: ${ctx.platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\nBackend: ${ctx.backend ? '✅ Enabled' : '❌ Disabled'}\n\nOpen WorkersCraft to start building:`,
+          buttons: [{ type: 'url', text: '🌐 Open in WorkersCraft', url: `${process.env.NEXT_PUBLIC_SITE_URL}/chat?project=${project.id}` }],
         }))
         return Response.json({ ok: true })
       }

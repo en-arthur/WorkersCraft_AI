@@ -49,59 +49,39 @@ export async function POST(request) {
         }
         break
 
-      case BUTTON_ACTIONS.SELECT_PLATFORM: {
-        const { data: pSess } = await supabase.from('bot_sessions')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('integration_id', integrationId)
-          .eq('state', 'awaiting_platform')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (!pSess) {
-          response = { text: '❌ Session expired. Please start over with /new' }
-          break
-        }
-
+      case BUTTON_ACTIONS.SELECT_PLATFORM:
+      case 'select_platform': {
+        // name is passed directly in button data — no session lookup needed
         await supabase.from('bot_sessions')
           .update({
             state: 'awaiting_backend',
-            context: { ...pSess.context, platform: data.platform },
-            updated_at: new Date().toISOString(),
+            context: { name: data.name, platform: data.platform },
           })
-          .eq('id', pSess.id)
+          .eq('user_id', userId)
+          .eq('integration_id', integrationId)
+          .eq('state', 'awaiting_platform')
 
         response = {
-          text: `🗄️ *Backend Services*\n\nAdd user authentication, database storage, and file uploads to your app?`,
-          buttons: getCreateProjectButtons('backend'),
+          text: `🗄️ *Backend Services*\n\nAdd user authentication, database storage, and file uploads?`,
+          buttons: [
+            { type: 'action', text: '✅ Yes, add backend', action: 'set_backend', data: { backend: true, name: data.name, platform: data.platform } },
+            { type: 'action', text: '❌ No backend', action: 'set_backend', data: { backend: false, name: data.name, platform: data.platform } },
+          ],
           update_message: true,
         }
         break
       }
 
       case 'set_backend': {
-        const { data: bSess } = await supabase.from('bot_sessions')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('integration_id', integrationId)
-          .eq('state', 'awaiting_backend')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-
-        if (!bSess) {
-          response = { text: '❌ Session expired. Please start over with /new' }
-          break
-        }
-
+        // All context is in button data — no session lookup needed
         await supabase.from('bot_sessions')
           .update({
             state: 'awaiting_prompt',
-            context: { ...bSess.context, backend: data.backend },
-            updated_at: new Date().toISOString(),
+            context: { name: data.name, platform: data.platform, backend: data.backend },
           })
-          .eq('id', bSess.id)
+          .eq('user_id', userId)
+          .eq('integration_id', integrationId)
+          .eq('state', 'awaiting_backend')
 
         response = {
           text: `💬 *What do you want to build?*\n\nDescribe your app in detail.\n\n_Example: A todo app with dark mode, add/delete tasks, and local storage_`,
