@@ -29,20 +29,6 @@ export async function POST(request) {
         break
         
       case BUTTON_ACTIONS.CREATE_PROJECT:
-        // Delete any existing sessions for this user+integration first
-        await supabase.from('bot_sessions')
-          .delete()
-          .eq('user_id', userId)
-          .eq('integration_id', integrationId)
-
-        await supabase.from('bot_sessions').insert({
-          user_id: userId,
-          integration_id: integrationId,
-          state: 'creating_project',
-          context: { step: 'platform' },
-          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        })
-        
         response = {
           text: '🎨 Choose Platform\n\nWhat type of app do you want to build?',
           buttons: getCreateProjectButtons('platform'),
@@ -50,70 +36,35 @@ export async function POST(request) {
         }
         break
         
-      case BUTTON_ACTIONS.SELECT_PLATFORM:
-        // Upsert session with platform selection
-        await supabase.from('bot_sessions')
-          .update({
-            context: { step: 'stack', platform: data.platform },
-            updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', userId)
-          .eq('integration_id', integrationId)
-          .eq('state', 'creating_project')
+      case BUTTON_ACTIONS.SELECT_PLATFORM: {
+        // Directly create project — web=nextjs, mobile=expo (no stack step needed)
+        const stack = data.platform === 'mobile' ? 'expo-developer' : 'nextjs-developer'
+        const projectName = `my-${data.platform}-app-${Date.now().toString().slice(-4)}`
         
-        response = {
-          text: `🛠️ Choose Tech Stack\n\nPlatform: ${data.platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\n\nSelect your framework:`,
-          buttons: getCreateProjectButtons('stack', { platform: data.platform }),
-          update_message: true,
-        }
-        break
-        
-      case BUTTON_ACTIONS.SELECT_STACK:
-        const { data: session, error: sessionError } = await supabase
-          .from('bot_sessions')
-          .select('*')
-          .eq('user_id', userId)
-          .eq('integration_id', integrationId)
-          .eq('state', 'creating_project')
-          .gt('expires_at', new Date().toISOString())
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        
-        if (!session) {
-          response = { text: '❌ Session expired. Please start over with /new' }
-          break
-        }
-        
-        const platform = session.context?.platform || 'web'
-        const projectName = `my-${data.stack.replace('-developer', '')}-app`
-        
-        const { data: project, error: projectError } = await supabase
+        const { data: newProject, error: createError } = await supabase
           .from('projects')
           .insert({
             user_id: userId,
             name: projectName,
-            platform,
-            tech_stack: data.stack,
-            description: `Created via Telegram`,
+            platform: data.platform,
+            tech_stack: stack,
+            description: 'Created via Telegram',
           })
           .select()
           .single()
         
-        if (projectError || !project) {
+        if (createError || !newProject) {
           response = { text: '❌ Failed to create project. Please try again.' }
           break
         }
         
-        // Clean up session
-        await supabase.from('bot_sessions').delete().eq('id', session.id)
-        
         response = {
-          text: `✅ *Project Created!*\n\n📝 Name: ${projectName}\nPlatform: ${platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\nStack: ${data.stack.replace('-developer', '')}\n\nOpen in WorkersCraft to start building:`,
-          buttons: getCreateProjectButtons('complete', { projectId: project.id }),
+          text: `✅ *Project Created!*\n\n📝 Name: ${projectName}\nPlatform: ${data.platform === 'mobile' ? '📱 Mobile (Expo)' : '🌐 Web (Next.js)'}\n\nOpen in WorkersCraft to start building:`,
+          buttons: getCreateProjectButtons('complete', { projectId: newProject.id }),
           update_message: true,
         }
         break
+      }
         
       case BUTTON_ACTIONS.DEPLOY:
         const { data: deployProject } = await supabase
