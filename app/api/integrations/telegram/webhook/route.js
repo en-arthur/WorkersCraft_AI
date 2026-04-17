@@ -157,7 +157,6 @@ export async function POST(request) {
         .select('*')
         .eq('user_id', integration.user_id)
         .eq('integration_id', integration.id)
-        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle()

@@ -51,7 +51,6 @@ export async function POST(request) {
 
       case BUTTON_ACTIONS.SELECT_PLATFORM:
       case 'select_platform': {
-        // name is passed directly in button data — no session lookup needed
         await supabase.from('bot_sessions')
           .update({
             state: 'awaiting_backend',
@@ -59,7 +58,6 @@ export async function POST(request) {
           })
           .eq('user_id', userId)
           .eq('integration_id', integrationId)
-          .eq('state', 'awaiting_platform')
 
         response = {
           text: `🗄️ *Backend Services*\n\nAdd user authentication, database storage, and file uploads?`,
@@ -73,7 +71,6 @@ export async function POST(request) {
       }
 
       case 'set_backend': {
-        // All context is in button data — no session lookup needed
         await supabase.from('bot_sessions')
           .update({
             state: 'awaiting_prompt',
@@ -81,7 +78,6 @@ export async function POST(request) {
           })
           .eq('user_id', userId)
           .eq('integration_id', integrationId)
-          .eq('state', 'awaiting_backend')
 
         response = {
           text: `💬 *What do you want to build?*\n\nDescribe your app in detail.\n\n_Example: A todo app with dark mode, add/delete tasks, and local storage_`,
