@@ -167,7 +167,7 @@ export async function POST(request) {
         })
       })
       
-      const data = await response.json()
+      const data = await response.json().catch(() => ({ text: '❌ Failed to process command.' }))
       
       // Format and send response
       const telegramFormatter = await import('@/lib/bot/telegram-formatter')
@@ -238,7 +238,7 @@ export async function POST(request) {
         })
       })
       
-      const responseData = await response.json()
+      const responseData = await response.json().catch(() => ({ text: '❌ Failed to process action.' }))
       
       // Format response
       const telegramFormatter = await import('@/lib/bot/telegram-formatter')

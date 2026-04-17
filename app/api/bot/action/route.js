@@ -424,7 +424,7 @@ export async function POST(request) {
     }
     
     // Log interaction (non-blocking, never crash main flow)
-    supabase.from('bot_interactions').insert({
+    Promise.resolve(supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'button',
@@ -432,14 +432,14 @@ export async function POST(request) {
       project_id: data?.projectId || null,
       success: true,
       response_time_ms: Date.now() - startTime,
-    }).catch(() => {})
+    })).catch(() => {})
     
-    return Response.json(response)
+    return Response.json(response || { text: '✅ Done' })
     
   } catch (error) {
     console.error('Action error:', error)
     
-    supabase.from('bot_interactions').insert({
+    Promise.resolve(supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'button',
@@ -448,7 +448,7 @@ export async function POST(request) {
       success: false,
       error_message: error.message,
       response_time_ms: Date.now() - startTime,
-    }).catch(() => {})
+    })).catch(() => {})
     
     return Response.json({
       text: '❌ An error occurred. Please try again.',
