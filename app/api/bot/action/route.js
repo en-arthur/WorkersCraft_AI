@@ -29,11 +29,18 @@ export async function POST(request) {
         break
         
       case BUTTON_ACTIONS.CREATE_PROJECT:
+        // Delete any existing sessions for this user+integration first
+        await supabase.from('bot_sessions')
+          .delete()
+          .eq('user_id', userId)
+          .eq('integration_id', integrationId)
+
         await supabase.from('bot_sessions').insert({
           user_id: userId,
           integration_id: integrationId,
           state: 'creating_project',
           context: { step: 'platform' },
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         })
         
         response = {
@@ -44,8 +51,8 @@ export async function POST(request) {
         break
         
       case BUTTON_ACTIONS.SELECT_PLATFORM:
-        await supabase
-          .from('bot_sessions')
+        // Upsert session with platform selection
+        await supabase.from('bot_sessions')
           .update({
             context: { step: 'stack', platform: data.platform },
             updated_at: new Date().toISOString(),
@@ -55,42 +62,54 @@ export async function POST(request) {
           .eq('state', 'creating_project')
         
         response = {
-          text: '🛠️ Choose Tech Stack\n\nSelect your framework:',
+          text: `🛠️ Choose Tech Stack\n\nPlatform: ${data.platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\n\nSelect your framework:`,
           buttons: getCreateProjectButtons('stack', { platform: data.platform }),
           update_message: true,
         }
         break
         
       case BUTTON_ACTIONS.SELECT_STACK:
-        const { data: session } = await supabase
+        const { data: session, error: sessionError } = await supabase
           .from('bot_sessions')
           .select('*')
           .eq('user_id', userId)
           .eq('integration_id', integrationId)
           .eq('state', 'creating_project')
-          .single()
+          .gt('expires_at', new Date().toISOString())
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
         
         if (!session) {
           response = { text: '❌ Session expired. Please start over with /new' }
           break
         }
         
-        const projectName = `my-${data.stack}-${Date.now()}`
-        const { data: project } = await supabase
+        const platform = session.context?.platform || 'web'
+        const projectName = `my-${data.stack.replace('-developer', '')}-app`
+        
+        const { data: project, error: projectError } = await supabase
           .from('projects')
           .insert({
             user_id: userId,
             name: projectName,
-            template: data.stack,
-            status: 'draft',
+            platform,
+            tech_stack: data.stack,
+            description: `Created via Telegram`,
           })
           .select()
           .single()
         
+        if (projectError || !project) {
+          response = { text: '❌ Failed to create project. Please try again.' }
+          break
+        }
+        
+        // Clean up session
         await supabase.from('bot_sessions').delete().eq('id', session.id)
         
         response = {
-          text: `✅ Project Created!\n\n📝 Name: ${projectName}\nTemplate: ${getTemplateName(data.stack)}\nStatus: Ready to build\n\nContinue building in web:`,
+          text: `✅ *Project Created!*\n\n📝 Name: ${projectName}\nPlatform: ${platform === 'mobile' ? '📱 Mobile' : '🌐 Web'}\nStack: ${data.stack.replace('-developer', '')}\n\nOpen in WorkersCraft to start building:`,
           buttons: getCreateProjectButtons('complete', { projectId: project.id }),
           update_message: true,
         }
@@ -404,32 +423,32 @@ export async function POST(request) {
         response = { text: '❌ Unknown action' }
     }
     
-    // Log interaction
-    await supabase.from('bot_interactions').insert({
+    // Log interaction (non-blocking, never crash main flow)
+    supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'button',
       action,
-      project_id: data.projectId,
+      project_id: data?.projectId || null,
       success: true,
       response_time_ms: Date.now() - startTime,
-    })
+    }).catch(() => {})
     
     return Response.json(response)
     
   } catch (error) {
     console.error('Action error:', error)
     
-    await supabase.from('bot_interactions').insert({
+    supabase.from('bot_interactions').insert({
       user_id: userId,
       integration_id: integrationId,
       interaction_type: 'button',
       action,
-      project_id: data?.projectId,
+      project_id: data?.projectId || null,
       success: false,
       error_message: error.message,
       response_time_ms: Date.now() - startTime,
-    })
+    }).catch(() => {})
     
     return Response.json({
       text: '❌ An error occurred. Please try again.',
