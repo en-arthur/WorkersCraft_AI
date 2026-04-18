@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Loader2, CheckCircle2, Zap, Smartphone, Github, Server, Download, FolderOpen, Apple, Headphones, Rocket, Star } from 'lucide-react'
 import UsageCard from '@/components/usage-card'
-import { DiscountBanner } from '@/components/discount-banner'
 
 const PLANS = [
   {
@@ -260,9 +259,6 @@ export default function DashboardBillingPage() {
           </Button>
         </div>
       )}
-
-      {/* Discount Banner */}
-      <DiscountBanner />
 
       <div className="grid grid-cols-3 gap-6">
         {PLANS.map((plan) => {
