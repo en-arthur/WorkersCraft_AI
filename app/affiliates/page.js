@@ -112,12 +112,12 @@ export default function AffiliatesPage() {
           <h2 className="text-lg font-semibold text-center">Why Join?</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
             {[
-              '25% commission on all monthly sales',
+              'Commission on all monthly sales',
               'Fast approval within 1–2 hours',
               'Real-time tracking dashboard',
               'Monthly payouts',
               'No hidden fees or charges',
-              'Dedicated affiliate support',
+              'Dedicated partner support',
             ].map((benefit) => (
               <div key={benefit} className="flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
