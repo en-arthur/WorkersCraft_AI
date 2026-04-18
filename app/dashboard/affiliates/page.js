@@ -69,9 +69,9 @@ export default function AffiliateDashboard() {
         <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-5">
           <DollarSign className="w-5 h-5 text-primary" />
         </div>
-        <h2 className="text-lg font-semibold mb-2">You are not an affiliate yet</h2>
+        <h2 className="text-lg font-semibold mb-2">You are not a partner yet</h2>
         <p className="text-sm text-muted-foreground mb-6 max-w-xs leading-relaxed">
-          Apply to join our affiliate program and earn 25% commission on every sale you refer.
+          Apply to join our partner program and earn commission on every sale you refer.
         </p>
         <Button onClick={() => router.push('/affiliates')}>Apply Now</Button>
       </div>
@@ -86,7 +86,7 @@ export default function AffiliateDashboard() {
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Affiliate Dashboard</h1>
+        <h1 className="text-2xl font-bold">Partner Dashboard</h1>
         <Badge variant={affiliate.status === 'approved' ? 'default' : affiliate.status === 'pending' ? 'secondary' : 'destructive'}>
           {affiliate.status}
         </Badge>

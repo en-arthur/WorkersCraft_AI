@@ -60,7 +60,7 @@ export default function DashboardLayout({ children }) {
             {navItem('/dashboard/deployments', <Rocket className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Deployments')}
             {navItem('/dashboard/integrations', <Plug className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Integrations')}
             {navItem('/dashboard/billing', <CreditCard className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Billing')}
-            {navItem('/dashboard/affiliates', <DollarSign className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Affiliates')}
+            {navItem('/dashboard/affiliates', <DollarSign className={`h-4 w-4 ${sidebarOpen ? 'mr-2' : ''}`} />, 'Partners')}
           </nav>
         </div>
         
