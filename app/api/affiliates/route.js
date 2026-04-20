@@ -39,7 +39,7 @@ export async function GET(request) {
     .eq('affiliate_id', affiliate.id)
     .order('requested_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   return Response.json({
     affiliate,
