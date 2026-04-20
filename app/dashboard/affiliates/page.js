@@ -27,12 +27,22 @@ export default function AffiliateDashboard() {
   }, [session])
 
   async function fetchData() {
-    const res = await fetch('/api/affiliates', {
-      headers: { 'Authorization': `Bearer ${session.access_token}` }
-    })
-    const json = await res.json()
-    setData(json)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/affiliates', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      })
+      if (!res.ok) {
+        console.error('Failed to fetch affiliate data:', res.status)
+        setLoading(false)
+        return
+      }
+      const json = await res.json()
+      setData(json)
+    } catch (err) {
+      console.error('Error fetching affiliate data:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   function copyLink() {

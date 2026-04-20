@@ -20,7 +20,7 @@ export default function AffiliatesPage() {
 
   async function handleApply(e) {
     e.preventDefault()
-    if (!session) { router.push('/auth'); return }
+    if (!session?.access_token) { router.push('/auth'); return }
     setApplying(true)
     try {
       const res = await fetch('/api/affiliates', {
@@ -53,7 +53,7 @@ export default function AffiliatesPage() {
             Affiliate Program
           </div>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Earn 25% on every sale
+            Earn on every sale
           </h1>
           <p className="text-muted-foreground text-base max-w-lg mx-auto leading-relaxed">
             Partner with WorkersCraft and earn recurring commissions for every customer you refer. Simple, transparent, rewarding.
@@ -68,7 +68,7 @@ export default function AffiliatesPage() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { icon: DollarSign, value: '25%', label: 'Commission Rate' },
+            { icon: DollarSign, value: 'Earn', label: 'Commission Rate' },
             { icon: TrendingUp, value: '$20', label: 'Minimum Payout' },
             { icon: Clock, value: '1–2h', label: 'Approval Time' },
           ].map(({ icon: Icon, value, label }) => (
@@ -89,7 +89,7 @@ export default function AffiliatesPage() {
             {[
               { step: '1', icon: LinkIcon, title: 'Get Your Link', desc: 'Apply and receive your unique referral link within 1–2 hours.' },
               { step: '2', icon: Users, title: 'Share & Promote', desc: 'Share with your audience through any channel you prefer.' },
-              { step: '3', icon: DollarSign, title: 'Earn Commission', desc: 'Get 25% of every monthly payment from your referred customers.' },
+              { step: '3', icon: DollarSign, title: 'Earn Commission', desc: 'Get commission on every monthly payment from your referred customers.' },
             ].map(({ step, icon: Icon, title, desc }) => (
               <div key={step} className="rounded-xl border p-6 space-y-4">
                 <div className="flex items-center gap-3">
