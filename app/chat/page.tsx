@@ -885,7 +885,7 @@ function ChatContent() {
             handleFileChange={handleFileChange}
             mode={chatMode}
             onModeChange={setChatMode}
-            buildDisabled={userPlan === 'free' && projectCount >= 1}
+            buildDisabled={false}
           >
             {!process.env.NEXT_PUBLIC_HIDE_MODEL_SELECTOR && (
               <ChatPicker
