@@ -1,18 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { useAuth } from '@/lib/auth'
+import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/ui/use-toast'
 import { DollarSign, Users, LinkIcon, Clock, CheckCircle2, Sparkles, TrendingUp } from 'lucide-react'
 
 export default function AffiliatesPage() {
-  const { session } = useAuth()
+  const [session, setSession] = useState(null)
   const router = useRouter()
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+  }, [])
   const { toast } = useToast()
   const [applying, setApplying] = useState(false)
   const [form, setForm] = useState({ payout_email: '', how_promote: '' })
