@@ -9,7 +9,7 @@ const supabase = createClient(
 )
 
 export default function UsageCard() {
-  const [usage, setUsage] = useState<{ count: number; limit: number | null; plan: string } | null>(null)
+  const [usage, setUsage] = useState<{ count: number; limit: number | null; plan: string; label?: string } | null>(null)
   const tokenRef = useRef<string | null>(null)
 
   const fetchUsage = useCallback(async () => {

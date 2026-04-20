@@ -21,6 +21,7 @@ function decrypt(text) {
   return decrypted.toString()
 }
 
+// Use anon client only for auth verification
 function getSupabaseWithAuth(token) {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -29,29 +30,30 @@ function getSupabaseWithAuth(token) {
   )
 }
 
+// Use service role for writes to bypass RLS issues
+function getSupabaseAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  )
+}
+
 export async function GET(request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = getSupabaseWithAuth(token)
-  
   const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (userError || !user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabase
+  const admin = getSupabaseAdmin()
+  const { data, error } = await admin
     .from('user_integrations')
     .select('*')
     .eq('user_id', user.id)
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 })
-  }
+  if (error) return Response.json({ error: error.message }, { status: 500 })
 
-  // Don't send encrypted tokens to client
   const integrations = data.map(i => ({
     ...i,
     access_token: i.access_token ? '••••••••' : null
@@ -62,16 +64,11 @@ export async function GET(request) {
 
 export async function POST(request) {
   const token = request.headers.get('authorization')?.replace('Bearer ', '')
-  if (!token) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!token) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const supabase = getSupabaseWithAuth(token)
-  
   const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError || !user) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (userError || !user) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
   const { integration_type, access_token } = body
@@ -80,23 +77,47 @@ export async function POST(request) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  // Encrypt the token
   const encrypted = encrypt(access_token)
+  const admin = getSupabaseAdmin()
 
-  const { data, error } = await supabase
+  // Check if integration already exists
+  const { data: existing } = await admin
     .from('user_integrations')
-    .upsert({
-      user_id: user.id,
-      integration_type,
-      access_token: encrypted,
-      status: 'connected',
-      metadata: { last_used: new Date().toISOString() },
-      updated_at: new Date().toISOString()
-    }, {
-      onConflict: 'user_id,integration_type'
-    })
-    .select()
-    .single()
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('integration_type', integration_type)
+    .is('platform_user_id', null)
+    .maybeSingle()
+
+  let data, error
+
+  if (existing) {
+    // Update existing
+    ;({ data, error } = await admin
+      .from('user_integrations')
+      .update({
+        access_token: encrypted,
+        status: 'connected',
+        metadata: { last_used: new Date().toISOString() },
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', existing.id)
+      .select()
+      .single())
+  } else {
+    // Insert new
+    ;({ data, error } = await admin
+      .from('user_integrations')
+      .insert({
+        user_id: user.id,
+        integration_type,
+        access_token: encrypted,
+        status: 'connected',
+        metadata: { last_used: new Date().toISOString() },
+      })
+      .select()
+      .single())
+  }
 
   if (error) {
     console.error('[integrations POST] Supabase error:', error)
