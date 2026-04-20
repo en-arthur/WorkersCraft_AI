@@ -79,9 +79,10 @@ export async function DELETE(request, { params }) {
 
   const { id } = params
 
+  // Soft delete — keeps row for free plan limit tracking
   const { error: dbError } = await supabase
     .from('projects')
-    .delete()
+    .update({ is_archived: true })
     .eq('id', id)
     .eq('user_id', u2.id)
 
