@@ -100,9 +100,13 @@ function ChatContent() {
     (model) => model.id === (process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'models/gemini-3-flash-preview'),
   ) || filteredModels[0]
 
+  const freePlanModel = filteredModels.find(
+    (model) => model.id === (process.env.NEXT_PUBLIC_FREE_PLAN_MODEL || 'llama-3.3-70b-versatile'),
+  ) || defaultModel
+
   const currentModel = filteredModels.find(
     (model) => model.id === languageModel.model,
-  ) || defaultModel
+  ) || (userPlan === 'free' ? freePlanModel : defaultModel)
 
   // Update localStorage if stored model no longer exists
   useEffect(() => {
@@ -134,6 +138,11 @@ function ChatContent() {
       .then(d => {
         setUserPlan(d.plan || 'free')
         setProjectCount(d.projectCount || 0)
+        // Force free plan model
+        if (d.plan === 'free' || !d.plan) {
+          const freeModelId = process.env.NEXT_PUBLIC_FREE_PLAN_MODEL || 'llama-3.3-70b-versatile'
+          setLanguageModel({ model: freeModelId })
+        }
       })
       .catch(() => {})
   }, [session?.user?.id])
