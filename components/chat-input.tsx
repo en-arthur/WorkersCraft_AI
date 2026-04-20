@@ -28,7 +28,6 @@ export function ChatInput({
   children,
   mode,
   onModeChange,
-  buildDisabled,
 }: {
   retry: () => void
   isErrored: boolean
@@ -45,7 +44,6 @@ export function ChatInput({
   children: React.ReactNode
   mode?: 'build' | 'ask'
   onModeChange?: (mode: 'build' | 'ask') => void
-  buildDisabled?: boolean
 }) {
   function handleFileInput(e: React.ChangeEvent<HTMLInputElement>) {
     handleFileChange((prev) => {
@@ -177,12 +175,6 @@ export function ChatInput({
           </button>
         </div>
       )}
-      {buildDisabled && mode !== 'ask' && (
-        <div className="flex items-center justify-between p-2 px-3 mb-1 rounded-xl bg-orange-400/10 text-orange-500 text-xs font-medium mx-0">
-          <span>Free plan limit reached. Upgrade to keep building.</span>
-          <a href="/dashboard/billing" className="underline ml-2 shrink-0">Upgrade →</a>
-        </div>
-      )}
       <div className="relative">
         <div
           className={`shadow-md rounded-2xl relative z-10 bg-background border ${
@@ -271,7 +263,7 @@ export function ChatInput({
                   <Tooltip delayDuration={0}>
                     <TooltipTrigger asChild>
                       <Button
-                        disabled={isErrored || (buildDisabled && mode !== 'ask')}
+                        disabled={isErrored}
                         variant="default"
                         size="icon"
                         type="submit"

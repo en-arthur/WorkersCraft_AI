@@ -47,14 +47,6 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser()
     
     const actualUserId = userId || user?.id
-
-    // Block deploy for free plan
-    const { getUserPlan, PLAN_LIMITS } = await import('@/lib/entitlements')
-    const plan = await getUserPlan(actualUserId)
-    const limits = PLAN_LIMITS[plan.plan] || PLAN_LIMITS.free
-    if (!limits.canDeploy) {
-      return NextResponse.json({ error: 'upgrade_required', message: 'Upgrade your plan to deploy projects.' }, { status: 402 })
-    }
     
     if (!actualUserId) {
       return NextResponse.json(

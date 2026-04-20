@@ -84,8 +84,6 @@ function ChatContent() {
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null)
   const [chatMode, setChatMode] = useState<'build' | 'ask'>('build')
   const [isAskLoading, setIsAskLoading] = useState(false)
-  const [userPlan, setUserPlan] = useState<string>('free')
-  const [projectCount, setProjectCount] = useState<number>(0)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -100,13 +98,9 @@ function ChatContent() {
     (model) => model.id === (process.env.NEXT_PUBLIC_DEFAULT_MODEL_ID || 'models/gemini-3-flash-preview'),
   ) || filteredModels[0]
 
-  const freePlanModel = filteredModels.find(
-    (model) => model.id === (process.env.NEXT_PUBLIC_FREE_PLAN_MODEL || 'llama-3.3-70b-versatile'),
-  ) || defaultModel
-
   const currentModel = filteredModels.find(
     (model) => model.id === languageModel.model,
-  ) || (userPlan === 'free' ? freePlanModel : defaultModel)
+  ) || defaultModel
 
   // Update localStorage if stored model no longer exists
   useEffect(() => {
@@ -129,23 +123,6 @@ function ChatContent() {
       router.push('/auth')
     }
   }, [session, router])
-
-  // Fetch user plan
-  useEffect(() => {
-    if (!session?.user?.id) return
-    fetch('/api/user-plan', { headers: { 'Authorization': `Bearer ${session.access_token}` } })
-      .then(r => r.json())
-      .then(d => {
-        setUserPlan(d.plan || 'free')
-        setProjectCount(d.projectCount || 0)
-        // Force free plan model
-        if (d.plan === 'free' || !d.plan) {
-          const freeModelId = process.env.NEXT_PUBLIC_FREE_PLAN_MODEL || 'llama-3.3-70b-versatile'
-          setLanguageModel({ model: freeModelId })
-        }
-      })
-      .catch(() => {})
-  }, [session?.user?.id])
 
   // Fire generation when project + prompt are ready (replaces setTimeout+click hack)
   useEffect(() => {
@@ -894,7 +871,6 @@ function ChatContent() {
             handleFileChange={handleFileChange}
             mode={chatMode}
             onModeChange={setChatMode}
-            buildDisabled={false}
           >
             {!process.env.NEXT_PUBLIC_HIDE_MODEL_SELECTOR && (
               <ChatPicker
