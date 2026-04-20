@@ -43,6 +43,15 @@ export default function DashboardPage() {
   const [authChecked, setAuthChecked] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [importingZip, setImportingZip] = useState(false)
+  const [userPlan, setUserPlan] = useState('free')
+
+  useEffect(() => {
+    if (!session?.access_token) return
+    fetch('/api/user-plan', { headers: { 'Authorization': `Bearer ${session.access_token}` } })
+      .then(r => r.json())
+      .then(d => setUserPlan(d.plan || 'free'))
+      .catch(() => {})
+  }, [session?.access_token])
 
   async function handleZipImport(e) {
     const file = e.target.files?.[0]
@@ -315,7 +324,12 @@ export default function DashboardPage() {
               </Button> */}
               <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setCurrentStep(1) }}>
                 <DialogTrigger asChild>
-                  <Button size="lg" className="px-8 py-6 text-base">
+                  <Button
+                    size="lg"
+                    className="px-8 py-6 text-base"
+                    disabled={userPlan === 'free' && projects.length >= 1}
+                    title={userPlan === 'free' && projects.length >= 1 ? 'Upgrade to create more projects' : undefined}
+                  >
                     + New Project
                   </Button>
                 </DialogTrigger>

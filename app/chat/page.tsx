@@ -84,6 +84,8 @@ function ChatContent() {
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null)
   const [chatMode, setChatMode] = useState<'build' | 'ask'>('build')
   const [isAskLoading, setIsAskLoading] = useState(false)
+  const [userPlan, setUserPlan] = useState<string>('free')
+  const [projectCount, setProjectCount] = useState<number>(0)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -123,6 +125,18 @@ function ChatContent() {
       router.push('/auth')
     }
   }, [session, router])
+
+  // Fetch user plan
+  useEffect(() => {
+    if (!session?.user?.id) return
+    fetch('/api/user-plan', { headers: { 'Authorization': `Bearer ${session.access_token}` } })
+      .then(r => r.json())
+      .then(d => {
+        setUserPlan(d.plan || 'free')
+        setProjectCount(d.projectCount || 0)
+      })
+      .catch(() => {})
+  }, [session?.user?.id])
 
   // Fire generation when project + prompt are ready (replaces setTimeout+click hack)
   useEffect(() => {
@@ -871,6 +885,7 @@ function ChatContent() {
             handleFileChange={handleFileChange}
             mode={chatMode}
             onModeChange={setChatMode}
+            buildDisabled={userPlan === 'free' && projectCount >= 1}
           >
             {!process.env.NEXT_PUBLIC_HIDE_MODEL_SELECTOR && (
               <ChatPicker
