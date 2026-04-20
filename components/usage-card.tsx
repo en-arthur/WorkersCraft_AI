@@ -53,7 +53,7 @@ export default function UsageCard() {
 
   if (!usage || !usage.plan) return null
 
-  const { count, limit, plan } = usage
+  const { count, limit, plan, label } = usage
   const isUnlimited = limit === null
   const pct = isUnlimited ? 0 : Math.min((count / limit!) * 100, 100)
   const barColor = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-yellow-500' : 'bg-primary'
@@ -66,7 +66,7 @@ export default function UsageCard() {
       </div>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span>Projects this month</span>
+          <span>{label || 'Projects this month'}</span>
           <span className="font-medium">{count}{isUnlimited ? ' (unlimited)' : ` / ${limit}`}</span>
         </div>
         {!isUnlimited && (
