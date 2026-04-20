@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/lib/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -11,26 +10,22 @@ import { supabase } from '@/lib/supabase'
 import { CustomDomainDialog } from '@/components/custom-domain-dialog'
 
 export default function DeploymentsPage() {
-  const { session } = useAuth()
+  const [session, setSession] = useState(null)
   const [deployments, setDeployments] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
-  const [hasLoaded, setHasLoaded] = useState(false)
 
   useEffect(() => {
-    if (session && !hasLoaded) {
-      fetchDeployments()
-      setHasLoaded(true)
-    }
-  }, [session, hasLoaded])
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+    })
+  }, [])
 
   useEffect(() => {
-    if (session && hasLoaded) {
-      fetchDeployments()
-    }
-  }, [typeFilter, statusFilter])
+    if (session) fetchDeployments()
+  }, [session, typeFilter, statusFilter])
 
   async function fetchDeployments() {
     setLoading(true)
