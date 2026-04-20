@@ -28,6 +28,7 @@ export function ChatInput({
   children,
   mode,
   onModeChange,
+  buildDisabled,
 }: {
   retry: () => void
   isErrored: boolean
